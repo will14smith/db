@@ -6,6 +6,14 @@ namespace SimpleDatabase.CLI
     {
         static void Main(string[] args)
         {
+            var input = new ConsoleREPLInput();
+            var output = new ConsoleREPLOutput();
+
+            var repl = new REPL(input, output);
+
+            var exitCode = repl.Run();
+            Environment.Exit((int) exitCode);
         }
+
     }
 }
