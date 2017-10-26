@@ -1,4 +1,6 @@
 ﻿using SimpleDatabase.CLI.MetaCommands;
+using SimpleDatabase.CLI.PrepareStatementResponses;
+using SimpleDatabase.Core;
 
 namespace SimpleDatabase.CLI
 {
@@ -37,6 +39,24 @@ namespace SimpleDatabase.CLI
                             continue;
                     }
                 }
+
+                var statementResponse = PrepareStatement(line);
+                switch (statementResponse)
+                {
+                    case SuccessPrepareStatementResponses resp:
+                        ExecuteStatement(resp.Statement);
+                        _output.WriteLine("Executed.");
+                        break;
+
+                    case UnrecognisedPrepareStatementResponses resp:
+                        _output.WriteLine("Unrecognized keyword at start of '{0}'.", resp.Input);
+                        break;
+
+                    default:
+                        _output.WriteLine("Unrecognized prepare statement response '{0}'.", statementResponse.GetType().Name);
+                        continue;
+                }
+
             }
         }
 
@@ -58,6 +78,33 @@ namespace SimpleDatabase.CLI
             }
 
             return new UnrecognisedMetaCommandResponse(input);
+        }
+
+        private IPrepareStatementResponse PrepareStatement(string input)
+        {
+            if (input.StartsWith("insert"))
+            {
+                return new SuccessPrepareStatementResponses(new InsertStatement());
+            }
+            if (input.StartsWith("select"))
+            {
+                return new SuccessPrepareStatementResponses(new SelectStatement());
+            }
+
+            return new UnrecognisedPrepareStatementResponses(input);
+        }
+
+        private void ExecuteStatement(IStatement statement)
+        {
+            switch (statement)
+            {
+                case InsertStatement insert:
+                    _output.WriteLine("This is where we would do an insert.");
+                    break;
+                case SelectStatement select:
+                    _output.WriteLine("This is where we would do an select.");
+                    break;
+            }
         }
     }
 }

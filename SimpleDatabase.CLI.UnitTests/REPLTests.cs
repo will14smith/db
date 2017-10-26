@@ -8,6 +8,9 @@ namespace SimpleDatabase.CLI.UnitTests
         [Theory]
         [InlineData(new[] { ".exit" }, "db > .exit", ExitCode.Success)]
         [InlineData(new[] { ".unknown", ".exit" }, "db > .unknown\nUnrecognized command '.unknown'.\ndb > .exit", ExitCode.Success)]
+        [InlineData(new[] { "insert", ".exit" }, "db > insert\nThis is where we would do an insert.\nExecuted.\ndb > .exit", ExitCode.Success)]
+        [InlineData(new[] { "select", ".exit" }, "db > select\nThis is where we would do an select.\nExecuted.\ndb > .exit", ExitCode.Success)]
+        [InlineData(new[] { "unknown", ".exit" }, "db > unknown\nUnrecognized keyword at start of 'unknown'.\ndb > .exit", ExitCode.Success)]
         public void RunningCommands_HasCorrectSnapshot(string[] commands, string expectedOutput, ExitCode expectedCode)
         {
             var fakeOutput = new FakeREPLOutput();
