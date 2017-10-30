@@ -6,15 +6,14 @@ namespace SimpleDatabase.CLI.UnitTests
     public class REPLTests
     {
         [Theory]
-        [InlineData(new[] { ".exit" }, "db > .exit", ExitCode.Success)]
-        [InlineData(new[] { ".unknown", ".exit" }, "db > .unknown\nUnrecognized command '.unknown'.\ndb > .exit", ExitCode.Success)]
-        [InlineData(new[] { "insert", ".exit" }, "db > insert\nThis is where we would do an insert.\nExecuted.\ndb > .exit", ExitCode.Success)]
-        [InlineData(new[] { "select", ".exit" }, "db > select\nThis is where we would do an select.\nExecuted.\ndb > .exit", ExitCode.Success)]
-        [InlineData(new[] { "unknown", ".exit" }, "db > unknown\nUnrecognized keyword at start of 'unknown'.\ndb > .exit", ExitCode.Success)]
+        [InlineData(new[] { ".exit" }, "db >", ExitCode.Success)]
+        [InlineData(new[] { ".unknown", ".exit" }, "db > Unrecognized command '.unknown'.\ndb >", ExitCode.Success)]
+        [InlineData(new[] { "insert 0 a b", "select", ".exit" }, "db > Executed.\ndb > (0, a, b)\nExecuted.\ndb >", ExitCode.Success)]
+        [InlineData(new[] { "unknown", ".exit" }, "db > Unrecognized keyword at start of 'unknown'.\ndb >", ExitCode.Success)]
         public void RunningCommands_HasCorrectSnapshot(string[] commands, string expectedOutput, ExitCode expectedCode)
         {
             var fakeOutput = new FakeREPLOutput();
-            var fakeInput = new FakeREPLInput(fakeOutput, commands);
+            var fakeInput = new FakeREPLInput(commands);
             var repl = new REPL(fakeInput, fakeOutput);
 
             var code = repl.Run();

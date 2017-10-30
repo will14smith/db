@@ -1,6 +1,4 @@
-﻿using SimpleDatabase.CLI.MetaCommands;
-using SimpleDatabase.CLI.PrepareStatementResponses;
-using SimpleDatabase.Core;
+﻿using SimpleDatabase.Core;
 
 namespace SimpleDatabase.CLI
 {
@@ -9,10 +7,14 @@ namespace SimpleDatabase.CLI
         private readonly IREPLInput _input;
         private readonly IREPLOutput _output;
 
+        private readonly Table _table;
+
         public REPL(IREPLInput input, IREPLOutput output)
         {
             _input = input;
             _output = output;
+
+            _table = new Table();
         }
 
         public ExitCode Run()
@@ -45,7 +47,10 @@ namespace SimpleDatabase.CLI
                 {
                     case PrepareStatementResponse.Success resp:
                         ExecuteStatement(resp.Statement);
-                        _output.WriteLine("Executed.");
+                        break;
+
+                    case PrepareStatementResponse.SyntaxError resp:
+                        _output.WriteLine("Syntax error '{0}'.", resp.Error);
                         break;
 
                     case PrepareStatementResponse.Unrecognised resp:
@@ -84,7 +89,19 @@ namespace SimpleDatabase.CLI
         {
             if (input.StartsWith("insert"))
             {
-                return new SuccessPrepareStatementResponses(new InsertStatement());
+                var tokens = input.Split(" ");
+                if (tokens.Length != 4)
+                {
+                    return new PrepareStatementResponse.SyntaxError("Expected 3 parameters (id, username, email) for insert");
+                }
+
+                var id = int.Parse(tokens[1]);
+                var username = tokens[2];
+                var email = tokens[3];
+
+                var row = new Row(id, username, email);
+
+                return new PrepareStatementResponse.Success(new InsertStatement(row));
             }
             if (input.StartsWith("select"))
             {
@@ -99,12 +116,44 @@ namespace SimpleDatabase.CLI
             switch (statement)
             {
                 case InsertStatement insert:
-                    _output.WriteLine("This is where we would do an insert.");
+                    ExecuteInsert(insert);
                     break;
                 case SelectStatement select:
-                    _output.WriteLine("This is where we would do an select.");
+                    ExecuteSelect(select);
                     break;
             }
+        }
+
+        private void ExecuteInsert(InsertStatement insert)
+        {
+            var result = _table.Insert(insert);
+            switch (result)
+            {
+                case InsertResult.Success _:
+                    _output.WriteLine("Executed.");
+                    break;
+                case InsertResult.TableFull _:
+                    _output.WriteLine("Error: Table full.");
+                    break;
+            }
+        }
+
+        private void ExecuteSelect(SelectStatement select)
+        {
+            var result = _table.Select(select);
+            switch (result)
+            {
+                case SelectResult.Success success:
+                    foreach (var row in success.Rows)
+                    {
+                        _output.WriteLine(row.ToString());
+                    }
+
+                    _output.WriteLine("Executed.");
+                    break;
+            }
+
+            _table.Select(select);
         }
     }
 }
