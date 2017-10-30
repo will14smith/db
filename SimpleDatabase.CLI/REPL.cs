@@ -27,11 +27,11 @@ namespace SimpleDatabase.CLI
                     var response = HandleMetaCommand(line);
                     switch (response)
                     {
-                        case SuccessMetaCommandResponse _:
+                        case MetaCommandResponse.Success _:
                             continue;
-                        case ExitMetaCommandResponse exit:
+                        case MetaCommandResponse.Exit exit:
                             return exit.Code;
-                        case UnrecognisedMetaCommandResponse resp:
+                        case MetaCommandResponse.Unrecognised resp:
                             _output.WriteLine("Unrecognized command '{0}'.", resp.Input);
                             continue;
                         default:
@@ -43,12 +43,12 @@ namespace SimpleDatabase.CLI
                 var statementResponse = PrepareStatement(line);
                 switch (statementResponse)
                 {
-                    case SuccessPrepareStatementResponses resp:
+                    case PrepareStatementResponse.Success resp:
                         ExecuteStatement(resp.Statement);
                         _output.WriteLine("Executed.");
                         break;
 
-                    case UnrecognisedPrepareStatementResponses resp:
+                    case PrepareStatementResponse.Unrecognised resp:
                         _output.WriteLine("Unrecognized keyword at start of '{0}'.", resp.Input);
                         break;
 
@@ -70,17 +70,17 @@ namespace SimpleDatabase.CLI
             return _input.ReadLine();
         }
 
-        private IMetaCommandResponse HandleMetaCommand(string input)
+        private MetaCommandResponse HandleMetaCommand(string input)
         {
             if (input == ".exit")
             {
-                return new ExitMetaCommandResponse(ExitCode.Success);
+                return new MetaCommandResponse.Exit(ExitCode.Success);
             }
 
-            return new UnrecognisedMetaCommandResponse(input);
+            return new MetaCommandResponse.Unrecognised(input);
         }
 
-        private IPrepareStatementResponse PrepareStatement(string input)
+        private PrepareStatementResponse PrepareStatement(string input)
         {
             if (input.StartsWith("insert"))
             {
@@ -88,10 +88,10 @@ namespace SimpleDatabase.CLI
             }
             if (input.StartsWith("select"))
             {
-                return new SuccessPrepareStatementResponses(new SelectStatement());
+                return new PrepareStatementResponse.Success(new SelectStatement());
             }
 
-            return new UnrecognisedPrepareStatementResponses(input);
+            return new PrepareStatementResponse.Unrecognised(input);
         }
 
         private void ExecuteStatement(IStatement statement)
