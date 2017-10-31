@@ -1,20 +1,22 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace SimpleDatabase.Core
 {
-    public class Table
+    public class Table : IDisposable
     {
-        public const int PageSize = 4096;
-        public const int TableMaxPages = 100;
-        public const int RowsPerPage = PageSize / Row.RowSize;
-        public const int TableMaxRows = RowsPerPage * TableMaxPages;
-
-        private readonly byte[][] _pages = new byte[TableMaxPages][];
+        private readonly IPager _pager;
         private int _rowCount;
+
+        public Table(IPager pager)
+        {
+            _pager = pager;
+            _rowCount = pager.RowCount;
+        }
 
         public InsertResult Insert(InsertStatement statement)
         {
-            if (_rowCount >= TableMaxRows)
+            if (_rowCount >= Pager.MaxRows)
             {
                 return new InsertResult.TableFull();
             }
@@ -44,13 +46,34 @@ namespace SimpleDatabase.Core
 
         private (byte[], int) GetRowSlot(int rowNumber)
         {
-            var pageOffset = rowNumber / RowsPerPage;
-            var page = _pages[pageOffset] ?? (_pages[pageOffset] = new byte[PageSize]);
+            var pageOffset = rowNumber / Pager.RowsPerPage;
+            var page = _pager.Get(pageOffset);
 
-            var rowOffset = rowNumber % RowsPerPage;
+            var rowOffset = rowNumber % Pager.RowsPerPage;
             var byteOffset = rowOffset * Row.RowSize;
 
-            return (page, byteOffset);
+            return (page.Data, byteOffset);
+        }
+
+        public void Dispose()
+        {
+            var fullPageCount = _rowCount / Pager.RowsPerPage;
+
+            for (var i = 0; i < fullPageCount; i++)
+            {
+                _pager.Evict(i, Pager.PageSize);
+            }
+
+            // There may be a partial page to write to the end of the file
+            // This should not be needed after we switch to a B-tree
+            var additionalRowCount = _rowCount % Pager.RowsPerPage;
+            if (additionalRowCount > 0)
+            {
+                var pageIndex = fullPageCount;
+                _pager.Evict(pageIndex, additionalRowCount * Row.RowSize);
+            }
+            
+            _pager?.Dispose();
         }
     }
 

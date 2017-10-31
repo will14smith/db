@@ -14,7 +14,7 @@ namespace SimpleDatabase.CLI
             _input = input;
             _output = output;
 
-            _table = new Table();
+            _table = new Table(new Pager("test.db"));
         }
 
         public ExitCode Run()
@@ -79,6 +79,7 @@ namespace SimpleDatabase.CLI
         {
             if (input == ".exit")
             {
+                _table.Dispose();
                 return new MetaCommandResponse.Exit(ExitCode.Success);
             }
 
