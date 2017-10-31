@@ -14,7 +14,8 @@ namespace SimpleDatabase.CLI
             _input = input;
             _output = output;
 
-            _table = new Table(new Pager("test.db"));
+            var storage = new FilePagerStorage("test.db");
+            _table = new Table(new Pager(storage));
         }
 
         public ExitCode Run()

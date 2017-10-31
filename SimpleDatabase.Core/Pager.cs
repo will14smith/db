@@ -12,6 +12,48 @@ namespace SimpleDatabase.Core
         void Evict(int index, int pageSize);
     }
 
+    public interface IPagerStorage : IDisposable
+    {
+        int ByteLength { get; }
+
+        Page Read(int index);
+        void Write(Page page, int index, int size);
+    }
+
+    public class FilePagerStorage : IPagerStorage
+    {
+        private readonly FileStream _file;
+
+        public FilePagerStorage(string path)
+        {
+            _file = File.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+        }
+
+        public int ByteLength => (int) _file.Length;
+
+        public Page Read(int index)
+        {
+            var page = new byte[Pager.PageSize];
+
+            _file.Seek(index * Pager.PageSize, SeekOrigin.Begin);
+            // TODO check bytes read
+            _file.Read(page, 0, Pager.PageSize);
+
+            return new Page(page);
+        }
+
+        public void Write(Page page, int index, int size)
+        {
+            _file.Seek(index * Pager.PageSize, SeekOrigin.Begin);
+            _file.Write(page.Data, 0, size);
+        }
+
+        public void Dispose()
+        {
+            _file?.Dispose();
+        }
+    }
+
     public class Pager : IPager
     {
         public const int PageSize = 4096;
@@ -19,15 +61,15 @@ namespace SimpleDatabase.Core
         public const int RowsPerPage = PageSize / Row.RowSize;
         public const int MaxRows = RowsPerPage * MaxPages;
 
-        private readonly FileStream _file;
+        private readonly IPagerStorage _storage;
         private readonly Page[] _pages = new Page[MaxPages];
 
-        public Pager(string path)
+        public Pager(IPagerStorage storage)
         {
-            _file = File.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+            _storage = storage;
         }
 
-        public int RowCount => (int) (_file.Length / Row.RowSize);
+        public int RowCount => _storage.ByteLength / Row.RowSize;
 
         public Page Get(int index)
         {
@@ -38,23 +80,22 @@ namespace SimpleDatabase.Core
 
             if (_pages[index] == null)
             {
-                var page = new byte[PageSize];
 
-                var pageCountInFile = _file.Length / PageSize;
+                var pageCountInStorage = _storage.ByteLength / PageSize;
                 // last page might not be completely full
-                if (_file.Length % PageSize != 0)
+                if (_storage.ByteLength % PageSize != 0)
                 {
-                    pageCountInFile += 1;
+                    pageCountInStorage += 1;
                 }
 
-                if (index < pageCountInFile)
+                if (index < pageCountInStorage)
                 {
-                    _file.Seek(index * PageSize, SeekOrigin.Begin);
-                    // TODO check bytes read
-                    _file.Read(page, 0, PageSize);
+                    _pages[index] = _storage.Read(index);
                 }
-
-                _pages[index] = new Page(page);
+                else
+                {
+                    _pages[index] = new Page(new byte[PageSize]);
+                }
             }
 
             return _pages[index];
@@ -67,8 +108,7 @@ namespace SimpleDatabase.Core
                 return;
             }
 
-            _file.Seek(index * PageSize, SeekOrigin.Begin);
-            _file.Write(_pages[index].Data, 0, pageSize);
+            _storage.Write(_pages[index], index, pageSize);
         }
 
         public void Evict(int index, int pageSize)
@@ -79,7 +119,7 @@ namespace SimpleDatabase.Core
 
         public void Dispose()
         {
-            _file?.Dispose();
+            _storage?.Dispose();
         }
     }
 
