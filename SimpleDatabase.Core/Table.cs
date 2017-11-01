@@ -7,37 +7,42 @@ namespace SimpleDatabase.Core
     public class Table : IDisposable
     {
         private readonly IPager _pager;
-        private int _rowCount;
+
+        public int RowCount { get; private set; }
 
         public Table(IPager pager)
         {
             _pager = pager;
-            _rowCount = pager.RowCount;
+            RowCount = pager.RowCount;
         }
 
         public InsertResult Insert(InsertStatement statement)
         {
-            if (_rowCount >= Pager.MaxRows)
+            if (RowCount >= Pager.MaxRows)
             {
                 return new InsertResult.TableFull();
             }
 
             var row = statement.Row;
-            var rowNumber = _rowCount++;
+            var cursor = this.EndCursor();
 
-            var (page, pageOffset) = GetRowSlot(rowNumber);
+            var (page, pageOffset) = GetRowSlot(cursor);
             row.Serialize(page, pageOffset);
+            RowCount++;
 
-            return new InsertResult.Success(rowNumber);
+            return new InsertResult.Success(cursor.RowNumber);
         }
 
         public SelectResult Select(SelectStatement statement)
         {
+            var cursor = this.StartCursor();
+
             var rows = new List<Row>();
-            for (var i = 0; i < _rowCount; i++)
+            while (!cursor.EndOfTable)
             {
-                var (page, pageOffset) = GetRowSlot(i);
+                var (page, pageOffset) = GetRowSlot(cursor);
                 var row = Row.Deserialize(page, pageOffset);
+                cursor = cursor.Advance();
 
                 rows.Add(row);
             }
@@ -45,12 +50,12 @@ namespace SimpleDatabase.Core
             return new SelectResult.Success(rows);
         }
 
-        private (byte[], int) GetRowSlot(int rowNumber)
+        private (byte[], int) GetRowSlot(Cursor cursor)
         {
-            var pageOffset = rowNumber / Pager.RowsPerPage;
+            var pageOffset = cursor.RowNumber / Pager.RowsPerPage;
             var page = _pager.Get(pageOffset);
 
-            var rowOffset = rowNumber % Pager.RowsPerPage;
+            var rowOffset = cursor.RowNumber % Pager.RowsPerPage;
             var byteOffset = rowOffset * Row.RowSize;
 
             return (page.Data, byteOffset);
@@ -58,7 +63,7 @@ namespace SimpleDatabase.Core
 
         public void Dispose()
         {
-            var fullPageCount = _rowCount / Pager.RowsPerPage;
+            var fullPageCount = RowCount / Pager.RowsPerPage;
 
             for (var i = 0; i < fullPageCount; i++)
             {
@@ -67,7 +72,7 @@ namespace SimpleDatabase.Core
 
             // There may be a partial page to write to the end of the file
             // This should not be needed after we switch to a B-tree
-            var additionalRowCount = _rowCount % Pager.RowsPerPage;
+            var additionalRowCount = RowCount % Pager.RowsPerPage;
             if (additionalRowCount > 0)
             {
                 var pageIndex = fullPageCount;
