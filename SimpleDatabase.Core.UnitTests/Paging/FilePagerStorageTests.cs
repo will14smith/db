@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using SimpleDatabase.Core.Paging;
 using Xunit;
 
@@ -18,44 +17,27 @@ namespace SimpleDatabase.Core.UnitTests.Paging
         [Fact]
         public void WriteThenRead_ShouldReturnOriginalData()
         {
-            var size = Pager.PageSize;
             var page = 1;
-            var data = GetData(size);
+            var data = GetData();
 
             using (var storage = new FilePagerStorage(_file))
             {
-                storage.Write(data, page, size);
+                storage.Write(data, page);
                 var result = storage.Read(page);
 
                 Assert.Equal(data.Data, result.Data);
-            }
-        }
-        [Fact]
-        public void WriteThenRead_WithPartialPage_ShouldReturnOriginalData()
-        {
-            var size = 10;
-            var page = 1;
-            var data = GetData(size);
-
-            using (var storage = new FilePagerStorage(_file))
-            {
-                storage.Write(data, page, size);
-                var result = storage.Read(page);
-
-                Assert.Equal(data.Data, result.Data.Take(size));
             }
         }
 
         [Fact]
         public void SameFileSecondInstance_ShouldReadOriginalData()
         {
-            var size = Pager.PageSize;
             var page = 1;
-            var data = GetData(size);
+            var data = GetData();
 
             using (var storage = new FilePagerStorage(_file))
             {
-                storage.Write(data, page, size);
+                storage.Write(data, page);
             }
             using (var storage = new FilePagerStorage(_file))
             {
@@ -68,15 +50,14 @@ namespace SimpleDatabase.Core.UnitTests.Paging
         [Fact]
         public void ByteLength_ShouldBeFileLength()
         {
-            var size = 10;
             var page = 1;
-            var data = GetData(size);
+            var data = GetData();
 
-            var expectedSize = page * Pager.PageSize + size;
+            var expectedSize = (page + 1) * Pager.PageSize;
 
             using (var storage = new FilePagerStorage(_file))
             {
-                storage.Write(data, page, size);
+                storage.Write(data, page);
 
                 Assert.Equal(expectedSize, storage.ByteLength);
             }
@@ -84,15 +65,14 @@ namespace SimpleDatabase.Core.UnitTests.Paging
         [Fact]
         public void ByteLengthOnSecondInstance_ShouldBeFileLength()
         {
-            var size = 10;
             var page = 1;
-            var data = GetData(size);
+            var data = GetData();
 
-            var expectedSize = page * Pager.PageSize + size;
+            var expectedSize = (page + 1) * Pager.PageSize;
 
             using (var storage = new FilePagerStorage(_file))
             {
-                storage.Write(data, page, size);
+                storage.Write(data, page);
             }
             using (var storage = new FilePagerStorage(_file))
             {
@@ -100,11 +80,11 @@ namespace SimpleDatabase.Core.UnitTests.Paging
             }
         }
 
-        private static Page GetData(int length)
+        private static Page GetData()
         {
-            var page = new byte[length];
+            var page = new byte[Pager.PageSize];
 
-            for (var i = 0; i < length; i++)
+            for (var i = 0; i < Pager.PageSize; i++)
             {
                 page[i] = (byte)i;
             }

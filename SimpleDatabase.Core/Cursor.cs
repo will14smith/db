@@ -4,31 +4,19 @@
     {
         private readonly Table _table;
 
-        public int RowNumber { get; }
-        public bool EndOfTable => _table.RowCount == RowNumber;
+        public int PageNumber { get; }
+        public int CellNumber { get; }
 
-        public Cursor(Table table, int rowNumber)
+        public bool EndOfTable { get; }
+
+        public Cursor(Table table, int pageNumber, int cellNumber, bool endOfTable)
         {
             _table = table;
-            RowNumber = rowNumber;
-        }
 
-        public Cursor Advance()
-        {
-            return new Cursor(_table, RowNumber + 1);
-        }
+            PageNumber = pageNumber;
+            CellNumber = cellNumber;
 
-    }
-
-    public static class TableCursorExtensions
-    {
-        public static Cursor StartCursor(this Table table)
-        {
-            return new Cursor(table, 0);
-        }
-        public static Cursor EndCursor(this Table table)
-        {
-            return new Cursor(table, table.RowCount);
+            EndOfTable = endOfTable;
         }
     }
 }

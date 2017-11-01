@@ -4,9 +4,10 @@ namespace SimpleDatabase.Core.Paging
 {
     public interface IPager : IDisposable
     {
+        int PageCount { get; }
         int RowCount { get; }
 
         Page Get(int index);
-        void Flush(int index, int pageSize);
+        void Flush(int index);
     }
 }

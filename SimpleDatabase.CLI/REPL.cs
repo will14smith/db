@@ -10,12 +10,12 @@ namespace SimpleDatabase.CLI
 
         private readonly Table _table;
 
-        public REPL(IREPLInput input, IREPLOutput output)
+        public REPL(IREPLInput input, IREPLOutput output, string file)
         {
             _input = input;
             _output = output;
 
-            var storage = new FilePagerStorage("test.db");
+            var storage = new FilePagerStorage(file);
             _table = new Table(new Pager(storage));
         }
 

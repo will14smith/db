@@ -24,10 +24,10 @@ namespace SimpleDatabase.Core.Paging
             return new Page(page);
         }
 
-        public void Write(Page page, int index, int size)
+        public void Write(Page page, int index)
         {
             _file.Seek(index * Pager.PageSize, SeekOrigin.Begin);
-            _file.Write(page.Data, 0, size);
+            _file.Write(page.Data, 0, Pager.PageSize);
         }
 
         public void Dispose()

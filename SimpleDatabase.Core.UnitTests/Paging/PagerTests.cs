@@ -1,5 +1,6 @@
 ﻿using Moq;
 using SimpleDatabase.Core.Paging;
+using SimpleDatabase.Core.Trees;
 using Xunit;
 
 namespace SimpleDatabase.Core.UnitTests.Paging
@@ -56,9 +57,9 @@ namespace SimpleDatabase.Core.UnitTests.Paging
             var (pager, storage) = CreatePager(0);
             pager.Get(0);
 
-            pager.Flush(0, Pager.PageSize);
+            pager.Flush(0);
 
-            storage.Verify(x => x.Write(It.IsAny<Page>(), 0, Pager.PageSize), Times.Once);
+            storage.Verify(x => x.Write(It.IsAny<Page>(), 0), Times.Once);
         }
 
         [Fact]
@@ -66,9 +67,21 @@ namespace SimpleDatabase.Core.UnitTests.Paging
         {
             var (pager, storage) = CreatePager(0);
 
-            pager.Flush(0, Pager.PageSize);
+            pager.Flush(0);
 
-            storage.Verify(x => x.Write(It.IsAny<Page>(), It.IsAny<int>(), It.IsAny<int>()), Times.Never);
+            storage.Verify(x => x.Write(It.IsAny<Page>(), It.IsAny<int>()), Times.Never);
+        }
+
+        [Fact]
+        public void Dispose_ShouldFlushAllPagesInMemory()
+        {
+            var (pager, storage) = CreatePager(0);
+            pager.Get(0);
+            pager.Get(1);
+
+            pager.Dispose();
+
+            storage.Verify(x => x.Write(It.IsAny<Page>(), It.IsAny<int>()), Times.Exactly(2));
         }
 
         private (Pager, Mock<IPagerStorage>) CreatePager(int byteLength)

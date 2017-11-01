@@ -2,6 +2,7 @@
 using System.Linq;
 using Moq;
 using SimpleDatabase.Core.Paging;
+using SimpleDatabase.Core.Trees;
 using Xunit;
 
 namespace SimpleDatabase.Core.UnitTests
@@ -9,7 +10,7 @@ namespace SimpleDatabase.Core.UnitTests
     public class TableTests
     {
         [Fact]
-        public void Insert_OneRow_ShouldReturnRowNumber0()
+        public void Insert_OneRow_ShouldReturnId()
         {
             var row = CreateRow();
             var (table, _) = CreateTable();
@@ -17,10 +18,10 @@ namespace SimpleDatabase.Core.UnitTests
             var result = table.Insert(new InsertStatement(row));
 
             var success = Assert.IsType<InsertResult.Success>(result);
-            Assert.Equal(0, success.RowNumber);
+            Assert.Equal(row.Id, success.RowNumber);
         }
         [Fact]
-        public void Insert_SecondRow_ShouldReturnRowNumber1()
+        public void Insert_SecondRow_ShouldReturnId()
         {
             var row = CreateRow();
             var (table, _) = CreateTable();
@@ -29,7 +30,7 @@ namespace SimpleDatabase.Core.UnitTests
             var result = table.Insert(new InsertStatement(row));
 
             var success = Assert.IsType<InsertResult.Success>(result);
-            Assert.Equal(1, success.RowNumber);
+            Assert.Equal(row.Id, success.RowNumber);
 
         }
         [Fact]
@@ -37,7 +38,7 @@ namespace SimpleDatabase.Core.UnitTests
         {
             var row = CreateRow();
             var (table, _) = CreateTable();
-            for (var i = 0; i < Pager.MaxRows; i++)
+            for (var i = 0; i < NodeLayout.LeafNodeMaxCells; i++)
             {
                 table.Insert(new InsertStatement(row));
             }
@@ -65,7 +66,7 @@ namespace SimpleDatabase.Core.UnitTests
         {
             var row = CreateRow();
             var (table, _) = CreateTable();
-            for (var i = 0; i < Pager.MaxRows; i++)
+            for (var i = 0; i < NodeLayout.LeafNodeMaxCells; i++)
             {
                 table.Insert(new InsertStatement(row));
             }
@@ -73,34 +74,17 @@ namespace SimpleDatabase.Core.UnitTests
             var result = table.Select(new SelectStatement());
 
             var success = Assert.IsType<SelectResult.Success>(result);
-            Assert.Equal(Pager.MaxRows, success.Rows.Count);
+            Assert.Equal(NodeLayout.LeafNodeMaxCells, success.Rows.Count);
         }
 
         [Fact]
-        public void Dispose_WithSingleRow_ShouldFlush()
+        public void Dispose_ShouldDisposePager()
         {
-            var row = CreateRow();
             var (table, pager) = CreateTable();
-            table.Insert(new InsertStatement(row));
             
             table.Dispose();
 
-            pager.Verify(x => x.Flush(0, Row.RowSize), Times.Once);
-        }
-        [Fact]
-        public void Dispose_WithMultiplePages_ShouldFlushAllPages()
-        {
-            var row = CreateRow();
-            var (table, pager) = CreateTable();
-            for (var i = 0; i < Pager.RowsPerPage + 1; i++)
-            {
-                table.Insert(new InsertStatement(row));
-            }
-
-            table.Dispose();
-
-            pager.Verify(x => x.Flush(0, Pager.PageSize), Times.Once);
-            pager.Verify(x => x.Flush(1, Row.RowSize), Times.Once);
+            pager.Verify(x => x.Dispose(), Times.Once);
         }
 
         private static (Table, Mock<IPager>) CreateTable()

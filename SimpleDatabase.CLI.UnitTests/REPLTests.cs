@@ -1,10 +1,18 @@
 using System;
+using System.IO;
 using Xunit;
 
 namespace SimpleDatabase.CLI.UnitTests
 {
-    public class REPLTests
+    public class REPLTests : IDisposable
     {
+        private readonly string _file;
+
+        public REPLTests()
+        {
+            _file = Path.GetTempFileName();
+        }
+
         [Theory]
         [InlineData(new[] { ".exit" }, "db >", ExitCode.Success)]
         [InlineData(new[] { ".unknown", ".exit" }, "db > Unrecognized command '.unknown'.\ndb >", ExitCode.Success)]
@@ -14,12 +22,17 @@ namespace SimpleDatabase.CLI.UnitTests
         {
             var fakeOutput = new FakeREPLOutput();
             var fakeInput = new FakeREPLInput(commands);
-            var repl = new REPL(fakeInput, fakeOutput);
+            var repl = new REPL(fakeInput, fakeOutput, _file);
 
             var code = repl.Run();
 
             Assert.Equal(expectedOutput.Replace("\n", Environment.NewLine), fakeOutput.Output.TrimEnd());
             Assert.Equal(expectedCode, code);
+        }
+
+        public void Dispose()
+        {
+            File.Delete(_file);
         }
     }
 }

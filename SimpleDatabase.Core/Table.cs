@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using SimpleDatabase.Core.Paging;
+using SimpleDatabase.Core.Trees;
 
 namespace SimpleDatabase.Core
 {
@@ -8,41 +9,50 @@ namespace SimpleDatabase.Core
     {
         private readonly IPager _pager;
 
-        public int RowCount { get; private set; }
+        public int RootPageNumber { get; }
 
         public Table(IPager pager)
         {
             _pager = pager;
-            RowCount = pager.RowCount;
+
+            RootPageNumber = 0;
+            if (_pager.PageCount == 0)
+            {
+                var rootPage = _pager.Get(RootPageNumber);
+                LeafNode.New(rootPage);
+                _pager.Flush(RootPageNumber);
+            }
         }
 
         public InsertResult Insert(InsertStatement statement)
         {
-            if (RowCount >= Pager.MaxRows)
+            var row = statement.Row;
+            var cursor = EndCursor();
+
+            var page = _pager.Get(cursor.PageNumber);
+            var leaf = LeafNode.Read(page);
+            if (leaf.CellCount >= NodeLayout.LeafNodeMaxCells)
             {
                 return new InsertResult.TableFull();
             }
 
-            var row = statement.Row;
-            var cursor = this.EndCursor();
+            LeafNodeInsert(cursor, row.Id, row);
 
-            var (page, pageOffset) = GetRowSlot(cursor);
-            row.Serialize(page, pageOffset);
-            RowCount++;
-
-            return new InsertResult.Success(cursor.RowNumber);
+            return new InsertResult.Success(row.Id);
         }
 
         public SelectResult Select(SelectStatement statement)
         {
-            var cursor = this.StartCursor();
+            var cursor = StartCursor();
 
             var rows = new List<Row>();
             while (!cursor.EndOfTable)
             {
-                var (page, pageOffset) = GetRowSlot(cursor);
-                var row = Row.Deserialize(page, pageOffset);
-                cursor = cursor.Advance();
+                var page = _pager.Get(cursor.PageNumber);
+                var leaf = LeafNode.Read(page);
+
+                var row = Row.Deserialize(page.Data, leaf.GetCellValueOffset(cursor.CellNumber));
+                cursor = AdvanceCursor(cursor);
 
                 rows.Add(row);
             }
@@ -50,35 +60,65 @@ namespace SimpleDatabase.Core
             return new SelectResult.Success(rows);
         }
 
-        private (byte[], int) GetRowSlot(Cursor cursor)
+
+        private Cursor StartCursor()
         {
-            var pageOffset = cursor.RowNumber / Pager.RowsPerPage;
-            var page = _pager.Get(pageOffset);
+            var page = _pager.Get(RootPageNumber);
+            var leaf = LeafNode.Read(page);
 
-            var rowOffset = cursor.RowNumber % Pager.RowsPerPage;
-            var byteOffset = rowOffset * Row.RowSize;
-
-            return (page.Data, byteOffset);
+            return new Cursor(
+                this,
+                RootPageNumber,
+                0,
+                leaf.CellCount == 0
+            );
         }
+        private Cursor EndCursor()
+        {
+            var page = _pager.Get(RootPageNumber);
+            var leaf = LeafNode.Read(page);
+
+            return new Cursor(
+                this,
+                RootPageNumber,
+                leaf.CellCount,
+                true
+            );
+        }
+
+        private Cursor AdvanceCursor(Cursor cursor)
+        {
+            var pageNumber = cursor.PageNumber;
+            var page = _pager.Get(pageNumber);
+            var leaf = LeafNode.Read(page);
+
+            var cellNumber = cursor.CellNumber + 1;
+
+            return new Cursor(
+                this,
+                pageNumber,
+                cellNumber,
+                cellNumber >= leaf.CellCount
+            );
+        }
+
+        private void LeafNodeInsert(Cursor cursor, int key, Row value)
+        {
+            var page = _pager.Get(cursor.PageNumber);
+            var leaf = LeafNode.Read(page);
+
+            if (leaf.CellCount >= NodeLayout.LeafNodeMaxCells)
+            {
+                throw new NotImplementedException("Split the leaf node");
+            }
+
+            leaf.InsertCell(cursor.CellNumber, key, value);
+            _pager.Flush(cursor.PageNumber);
+        }
+
 
         public void Dispose()
         {
-            var fullPageCount = RowCount / Pager.RowsPerPage;
-
-            for (var i = 0; i < fullPageCount; i++)
-            {
-                _pager.Flush(i, Pager.PageSize);
-            }
-
-            // There may be a partial page to write to the end of the file
-            // This should not be needed after we switch to a B-tree
-            var additionalRowCount = RowCount % Pager.RowsPerPage;
-            if (additionalRowCount > 0)
-            {
-                var pageIndex = fullPageCount;
-                _pager.Flush(pageIndex, additionalRowCount * Row.RowSize);
-            }
-            
             _pager?.Dispose();
         }
     }

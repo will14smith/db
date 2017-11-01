@@ -7,6 +7,6 @@ namespace SimpleDatabase.Core.Paging
         int ByteLength { get; }
 
         Page Read(int index);
-        void Write(Page page, int index, int size);
+        void Write(Page page, int index);
     }
 }
