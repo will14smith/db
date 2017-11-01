@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using SimpleDatabase.Core.Paging;
 
 namespace SimpleDatabase.Core
 {
@@ -61,7 +62,7 @@ namespace SimpleDatabase.Core
 
             for (var i = 0; i < fullPageCount; i++)
             {
-                _pager.Evict(i, Pager.PageSize);
+                _pager.Flush(i, Pager.PageSize);
             }
 
             // There may be a partial page to write to the end of the file
@@ -70,7 +71,7 @@ namespace SimpleDatabase.Core
             if (additionalRowCount > 0)
             {
                 var pageIndex = fullPageCount;
-                _pager.Evict(pageIndex, additionalRowCount * Row.RowSize);
+                _pager.Flush(pageIndex, additionalRowCount * Row.RowSize);
             }
             
             _pager?.Dispose();

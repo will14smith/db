@@ -1,4 +1,5 @@
 ﻿using SimpleDatabase.Core;
+using SimpleDatabase.Core.Paging;
 
 namespace SimpleDatabase.CLI
 {
