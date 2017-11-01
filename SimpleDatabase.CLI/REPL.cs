@@ -8,6 +8,7 @@ namespace SimpleDatabase.CLI
         private readonly IREPLInput _input;
         private readonly IREPLOutput _output;
 
+        private readonly Pager _pager;
         private readonly Table _table;
 
         public REPL(IREPLInput input, IREPLOutput output, string file)
@@ -16,7 +17,8 @@ namespace SimpleDatabase.CLI
             _output = output;
 
             var storage = new FilePagerStorage(file);
-            _table = new Table(new Pager(storage));
+            _pager = new Pager(storage);
+            _table = new Table(_pager);
         }
 
         public ExitCode Run()
@@ -83,6 +85,16 @@ namespace SimpleDatabase.CLI
             {
                 _table.Dispose();
                 return new MetaCommandResponse.Exit(ExitCode.Success);
+            }
+            if (input == ".constants")
+            {
+                MetaCommands.PrintConstants(_output);
+                return new MetaCommandResponse.Success();
+            }
+            if (input == ".btree")
+            {
+                MetaCommands.PrintBTree(_output, _pager, _table.RootPageNumber);
+                return new MetaCommandResponse.Success();
             }
 
             return new MetaCommandResponse.Unrecognised(input);

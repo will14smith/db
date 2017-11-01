@@ -48,6 +48,20 @@ namespace SimpleDatabase.CLI.UnitTests
             "db > Unrecognized keyword at start of 'unknown'.",
             "db >"
         }, ExitCode.Success)]
+        [InlineData(new[]
+        {
+            ".constants",
+            ".exit"
+        }, new[] {
+            "db > Constants:",
+            "RowSize: 291",
+            "CommonNodeHeaderSize: 6",
+            "LeafNodeHeaderSize: 10",
+            "LeafNodeCellSize: 295",
+            "LeafNodeSpaceForCells: 4086",
+            "LeafNodeMaxCells: 13",
+            "db >",
+        }, ExitCode.Success)]
         public void RunningCommands_HasCorrectSnapshot(string[] commands, string[] expectedOutput, ExitCode expectedCode)
         {
             var fakeOutput = new FakeREPLOutput();
