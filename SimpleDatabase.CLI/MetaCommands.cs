@@ -32,7 +32,7 @@ namespace SimpleDatabase.CLI
             output.WriteLine("leaf (size {0})", numCells);
             for (var i = 0; i < numCells; i++)
             {
-                var (key, _) = node.GetCell(i);
+                var key = node.GetCellKey(i);
                 output.WriteLine("  - {0} : {1}", i, key);
             }
         }

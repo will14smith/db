@@ -1,9 +1,10 @@
-﻿using SimpleDatabase.Core;
+﻿using System;
+using SimpleDatabase.Core;
 using SimpleDatabase.Core.Paging;
 
 namespace SimpleDatabase.CLI
 {
-    public class REPL
+    public class REPL : IDisposable
     {
         private readonly IREPLInput _input;
         private readonly IREPLOutput _output;
@@ -147,6 +148,9 @@ namespace SimpleDatabase.CLI
                 case InsertResult.Success _:
                     _output.WriteLine("Executed.");
                     break;
+                case InsertResult.DuplicateKey _:
+                    _output.WriteLine("Error: Duplicate key.");
+                    break;
                 case InsertResult.TableFull _:
                     _output.WriteLine("Error: Table full.");
                     break;
@@ -169,6 +173,11 @@ namespace SimpleDatabase.CLI
             }
 
             _table.Select(select);
+        }
+
+        public void Dispose()
+        {
+            _table?.Dispose();
         }
     }
 }

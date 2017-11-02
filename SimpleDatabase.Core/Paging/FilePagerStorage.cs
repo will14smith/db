@@ -4,7 +4,7 @@ namespace SimpleDatabase.Core.Paging
 {
     public class FilePagerStorage : IPagerStorage
     {
-        private readonly FileStream _file;
+        private FileStream _file;
 
         public FilePagerStorage(string path)
         {
@@ -39,6 +39,7 @@ namespace SimpleDatabase.Core.Paging
 
             _file.Flush();
             _file.Dispose();
+            _file = null;
         }
     }
 }

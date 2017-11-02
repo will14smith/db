@@ -31,28 +31,35 @@ namespace SimpleDatabase.Core.Trees
             protected set => BitConverter.GetBytes(value).CopyTo(Page.Data, NodeLayout.LeafNodeCellCountOffset);
         }
 
+        public int GetCellOffset(int index)
+        {
+            return NodeLayout.LeafNodeHeaderSize + index * NodeLayout.LeafNodeCellSize;
+        }
         public int GetCellKeyOffset(int index)
         {
-            return NodeLayout.LeafNodeHeaderSize + index * NodeLayout.LeafNodeCellCountSize;
+            return GetCellOffset(index);
         }
         public int GetCellValueOffset(int index)
         {
-            return NodeLayout.LeafNodeHeaderSize + index * NodeLayout.LeafNodeCellCountSize + NodeLayout.LeafNodeKeySize;
+            return GetCellOffset(index) + NodeLayout.LeafNodeKeySize;
         }
 
-        public (int key, int valueOffset) GetCell(int cellNumber)
+        public int GetCellKey(int cellNumber)
         {
-            var key = BitConverter.ToInt32(Page.Data, GetCellKeyOffset(cellNumber));
-            var valueOffset = GetCellValueOffset(cellNumber);
-
-            return (key, valueOffset);
+            return BitConverter.ToInt32(Page.Data, GetCellKeyOffset(cellNumber));
         }
 
         public void InsertCell(int cellNumber, int key, Row value)
         {
             if (cellNumber < CellCount)
             {
-                throw new NotImplementedException("Move cells after the cursor");
+                for (var i = CellCount; i > cellNumber; i--)
+                {
+                    Array.Copy(
+                        Page.Data, GetCellOffset(i - 1),
+                        Page.Data, GetCellOffset(i),
+                        NodeLayout.LeafNodeCellSize);
+                }
             }
 
             CellCount += 1;
@@ -73,8 +80,13 @@ namespace SimpleDatabase.Core.Trees
 
         public NodeType Type
         {
-            get => (NodeType)Page.Data[NodeLayout.NodeTypeOffset];
+            get => GetType(Page);
             protected set => Page.Data[NodeLayout.NodeTypeOffset] = (byte)value;
+        }
+
+        public static NodeType GetType(Page page)
+        {
+            return (NodeType)page.Data[NodeLayout.NodeTypeOffset];
         }
     }
 }

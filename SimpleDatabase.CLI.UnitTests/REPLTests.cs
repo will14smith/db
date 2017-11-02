@@ -80,18 +80,21 @@ namespace SimpleDatabase.CLI.UnitTests
             "db > Executed.",
             "db > Tree:",
             "leaf (size 3)",
-            "  - 0 : 3",
-            "  - 1 : 1",
-            "  - 2 : 2",
+            "  - 0 : 1",
+            "  - 1 : 2",
+            "  - 2 : 3",
             "db >",
         }, ExitCode.Success)]
         public void RunningCommands_HasCorrectSnapshot(string[] commands, string[] expectedOutput, ExitCode expectedCode)
         {
             var fakeOutput = new FakeREPLOutput();
             var fakeInput = new FakeREPLInput(commands);
-            var repl = new REPL(fakeInput, fakeOutput, _file);
 
-            var code = repl.Run();
+            ExitCode code;
+            using (var repl = new REPL(fakeInput, fakeOutput, _file))
+            {
+                code = repl.Run();
+            }
 
             EqualWithDiff(expectedOutput, fakeOutput.Output.Split(Environment.NewLine).Select(x => x.TrimEnd()));
             Assert.Equal(expectedCode, code);

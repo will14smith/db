@@ -75,6 +75,7 @@ namespace SimpleDatabase.Core.Paging
             for (var i = 0; i < PageCount; i++)
             {
                 Flush(i);
+                _pages[i] = null;
             }
 
             _storage?.Dispose();

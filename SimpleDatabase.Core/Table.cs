@@ -27,10 +27,23 @@ namespace SimpleDatabase.Core
         public InsertResult Insert(InsertStatement statement)
         {
             var row = statement.Row;
-            var cursor = EndCursor();
+
+            var keyToInsert = row.Id;
+            var cursor = FindCursor(keyToInsert);
 
             var page = _pager.Get(cursor.PageNumber);
             var leaf = LeafNode.Read(page);
+
+            if (cursor.CellNumber < leaf.CellCount)
+            {
+                var keyAtIndex = leaf.GetCellKey(cursor.CellNumber);
+                if (keyAtIndex == keyToInsert)
+                {
+                    return new InsertResult.DuplicateKey(keyToInsert);
+                }
+            }
+
+
             if (leaf.CellCount >= NodeLayout.LeafNodeMaxCells)
             {
                 return new InsertResult.TableFull();
@@ -73,18 +86,22 @@ namespace SimpleDatabase.Core
                 leaf.CellCount == 0
             );
         }
-        private Cursor EndCursor()
-        {
-            var page = _pager.Get(RootPageNumber);
-            var leaf = LeafNode.Read(page);
 
-            return new Cursor(
-                this,
-                RootPageNumber,
-                leaf.CellCount,
-                true
-            );
+        private Cursor FindCursor(int key)
+        {
+            var rootPage = _pager.Get(RootPageNumber);
+            var rootNodeType = Node.GetType(rootPage);
+
+            if (rootNodeType == NodeType.Leaf)
+            {
+                return LeafNodeFind(RootPageNumber, key);
+            }
+            else
+            {
+                throw new NotImplementedException("Searching an internal node");
+            }
         }
+
 
         private Cursor AdvanceCursor(Cursor cursor)
         {
@@ -102,6 +119,41 @@ namespace SimpleDatabase.Core
             );
         }
 
+        private Cursor LeafNodeFind(int pageNumber, int key)
+        {
+            var page = _pager.Get(pageNumber);
+            var node = LeafNode.Read(page);
+
+            var minIndex = 0;
+            var onePastMaxIndex = node.CellCount;
+            while (onePastMaxIndex != minIndex)
+            {
+                var index = (minIndex + onePastMaxIndex) / 2;
+                var keyAtIndex = node.GetCellKey(index);
+                if (key == keyAtIndex)
+                {
+                    minIndex = index;
+                    break;
+                }
+
+                if (key < keyAtIndex)
+                {
+                    onePastMaxIndex = index;
+                }
+                else
+                {
+                    minIndex = index + 1;
+                }
+            }
+            
+            return new Cursor(
+                this,
+                pageNumber,
+                minIndex,
+                minIndex >= node.CellCount
+            );
+        }
+
         private void LeafNodeInsert(Cursor cursor, int key, Row value)
         {
             var page = _pager.Get(cursor.PageNumber);
@@ -115,7 +167,6 @@ namespace SimpleDatabase.Core
             leaf.InsertCell(cursor.CellNumber, key, value);
             _pager.Flush(cursor.PageNumber);
         }
-
 
         public void Dispose()
         {
@@ -137,6 +188,16 @@ namespace SimpleDatabase.Core
 
         public class TableFull : InsertResult
         {
+        }
+
+        public class DuplicateKey : InsertResult
+        {
+            public int Key { get; }
+
+            public DuplicateKey(int key)
+            {
+                Key = key;
+            }
         }
     }
 
