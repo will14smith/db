@@ -1,6 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using DiffPlex;
+using DiffPlex.DiffBuilder;
+using DiffPlex.DiffBuilder.Model;
 using Xunit;
 
 namespace SimpleDatabase.CLI.UnitTests
@@ -62,6 +67,24 @@ namespace SimpleDatabase.CLI.UnitTests
             "LeafNodeMaxCells: 13",
             "db >",
         }, ExitCode.Success)]
+        [InlineData(new[]
+        {
+            "insert 3 a b",
+            "insert 1 a b",
+            "insert 2 a b",
+            ".btree",
+            ".exit"
+        }, new[] {
+            "db > Executed.",
+            "db > Executed.",
+            "db > Executed.",
+            "db > Tree:",
+            "leaf (size 3)",
+            "  - 0 : 3",
+            "  - 1 : 1",
+            "  - 2 : 2",
+            "db >",
+        }, ExitCode.Success)]
         public void RunningCommands_HasCorrectSnapshot(string[] commands, string[] expectedOutput, ExitCode expectedCode)
         {
             var fakeOutput = new FakeREPLOutput();
@@ -70,8 +93,39 @@ namespace SimpleDatabase.CLI.UnitTests
 
             var code = repl.Run();
 
-            Assert.Equal(expectedOutput, fakeOutput.Output.Split(Environment.NewLine).Select(x => x.TrimEnd()));
+            EqualWithDiff(expectedOutput, fakeOutput.Output.Split(Environment.NewLine).Select(x => x.TrimEnd()));
             Assert.Equal(expectedCode, code);
+        }
+
+        private void EqualWithDiff(IEnumerable<string> expected, IEnumerable<string> actual)
+        {
+            var diffBuilder = new InlineDiffBuilder(new Differ());
+            var diff = diffBuilder.BuildDiffModel(string.Join(Environment.NewLine, expected), string.Join(Environment.NewLine, actual));
+
+            var output = new StringBuilder();
+
+            foreach (var line in diff.Lines)
+            {
+                switch (line.Type)
+                {
+                    case ChangeType.Inserted:
+                        output.Append("+ ");
+                        break;
+                    case ChangeType.Deleted:
+                        output.Append("- ");
+                        break;
+                    default:
+                        output.Append("  ");
+                        break;
+                }
+
+                output.AppendLine(line.Text);
+            }
+
+            if (diff.Lines.Any(x => x.Type != ChangeType.Unchanged))
+            {
+                Assert.True(false, output.ToString());
+            }
         }
 
         public void Dispose()

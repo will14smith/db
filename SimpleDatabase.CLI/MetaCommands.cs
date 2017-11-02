@@ -20,7 +20,21 @@ namespace SimpleDatabase.CLI
 
         public static void PrintBTree(IREPLOutput output, Pager pager, int rootPageNumber)
         {
-            throw new System.NotImplementedException();
+            output.WriteLine("Tree:");
+
+            var page = pager.Get(rootPageNumber);
+            PrintLeafNode(output, LeafNode.Read(page));
+        }
+
+        private static void PrintLeafNode(IREPLOutput output, LeafNode node)
+        {
+            var numCells = node.CellCount;
+            output.WriteLine("leaf (size {0})", numCells);
+            for (var i = 0; i < numCells; i++)
+            {
+                var (key, _) = node.GetCell(i);
+                output.WriteLine("  - {0} : {1}", i, key);
+            }
         }
     }
 }

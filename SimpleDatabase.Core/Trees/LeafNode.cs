@@ -40,6 +40,14 @@ namespace SimpleDatabase.Core.Trees
             return NodeLayout.LeafNodeHeaderSize + index * NodeLayout.LeafNodeCellCountSize + NodeLayout.LeafNodeKeySize;
         }
 
+        public (int key, int valueOffset) GetCell(int cellNumber)
+        {
+            var key = BitConverter.ToInt32(Page.Data, GetCellKeyOffset(cellNumber));
+            var valueOffset = GetCellValueOffset(cellNumber);
+
+            return (key, valueOffset);
+        }
+
         public void InsertCell(int cellNumber, int key, Row value)
         {
             if (cellNumber < CellCount)
