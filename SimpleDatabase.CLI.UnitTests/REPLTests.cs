@@ -85,6 +85,19 @@ namespace SimpleDatabase.CLI.UnitTests
             "  - 2 : 3",
             "db >",
         }, ExitCode.Success)]
+        [InlineData(new[]
+        {
+            "insert 1 a b",
+            "insert 1 a b",
+            "select",
+            ".exit"
+        }, new[] {
+            "db > Executed.",
+            "db > Error: Duplicate key.",
+            "db > (1, a, b)",
+            "Executed.",
+            "db >",
+        }, ExitCode.Success)]
         public void RunningCommands_HasCorrectSnapshot(string[] commands, string[] expectedOutput, ExitCode expectedCode)
         {
             var fakeOutput = new FakeREPLOutput();
