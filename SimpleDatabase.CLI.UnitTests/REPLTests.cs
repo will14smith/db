@@ -12,52 +12,62 @@ namespace SimpleDatabase.CLI.UnitTests
 {
     public class REPLTests : IDisposable
     {
-        private readonly string _file;
-
         public REPLTests()
         {
             _file = Path.GetTempFileName();
         }
 
+        public void Dispose()
+        {
+            File.Delete(_file);
+        }
+
+        private readonly string _file;
+
         [Theory]
         [InlineData(new[]
         {
             ".exit"
-        }, new[] {
+        }, new[]
+        {
             "db >"
-        }, ExitCode.Success)]
+        }, 0, ExitCode.Success)]
         [InlineData(new[]
         {
             ".unknown",
             ".exit"
-        }, new[] {
+        }, new[]
+        {
             "db > Unrecognized command '.unknown'.",
             "db >"
-        }, ExitCode.Success)]
+        }, 0, ExitCode.Success)]
         [InlineData(new[]
         {
             "insert 0 a b",
             "select",
             ".exit"
-        }, new[] {
+        }, new[]
+        {
             "db > Executed.",
             "db > (0, a, b)",
             "Executed.",
             "db >"
-        }, ExitCode.Success)]
+        }, 0, ExitCode.Success)]
         [InlineData(new[]
         {
             "unknown",
             ".exit"
-        }, new[] {
+        }, new[]
+        {
             "db > Unrecognized keyword at start of 'unknown'.",
             "db >"
-        }, ExitCode.Success)]
+        }, 0, ExitCode.Success)]
         [InlineData(new[]
         {
             ".constants",
             ".exit"
-        }, new[] {
+        }, new[]
+        {
             "db > Constants:",
             "RowSize: 291",
             "CommonNodeHeaderSize: 6",
@@ -65,8 +75,8 @@ namespace SimpleDatabase.CLI.UnitTests
             "LeafNodeCellSize: 295",
             "LeafNodeSpaceForCells: 4086",
             "LeafNodeMaxCells: 13",
-            "db >",
-        }, ExitCode.Success)]
+            "db >"
+        }, 0, ExitCode.Success)]
         [InlineData(new[]
         {
             "insert 3 a b",
@@ -74,31 +84,33 @@ namespace SimpleDatabase.CLI.UnitTests
             "insert 2 a b",
             ".btree",
             ".exit"
-        }, new[] {
+        }, new[]
+        {
             "db > Executed.",
             "db > Executed.",
             "db > Executed.",
             "db > Tree:",
-            "leaf (size 3)",
-            "  - 0 : 1",
-            "  - 1 : 2",
-            "  - 2 : 3",
-            "db >",
-        }, ExitCode.Success)]
+            "- leaf (size 3)",
+            "  - 1",
+            "  - 2",
+            "  - 3",
+            "db >"
+        }, 0, ExitCode.Success)]
         [InlineData(new[]
         {
             "insert 1 a b",
             "insert 1 a b",
             "select",
             ".exit"
-        }, new[] {
+        }, new[]
+        {
             "db > Executed.",
             "db > Error: Duplicate key.",
             "db > (1, a, b)",
             "Executed.",
-            "db >",
-        }, ExitCode.Success)]
-        public void RunningCommands_HasCorrectSnapshot(string[] commands, string[] expectedOutput, ExitCode expectedCode)
+            "db >"
+        }, 0, ExitCode.Success)]
+        public void RunningCommands_HasCorrectSnapshot(string[] commands, string[] expectedOutput, int outputOffset, ExitCode expectedCode)
         {
             var fakeOutput = new FakeREPLOutput();
             var fakeInput = new FakeREPLInput(commands);
@@ -109,7 +121,7 @@ namespace SimpleDatabase.CLI.UnitTests
                 code = repl.Run();
             }
 
-            EqualWithDiff(expectedOutput, fakeOutput.Output.Split(Environment.NewLine).Select(x => x.TrimEnd()));
+            EqualWithDiff(expectedOutput, fakeOutput.Output.Split(Environment.NewLine).Skip(outputOffset).Select(x => x.TrimEnd()));
             Assert.Equal(expectedCode, code);
         }
 
@@ -139,14 +151,43 @@ namespace SimpleDatabase.CLI.UnitTests
             }
 
             if (diff.Lines.Any(x => x.Type != ChangeType.Unchanged))
-            {
                 Assert.True(false, output.ToString());
-            }
         }
 
-        public void Dispose()
+        [Fact]
+        public void PrintingInternalNodes()
         {
-            File.Delete(_file);
+            var commands = new string[16];
+            for (var i = 0; i < 14; i++)
+                commands[i] = $"insert {i} user{i} person{i}@example.com";
+            commands[14] = ".btree";
+            commands[15] = ".exit";
+
+            var outputs = new[]
+            {
+                "db > Tree:",
+                "- internal (size 1)",
+                "  - leaf (size 7)",
+                "    - 0",
+                "    - 1",
+                "    - 2",
+                "    - 3",
+                "    - 4",
+                "    - 5",
+                "    - 6",
+                "- key 6",
+                "  - leaf (size 7)",
+                "    - 7",
+                "    - 8",
+                "    - 9",
+                "    - 10",
+                "    - 11",
+                "    - 12",
+                "    - 13",
+                "db >"
+            };
+            
+            RunningCommands_HasCorrectSnapshot(commands, outputs, 14, ExitCode.Success);
         }
     }
 }

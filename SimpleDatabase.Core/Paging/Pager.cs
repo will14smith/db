@@ -70,6 +70,13 @@ namespace SimpleDatabase.Core.Paging
             _storage.Write(_pages[index], index);
         }
 
+        public (Page, int) GetUnusedPage()
+        {
+            // Allocate a new page at the end of the table since we don't support deleting yet
+            var unusedIndex = PageCount;
+            return (Get(unusedIndex), unusedIndex);
+        }
+
         public void Dispose()
         {
             for (var i = 0; i < PageCount; i++)

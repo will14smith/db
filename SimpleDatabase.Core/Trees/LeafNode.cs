@@ -11,24 +11,29 @@ namespace SimpleDatabase.Core.Trees
 
         public static LeafNode New(Page page)
         {
-            var node = new LeafNode(page)
+            return new LeafNode(page)
             {
                 Type = NodeType.Leaf,
+                IsRoot = false,
                 CellCount = 0
             };
-
-            return node;
         }
 
-        public static LeafNode Read(Page page)
+        public new static LeafNode Read(Page page)
         {
+            var type = GetType(page);
+            if (type != NodeType.Leaf)
+            {
+                throw new InvalidOperationException($"Tried to read a {NodeType.Leaf} node but found a {type} node instead");
+            }
+
             return new LeafNode(page);
         }
 
         public int CellCount
         {
             get => BitConverter.ToInt32(Page.Data, NodeLayout.LeafNodeCellCountOffset);
-            protected set => BitConverter.GetBytes(value).CopyTo(Page.Data, NodeLayout.LeafNodeCellCountOffset);
+            set => BitConverter.GetBytes(value).CopyTo(Page.Data, NodeLayout.LeafNodeCellCountOffset);
         }
 
         public int GetCellOffset(int index)
@@ -55,38 +60,27 @@ namespace SimpleDatabase.Core.Trees
             {
                 for (var i = CellCount; i > cellNumber; i--)
                 {
-                    Array.Copy(
-                        Page.Data, GetCellOffset(i - 1),
-                        Page.Data, GetCellOffset(i),
-                        NodeLayout.LeafNodeCellSize);
+                    CopyCell(this, i - 1, i);
                 }
             }
 
             CellCount += 1;
 
+            SetCell(cellNumber, key, value);
+        }
+
+        public void SetCell(int cellNumber, int key, Row value)
+        {
             BitConverter.GetBytes(key).CopyTo(Page.Data, GetCellKeyOffset(cellNumber));
             value.Serialize(Page.Data, GetCellValueOffset(cellNumber));
         }
-    }
 
-    public abstract class Node
-    {
-        protected readonly Page Page;
-
-        protected Node(Page page)
+        public void CopyCell(LeafNode source, int sourceCell, int destinationCell)
         {
-            Page = page;
-        }
-
-        public NodeType Type
-        {
-            get => GetType(Page);
-            protected set => Page.Data[NodeLayout.NodeTypeOffset] = (byte)value;
-        }
-
-        public static NodeType GetType(Page page)
-        {
-            return (NodeType)page.Data[NodeLayout.NodeTypeOffset];
+            Array.Copy(
+                source.Page.Data, GetCellOffset(sourceCell),
+                Page.Data, GetCellOffset(destinationCell),
+                NodeLayout.LeafNodeCellSize);
         }
     }
 }

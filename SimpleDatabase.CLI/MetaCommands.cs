@@ -1,4 +1,5 @@
-﻿using SimpleDatabase.Core;
+﻿using System;
+using SimpleDatabase.Core;
 using SimpleDatabase.Core.Paging;
 using SimpleDatabase.Core.Trees;
 
@@ -22,19 +23,44 @@ namespace SimpleDatabase.CLI
         {
             output.WriteLine("Tree:");
 
-            var page = pager.Get(rootPageNumber);
-            PrintLeafNode(output, LeafNode.Read(page));
+            PrintNode(output, pager, rootPageNumber, 0);
         }
 
-        private static void PrintLeafNode(IREPLOutput output, LeafNode node)
+        private static void PrintNode(IREPLOutput output, Pager pager, int pageNumber, int level)
         {
-            var numCells = node.CellCount;
-            output.WriteLine("leaf (size {0})", numCells);
-            for (var i = 0; i < numCells; i++)
+            var page = pager.Get(pageNumber);
+            var node = Node.Read(page);
+
+            switch (node)
             {
-                var key = node.GetCellKey(i);
-                output.WriteLine("  - {0} : {1}", i, key);
+                case LeafNode leafNode:
+                    output.Indent(level);
+                    output.WriteLine("- leaf (size {0})", leafNode.CellCount);
+
+                    for (var i = 0; i < leafNode.CellCount; i++)
+                    {
+                        output.Indent(level + 1);
+                        output.WriteLine("- {0}", leafNode.GetCellKey(i));
+                    }
+                    break;
+                case InternalNode internalNode:
+                    output.Indent(level);
+                    output.WriteLine("- internal (size {0})", internalNode.KeyCount);
+
+                    for (var i = 0; i < internalNode.KeyCount; i++)
+                    {
+                        PrintNode(output, pager, internalNode.GetChild(i), level + 1);
+
+                        output.Indent(level);
+                        output.WriteLine("- key {0}", internalNode.GetKey(i));
+                    }
+
+                    PrintNode(output, pager, internalNode.RightChild, level + 1);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
+
         }
     }
 }
