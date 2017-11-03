@@ -157,11 +157,12 @@ namespace SimpleDatabase.CLI.UnitTests
         [Fact]
         public void PrintingInternalNodes()
         {
-            var commands = new string[16];
+            var commands = new string[17];
             for (var i = 0; i < 14; i++)
                 commands[i] = $"insert {i} user{i} person{i}@example.com";
             commands[14] = ".btree";
-            commands[15] = ".exit";
+            commands[15] = "insert 14 user14 person14@example.com";
+            commands[16] = ".exit";
 
             var outputs = new[]
             {
@@ -184,6 +185,7 @@ namespace SimpleDatabase.CLI.UnitTests
                 "    - 11",
                 "    - 12",
                 "    - 13",
+                "db > Executed.",
                 "db >"
             };
             

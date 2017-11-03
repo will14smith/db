@@ -84,19 +84,23 @@ namespace SimpleDatabase.Core
 
         private Cursor FindCursor(int key)
         {
-            var rootPage = _pager.Get(RootPageNumber);
-            var rootNodeType = Node.GetType(rootPage);
+            return FindCursor(RootPageNumber, key);
+        }
+        private Cursor FindCursor(int pageNumber, int key)
+        {
+            var page = _pager.Get(pageNumber);
+            var node = Node.Read(page);
 
-            if (rootNodeType == NodeType.Leaf)
+            switch (node)
             {
-                return LeafNodeFind(RootPageNumber, key);
-            }
-            else
-            {
-                throw new NotImplementedException("Searching an internal node");
+                case LeafNode leafNode:
+                    return LeafNodeFind(leafNode, pageNumber, key);
+                case InternalNode internalNode:
+                    return InternalNodeFind(internalNode, key);
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
-
 
         private Cursor AdvanceCursor(Cursor cursor)
         {
@@ -114,11 +118,8 @@ namespace SimpleDatabase.Core
             );
         }
 
-        private Cursor LeafNodeFind(int pageNumber, int key)
+        private Cursor LeafNodeFind(LeafNode node, int pageNumber, int key)
         {
-            var page = _pager.Get(pageNumber);
-            var node = LeafNode.Read(page);
-
             var minIndex = 0;
             var onePastMaxIndex = node.CellCount;
             while (onePastMaxIndex != minIndex)
@@ -147,6 +148,30 @@ namespace SimpleDatabase.Core
                 minIndex,
                 minIndex >= node.CellCount
             );
+        }
+
+        private Cursor InternalNodeFind(InternalNode node, int key)
+        {
+            // Binary search to find index of child to search
+            var minIndex = 0;
+            var maxIndex = node.KeyCount; // there is one more child than key
+
+            while (minIndex != maxIndex)
+            {
+                var index = (minIndex + maxIndex) / 2;
+                var keyToRight = node.GetKey(index);
+                if (keyToRight >= key)
+                {
+                    maxIndex = index;
+                }
+                else
+                {
+                    minIndex = index + 1;
+                }
+            }
+
+            var childPageNumber = node.GetChild(minIndex);
+            return FindCursor(childPageNumber, key);
         }
 
         private void LeafNodeInsert(Cursor cursor, int key, Row value)
