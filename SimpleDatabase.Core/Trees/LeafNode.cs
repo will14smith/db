@@ -16,6 +16,7 @@ namespace SimpleDatabase.Core.Trees
                 Type = NodeType.Leaf,
                 IsRoot = false,
                 CellCount = 0
+                NextLeaf = 0,
             };
         }
 
@@ -34,6 +35,11 @@ namespace SimpleDatabase.Core.Trees
         {
             get => BitConverter.ToInt32(Page.Data, NodeLayout.LeafNodeCellCountOffset);
             set => BitConverter.GetBytes(value).CopyTo(Page.Data, NodeLayout.LeafNodeCellCountOffset);
+        }
+        public int NextLeaf
+        {
+            get => BitConverter.ToInt32(Page.Data, NodeLayout.LeafNodeNextLeafOffset);
+            set => BitConverter.GetBytes(value).CopyTo(Page.Data, NodeLayout.LeafNodeNextLeafOffset);
         }
 
         public int GetCellOffset(int index)

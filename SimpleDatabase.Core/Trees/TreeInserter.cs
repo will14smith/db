@@ -41,6 +41,9 @@ namespace SimpleDatabase.Core.Trees
             var (newPage, newPageNum) = _pager.GetUnusedPage();
             var newNode = LeafNode.New(newPage);
 
+            newNode.NextLeaf = oldNode.NextLeaf;
+            oldNode.NextLeaf = newPageNum;
+
             /*
              * All existing keys plus new key should should be divided
              * evenly between old (left) and new (right) nodes.

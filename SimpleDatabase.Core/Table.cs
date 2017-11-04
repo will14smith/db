@@ -51,7 +51,9 @@ namespace SimpleDatabase.Core
 
         public SelectResult Select(SelectStatement statement)
         {
-            var cursor = StartCursor();
+            var traverser = new TreeTraverser(this, _pager);
+            
+            var cursor = traverser.StartCursor();
 
             var rows = new List<Row>();
             while (!cursor.EndOfTable)
@@ -60,44 +62,17 @@ namespace SimpleDatabase.Core
                 var leaf = LeafNode.Read(page);
 
                 var row = Row.Deserialize(page.Data, leaf.GetCellValueOffset(cursor.CellNumber));
-                cursor = AdvanceCursor(cursor);
+                cursor = traverser.AdvanceCursor(cursor);
 
                 rows.Add(row);
             }
 
             return new SelectResult.Success(rows);
         }
-        
-        private Cursor StartCursor()
-        {
-            var page = _pager.Get(RootPageNumber);
-            var leaf = LeafNode.Read(page);
-
-            return new Cursor(
-                RootPageNumber,
-                0,
-                leaf.CellCount == 0
-            );
-        }
 
         private Cursor FindCursor(int key)
         {
-            return new TreeSearcher(_pager).FindCursor(RootPageNumber, key);
-        }
-        
-        private Cursor AdvanceCursor(Cursor cursor)
-        {
-            var pageNumber = cursor.PageNumber;
-            var page = _pager.Get(pageNumber);
-            var leaf = LeafNode.Read(page);
-
-            var cellNumber = cursor.CellNumber + 1;
-
-            return new Cursor(
-                pageNumber,
-                cellNumber,
-                cellNumber >= leaf.CellCount
-            );
+            return new TreeKeySearcher(_pager, key).FindCursor(RootPageNumber);
         }
 
         public void Dispose()

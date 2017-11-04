@@ -71,9 +71,9 @@ namespace SimpleDatabase.CLI.UnitTests
             "db > Constants:",
             "RowSize: 291",
             "CommonNodeHeaderSize: 6",
-            "LeafNodeHeaderSize: 10",
+            "LeafNodeHeaderSize: 14",
             "LeafNodeCellSize: 295",
-            "LeafNodeSpaceForCells: 4086",
+            "LeafNodeSpaceForCells: 4082",
             "LeafNodeMaxCells: 13",
             "db >"
         }, 0, ExitCode.Success)]
@@ -98,6 +98,21 @@ namespace SimpleDatabase.CLI.UnitTests
         }, 0, ExitCode.Success)]
         [InlineData(new[]
         {
+            "insert 3 a b",
+            "insert 1 a b",
+            "insert 2 a b",
+            "select",
+            ".exit"
+        }, new[]
+        {
+            "db > (1, a, b)",
+            "(2, a, b)",
+            "(3, a, b)",
+            "Executed.",
+            "db >"
+        }, 3, ExitCode.Success)]
+        [InlineData(new[]
+        {
             "insert 1 a b",
             "insert 1 a b",
             "select",
@@ -110,7 +125,7 @@ namespace SimpleDatabase.CLI.UnitTests
             "Executed.",
             "db >"
         }, 0, ExitCode.Success)]
-        public void RunningCommands_HasCorrectSnapshot(string[] commands, string[] expectedOutput, int outputOffset, ExitCode expectedCode)
+        public void RunningCommands_HasCorrectSnapshot(IReadOnlyList<string> commands, IReadOnlyCollection<string> expectedOutput, int outputOffset, ExitCode expectedCode)
         {
             var fakeOutput = new FakeREPLOutput();
             var fakeInput = new FakeREPLInput(commands);
@@ -188,7 +203,25 @@ namespace SimpleDatabase.CLI.UnitTests
                 "db > Executed.",
                 "db >"
             };
-            
+
+            RunningCommands_HasCorrectSnapshot(commands, outputs, 14, ExitCode.Success);
+        }
+
+        [Fact]
+        public void SelectingInternalNodes()
+        {
+            var commands = new string[16];
+            var outputs = new List<string>();
+            for (var i = 0; i < 14; i++)
+            {
+                commands[i] = $"insert {i} user{i} person{i}@example.com";
+                outputs.Add((i == 0 ? "db > " : "") + $"({i}, user{i}, person{i}@example.com)");
+            }
+            commands[14] = "select";
+            commands[15] = ".exit";
+            outputs.Add("Executed.");
+            outputs.Add("db >");
+
             RunningCommands_HasCorrectSnapshot(commands, outputs, 14, ExitCode.Success);
         }
     }

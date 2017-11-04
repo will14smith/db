@@ -7,20 +7,22 @@ namespace SimpleDatabase.Core.Trees
         // Common Node Header
         public const int NodeTypeSize = sizeof(NodeType);
         public const int IsRootSize = sizeof(bool);
-        public const int ParentPointer = sizeof(int);
+        public const int ParentPointerSize = sizeof(int);
 
         public const int NodeTypeOffset = 0;
         public const int IsRootOffset = NodeTypeOffset + NodeTypeSize;
         public const int ParentPointerOffset = IsRootOffset + IsRootSize;
 
-        public const int CommonNodeHeaderSize = NodeTypeSize + IsRootSize + ParentPointer;
+        public const int CommonNodeHeaderSize = NodeTypeSize + IsRootSize + ParentPointerSize;
 
         // Leaf Node Header
         public const int LeafNodeCellCountSize = sizeof(int);
+        public const int LeafNodeNextLeafSize = sizeof(int);
 
         public const int LeafNodeCellCountOffset = CommonNodeHeaderSize;
+        public const int LeafNodeNextLeafOffset = LeafNodeCellCountOffset + LeafNodeCellCountSize;
 
-        public const int LeafNodeHeaderSize = CommonNodeHeaderSize + LeafNodeCellCountSize;
+        public const int LeafNodeHeaderSize = CommonNodeHeaderSize + LeafNodeCellCountSize + LeafNodeNextLeafSize;
 
         // Leaf Node Body
         public const int LeafNodeKeySize = sizeof(int);
