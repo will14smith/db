@@ -23,29 +23,14 @@ namespace SimpleDatabase.Core.UnitTests
         [Fact]
         public void Insert_SecondRow_ShouldReturnId()
         {
-            var row = CreateRow();
             var (table, _) = CreateTable();
-            table.Insert(new InsertStatement(row));
+            table.Insert(new InsertStatement(CreateRow(1)));
 
-            var result = table.Insert(new InsertStatement(row));
+            var result = table.Insert(new InsertStatement(CreateRow(2)));
 
             var success = Assert.IsType<InsertResult.Success>(result);
-            Assert.Equal(row.Id, success.Key);
+            Assert.Equal(2, success.Key);
 
-        }
-        [Fact]
-        public void Insert_MaxRows_ShouldReturnTableFull()
-        {
-            var row = CreateRow();
-            var (table, _) = CreateTable();
-            for (var i = 0; i < NodeLayout.LeafNodeMaxCells; i++)
-            {
-                table.Insert(new InsertStatement(row));
-            }
-
-            var result = table.Insert(new InsertStatement(row));
-
-            Assert.IsType<InsertResult.TableFull>(result);
         }
 
         [Fact]
@@ -64,11 +49,10 @@ namespace SimpleDatabase.Core.UnitTests
         [Fact]
         public void InsertsThenSelect_ShouldReturnAllRows()
         {
-            var row = CreateRow();
             var (table, _) = CreateTable();
             for (var i = 0; i < NodeLayout.LeafNodeMaxCells; i++)
             {
-                table.Insert(new InsertStatement(row));
+                table.Insert(new InsertStatement(CreateRow(i)));
             }
 
             var result = table.Select(new SelectStatement());
@@ -97,9 +81,9 @@ namespace SimpleDatabase.Core.UnitTests
             return (table, pager);
         }
 
-        private static Row CreateRow()
+        private static Row CreateRow(int id = 1)
         {
-            return new Row(1, "a", "b");
+            return new Row(id, "a", "b");
         }
     }
 

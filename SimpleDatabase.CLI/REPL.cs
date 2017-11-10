@@ -151,9 +151,6 @@ namespace SimpleDatabase.CLI
                 case InsertResult.DuplicateKey _:
                     _output.WriteLine("Error: Duplicate key.");
                     break;
-                case InsertResult.TableFull _:
-                    _output.WriteLine("Error: Table full.");
-                    break;
             }
         }
 

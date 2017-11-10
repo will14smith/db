@@ -79,10 +79,6 @@ namespace SimpleDatabase.Core
             }
         }
 
-        public class TableFull : InsertResult
-        {
-        }
-
         public class DuplicateKey : InsertResult
         {
             public int Key { get; }
