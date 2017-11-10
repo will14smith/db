@@ -15,7 +15,7 @@ namespace SimpleDatabase.Core.Trees
             {
                 Type = NodeType.Leaf,
                 IsRoot = false,
-                CellCount = 0
+                CellCount = 0,
                 NextLeaf = 0,
             };
         }
@@ -58,21 +58,6 @@ namespace SimpleDatabase.Core.Trees
         public int GetCellKey(int cellNumber)
         {
             return BitConverter.ToInt32(Page.Data, GetCellKeyOffset(cellNumber));
-        }
-
-        public void InsertCell(int cellNumber, int key, Row value)
-        {
-            if (cellNumber < CellCount)
-            {
-                for (var i = CellCount; i > cellNumber; i--)
-                {
-                    CopyCell(this, i - 1, i);
-                }
-            }
-
-            CellCount += 1;
-
-            SetCell(cellNumber, key, value);
         }
 
         public void SetCell(int cellNumber, int key, Row value)

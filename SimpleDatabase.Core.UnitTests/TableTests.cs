@@ -18,7 +18,7 @@ namespace SimpleDatabase.Core.UnitTests
             var result = table.Insert(new InsertStatement(row));
 
             var success = Assert.IsType<InsertResult.Success>(result);
-            Assert.Equal(row.Id, success.RowNumber);
+            Assert.Equal(row.Id, success.Key);
         }
         [Fact]
         public void Insert_SecondRow_ShouldReturnId()
@@ -30,7 +30,7 @@ namespace SimpleDatabase.Core.UnitTests
             var result = table.Insert(new InsertStatement(row));
 
             var success = Assert.IsType<InsertResult.Success>(result);
-            Assert.Equal(row.Id, success.RowNumber);
+            Assert.Equal(row.Id, success.Key);
 
         }
         [Fact]
@@ -90,7 +90,7 @@ namespace SimpleDatabase.Core.UnitTests
         private static (Table, Mock<IPager>) CreateTable()
         {
             var pager = new Mock<IPager>();
-            pager.Setup(x => x.Get(It.IsAny<int>())).Returns(new Page(new byte[Pager.PageSize]));
+            pager.Setup(x => x.Get(It.IsAny<int>())).Returns(new Page(0, new byte[Pager.PageSize]));
 
             var table = new Table(pager.Object);
 

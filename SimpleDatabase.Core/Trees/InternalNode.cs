@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using SimpleDatabase.Core.Paging;
 
 namespace SimpleDatabase.Core.Trees
@@ -99,6 +100,29 @@ namespace SimpleDatabase.Core.Trees
         {
             SetChild(cellNumber, child);
             SetKey(cellNumber, key);
+        }
+
+        public void CopyCell(InternalNode source, int sourceCell, int destinationCell)
+        {
+            Array.Copy(
+                source.Page.Data, GetCellOffset(sourceCell),
+                Page.Data, GetCellOffset(destinationCell),
+                NodeLayout.InternalNodeCellSize);
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+
+            for (var i = 0; i < KeyCount; i++)
+            {
+                sb.Append($"p{GetChild(i)}, ");
+                sb.Append($"k{GetKey(i)}, ");
+            }
+
+            sb.Append($"p{GetChild(KeyCount)}");
+            
+            return sb.ToString();
         }
     }
 }

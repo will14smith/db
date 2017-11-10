@@ -29,24 +29,7 @@ namespace SimpleDatabase.Core
         {
             var row = statement.Row;
 
-            var keyToInsert = row.Id;
-            var cursor = FindCursor(keyToInsert);
-
-            var page = _pager.Get(cursor.PageNumber);
-            var leaf = LeafNode.Read(page);
-
-            if (cursor.CellNumber < leaf.CellCount)
-            {
-                var keyAtIndex = leaf.GetCellKey(cursor.CellNumber);
-                if (keyAtIndex == keyToInsert)
-                {
-                    return new InsertResult.DuplicateKey(keyToInsert);
-                }
-            }
-
-            new TreeInserter(_pager).LeafNodeInsert(cursor, row.Id, row);
-
-            return new InsertResult.Success(row.Id);
+            return new TreeInserter(_pager).Insert(RootPageNumber, row.Id, row);
         }
 
         public SelectResult Select(SelectStatement statement)
@@ -72,7 +55,10 @@ namespace SimpleDatabase.Core
 
         private Cursor FindCursor(int key)
         {
-            return new TreeKeySearcher(_pager, key).FindCursor(RootPageNumber);
+            var strategy = new TreeKeySearcher(key);
+            var searcher = new TreeSearcher(_pager, strategy);
+
+            return searcher.FindCursor(RootPageNumber);
         }
 
         public void Dispose()
@@ -85,11 +71,11 @@ namespace SimpleDatabase.Core
     {
         public class Success : InsertResult
         {
-            public int RowNumber { get; }
+            public int Key { get; }
 
-            public Success(int rowNumber)
+            public Success(int key)
             {
-                RowNumber = rowNumber;
+                Key = key;
             }
         }
 

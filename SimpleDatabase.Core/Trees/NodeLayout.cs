@@ -7,13 +7,11 @@ namespace SimpleDatabase.Core.Trees
         // Common Node Header
         public const int NodeTypeSize = sizeof(NodeType);
         public const int IsRootSize = sizeof(bool);
-        public const int ParentPointerSize = sizeof(int);
 
         public const int NodeTypeOffset = 0;
         public const int IsRootOffset = NodeTypeOffset + NodeTypeSize;
-        public const int ParentPointerOffset = IsRootOffset + IsRootSize;
 
-        public const int CommonNodeHeaderSize = NodeTypeSize + IsRootSize + ParentPointerSize;
+        public const int CommonNodeHeaderSize = NodeTypeSize + IsRootSize;
 
         // Leaf Node Header
         public const int LeafNodeCellCountSize = sizeof(int);
@@ -34,8 +32,8 @@ namespace SimpleDatabase.Core.Trees
 
         public const int LeafNodeSpaceForCells = Pager.PageSize - LeafNodeHeaderSize;
         public const int LeafNodeMaxCells = LeafNodeSpaceForCells / LeafNodeCellSize;
-        public const int LeafNodeRightSplitCount = (LeafNodeMaxCells + 1) / 2;
-        public const int LeafNodeLeftSplitCount = (LeafNodeMaxCells + 1) - LeafNodeRightSplitCount;
+        public const int LeafNodeRightSplitCount = (LeafNodeMaxCells) / 2;
+        public const int LeafNodeLeftSplitCount = LeafNodeMaxCells - LeafNodeRightSplitCount;
 
         // Internal Node Header
         public const int InternalNodeKeyCountSize = sizeof(int);
@@ -52,6 +50,10 @@ namespace SimpleDatabase.Core.Trees
 
         public const int InternalNodeCellSize = InternalNodeChildSize + InternalNodeKeySize;
 
+        public const int InternalNodeSpaceForCells = Pager.PageSize - InternalNodeHeaderSize;
+        public const int InternalNodeMaxCells = InternalNodeSpaceForCells / InternalNodeCellSize;
+        public const int InternalNodeRightSplitCount = (InternalNodeMaxCells) / 2;
+        public const int InternalNodeLeftSplitCount = InternalNodeMaxCells - InternalNodeRightSplitCount;
 
     }
 }

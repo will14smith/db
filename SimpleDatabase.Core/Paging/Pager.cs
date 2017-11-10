@@ -5,7 +5,7 @@ namespace SimpleDatabase.Core.Paging
     public class Pager : IPager
     {
         public const int PageSize = 4096;
-        public const int MaxPages = 100;
+        public const int MaxPages = 2000;
 
         private readonly IPagerStorage _storage;
         private readonly Page[] _pages = new Page[MaxPages];
@@ -48,7 +48,7 @@ namespace SimpleDatabase.Core.Paging
                 }
                 else
                 {
-                    _pages[index] = new Page(new byte[PageSize]);
+                    _pages[index] = new Page(index, new byte[PageSize]);
                 }
 
                 if (index >= PageCount)
@@ -70,11 +70,11 @@ namespace SimpleDatabase.Core.Paging
             _storage.Write(_pages[index], index);
         }
 
-        public (Page, int) GetUnusedPage()
+        public Page GetUnusedPage()
         {
             // Allocate a new page at the end of the table since we don't support deleting yet
             var unusedIndex = PageCount;
-            return (Get(unusedIndex), unusedIndex);
+            return Get(unusedIndex);
         }
 
         public void Dispose()

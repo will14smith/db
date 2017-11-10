@@ -12,6 +12,8 @@ namespace SimpleDatabase.Core.Trees
             Page = page;
         }
 
+        public int PageNumber => Page.Number;
+
         public NodeType Type
         {
             get => GetType(Page);

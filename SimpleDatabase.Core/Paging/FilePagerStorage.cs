@@ -21,7 +21,7 @@ namespace SimpleDatabase.Core.Paging
             // TODO check bytes read
             _file.Read(page, 0, Pager.PageSize);
 
-            return new Page(page);
+            return new Page(index, page);
         }
 
         public void Write(Page page, int index)

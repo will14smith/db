@@ -70,10 +70,10 @@ namespace SimpleDatabase.CLI.UnitTests
         {
             "db > Constants:",
             "RowSize: 291",
-            "CommonNodeHeaderSize: 6",
-            "LeafNodeHeaderSize: 14",
+            "CommonNodeHeaderSize: 2",
+            "LeafNodeHeaderSize: 10",
             "LeafNodeCellSize: 295",
-            "LeafNodeSpaceForCells: 4082",
+            "LeafNodeSpaceForCells: 4086",
             "LeafNodeMaxCells: 13",
             "db >"
         }, 0, ExitCode.Success)]
@@ -208,6 +208,24 @@ namespace SimpleDatabase.CLI.UnitTests
         }
 
         [Fact]
+        public void InsertingInternalNodesInReverse()
+        {
+            var commands = new string[50];
+            var outputs = new List<string>();
+            for (var i = 0; i < 48; i++)
+            {
+                commands[i] = $"insert {47-i} user{47 - i} person{47 - i}@example.com";
+                outputs.Add((i == 0 ? "db > " : "") + $"({i}, user{i}, person{i}@example.com)");
+            }
+            commands[48] = "select";
+            commands[49] = ".exit";
+            outputs.Add("Executed.");
+            outputs.Add("db >");
+
+            RunningCommands_HasCorrectSnapshot(commands, outputs, 48, ExitCode.Success);
+        }
+
+        [Fact]
         public void SelectingInternalNodes()
         {
             var commands = new string[16];
@@ -223,6 +241,24 @@ namespace SimpleDatabase.CLI.UnitTests
             outputs.Add("db >");
 
             RunningCommands_HasCorrectSnapshot(commands, outputs, 14, ExitCode.Success);
+        }
+
+        [Fact]
+        public void SplittingInternalNodes()
+        {
+            var commands = new string[7000];
+            var outputs = new List<string>();
+            for (var i = 0; i < 6998; i++)
+            {
+                commands[i] = $"insert {i} user{i} person{i}@example.com";
+                outputs.Add((i == 0 ? "db > " : "") + $"({i}, user{i}, person{i}@example.com)");
+            }
+            commands[6998] = "select";
+            commands[6999] = ".exit";
+            outputs.Add("Executed.");
+            outputs.Add("db >");
+
+            RunningCommands_HasCorrectSnapshot(commands, outputs, 6998, ExitCode.Success);
         }
     }
 }

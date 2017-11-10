@@ -1,19 +1,13 @@
-﻿using SimpleDatabase.Core.Paging;
-
-namespace SimpleDatabase.Core.Trees
+﻿namespace SimpleDatabase.Core.Trees
 {
-    public class TreeStartSearcher : BaseTreeSearcher
+    public class TreeStartSearcher : ITreeSearchStrategy
     {
-        public TreeStartSearcher(IPager pager) : base(pager)
-        {
-        }
-
-        public override int LeafNodeFindCell(LeafNode node)
+        public int FindCell(LeafNode node)
         {
             return 0;
         }
 
-        public override int InternalNodeFindCell(InternalNode node)
+        public int FindCell(InternalNode node)
         {
             return 0;
         }

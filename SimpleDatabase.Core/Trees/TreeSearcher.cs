@@ -3,13 +3,15 @@ using SimpleDatabase.Core.Paging;
 
 namespace SimpleDatabase.Core.Trees
 {
-    public abstract class BaseTreeSearcher
+    public class TreeSearcher
     {
         private readonly IPager _pager;
+        private readonly ITreeSearchStrategy _treeSearchStrategy;
 
-        protected BaseTreeSearcher(IPager pager)
+        public TreeSearcher(IPager pager, ITreeSearchStrategy treeSearchStrategy)
         {
             _pager = pager;
+            _treeSearchStrategy = treeSearchStrategy;
         }
 
         public Cursor FindCursor(int pageNumber)
@@ -30,22 +32,18 @@ namespace SimpleDatabase.Core.Trees
 
         private Cursor LeafNodeFind(LeafNode node, int pageNumber)
         {
-            var cellNumber = LeafNodeFindCell(node);
+            var cellNumber = _treeSearchStrategy.FindCell(node);
 
             return TreeTraverser.CreateCursor(pageNumber, cellNumber, node);
         }
 
-        public abstract int LeafNodeFindCell(LeafNode node);
-
         private Cursor InternalNodeFind(InternalNode node)
         {
-            var minIndex = InternalNodeFindCell(node);
+            var minIndex = _treeSearchStrategy.FindCell(node);
 
             var childPageNumber = node.GetChild(minIndex);
 
             return FindCursor(childPageNumber);
         }
-
-        public abstract int InternalNodeFindCell(InternalNode node);
     }
 }

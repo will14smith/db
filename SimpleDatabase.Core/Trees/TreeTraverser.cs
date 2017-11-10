@@ -16,7 +16,8 @@ namespace SimpleDatabase.Core.Trees
 
         public Cursor StartCursor()
         {
-            var seacher = new TreeStartSearcher(_pager);
+            var strategy = new TreeStartSearcher();
+            var seacher = new TreeSearcher(_pager, strategy);
 
             return seacher.FindCursor(_table.RootPageNumber);
         }

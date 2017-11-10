@@ -12,104 +12,243 @@ namespace SimpleDatabase.Core.Trees
             _pager = pager;
         }
 
-        public void LeafNodeInsert(Cursor cursor, int key, Row value)
+        public InsertResult Insert(int rootPageNumber, int key, Row row)
         {
-            var page = _pager.Get(cursor.PageNumber);
-            var leaf = LeafNode.Read(page);
+            var page = _pager.Get(rootPageNumber);
+            var node = Node.Read(page);
 
-            if (leaf.CellCount >= NodeLayout.LeafNodeMaxCells)
+            Result result;
+            switch (node)
             {
-                LeafNodeSplitAndInsert(cursor, key, value);
+                case LeafNode leafNode:
+                    result = LeafInsert(leafNode, key, row);
+                    break;
+                case InternalNode internalNode:
+                    result = InternalInsert(internalNode, key, row);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
-            else
+
+            switch (result)
             {
-                leaf.InsertCell(cursor.CellNumber, key, value);
-                _pager.Flush(cursor.PageNumber);
+                case Result.Success _:
+                    return new InsertResult.Success(key);
+                case Result.DuplicateKey r:
+                    return new InsertResult.DuplicateKey(r.Key);
+
+                case Result.WasSplit split:
+                    SplitRoot(rootPageNumber, split);
+                    return new InsertResult.Success(key);
+
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
-        private void LeafNodeSplitAndInsert(Cursor cursor, int key, Row value)
+        private void SplitRoot(int rootPageNumber, Result.WasSplit split)
         {
-            /*
-             * Create a new node and move half the cells over.
-             * Insert the new value in one of the two nodes.
-             * Update parent or create a new parent.
-             */
-
-            var oldPage = _pager.Get(cursor.PageNumber);
-            var oldNode = LeafNode.Read(oldPage);
-            var (newPage, newPageNum) = _pager.GetUnusedPage();
-            var newNode = LeafNode.New(newPage);
-
-            newNode.NextLeaf = oldNode.NextLeaf;
-            oldNode.NextLeaf = newPageNum;
-
-            /*
-             * All existing keys plus new key should should be divided
-             * evenly between old (left) and new (right) nodes.
-             * Starting from the right, move each key to correct position.
-             */
-            for (var i = NodeLayout.LeafNodeMaxCells; i >= 0; i--)
+            if (rootPageNumber != split.Left)
             {
-                var destinationNode = i >= NodeLayout.LeafNodeLeftSplitCount ? newNode : oldNode;
-                var indexWithinNode = i % NodeLayout.LeafNodeLeftSplitCount;
-
-                if (i == cursor.CellNumber)
-                {
-                    destinationNode.SetCell(indexWithinNode, key, value);
-                }
-                else if (i > cursor.CellNumber)
-                {
-                    destinationNode.CopyCell(oldNode, i - 1, indexWithinNode);
-                }
-                else
-                {
-                    destinationNode.CopyCell(oldNode, i, indexWithinNode);
-                }
+                throw new InvalidOperationException("Uhm...?");
             }
 
-            // Update cell count on both leaf nodes
-            oldNode.CellCount = NodeLayout.LeafNodeLeftSplitCount;
-            newNode.CellCount = NodeLayout.LeafNodeRightSplitCount;
+            var leftPage = _pager.GetUnusedPage();
+            var rightPage = _pager.Get(split.Right);
+            var rootPage = _pager.Get(split.Left);
 
-            if (oldNode.IsRoot)
-            {
-                CreateNewRoot(cursor.PageNumber, newPageNum);
-            }
-            else
-            {
-                throw new NotImplementedException("Update parent after split");
-            }
-        }
+            Array.Copy(rootPage.Data, leftPage.Data, Pager.PageSize);
 
-        private void CreateNewRoot(int rootPageNumber, int rightChildPageNum)
-        {
-            /*
-             * Handle splitting the root.
-             * Old root copied to new page, becomes left child.
-             * Address of right child passed in.
-             * Re-initialize root page to contain the new root node.
-             * New root node points to two children.
-             */
-
-            var rootPage = _pager.Get(rootPageNumber);
-            var (leftChild, leftChildPageNum) = _pager.GetUnusedPage();
-
-            // Left child has data copied from old root
-            Array.Copy(rootPage.Data, leftChild.Data, Pager.PageSize);
-            var leftNode = Node.Read(leftChild);
-            leftNode.IsRoot = false;
-
-            // Root node is a new internal node with one key and two children
             var rootNode = InternalNode.New(rootPage);
             rootNode.IsRoot = true;
 
             rootNode.KeyCount = 1;
-
-            var leftChildMaxKey = leftNode.GetMaxKey();
-            rootNode.SetCell(0, leftChildPageNum, leftChildMaxKey);
-            rootNode.SetChild(1, rightChildPageNum);
+            rootNode.SetCell(0, leftPage.Number, split.Key);
+            rootNode.SetChild(1, rightPage.Number);
         }
 
+        private Result LeafInsert(LeafNode node, int key, Row row)
+        {
+            var cellIndex = new TreeKeySearcher(key).FindCell(node);
+
+            if (node.CellCount < NodeLayout.LeafNodeMaxCells)
+            {
+                return LeafInsertNonFull(node, key, row, cellIndex);
+            }
+
+            var newPage = _pager.GetUnusedPage();
+            var newNode = LeafNode.New(newPage);
+
+            newNode.NextLeaf = node.NextLeaf;
+            node.NextLeaf = newPage.Number;
+
+            var threshold = NodeLayout.LeafNodeLeftSplitCount;
+            for (var j = 0; j < NodeLayout.LeafNodeRightSplitCount; ++j)
+            {
+                newNode.CopyCell(node, threshold + j, j);
+            }
+
+            newNode.CellCount = NodeLayout.LeafNodeRightSplitCount;
+            node.CellCount = NodeLayout.LeafNodeLeftSplitCount;
+
+            if (cellIndex < threshold)
+            {
+                LeafInsertNonFull(node, key, row, cellIndex);
+            }
+            else
+            {
+                LeafInsertNonFull(newNode, key, row, cellIndex - threshold);
+            }
+
+            return new Result.WasSplit(
+                node.GetMaxKey(),
+                node.PageNumber,
+                newNode.PageNumber
+            );
+        }
+
+        private Result LeafInsertNonFull(LeafNode node, int key, Row row, int cellIndex)
+        {
+            if (node.CellCount >= NodeLayout.LeafNodeMaxCells)
+            {
+                throw new InvalidOperationException("Leaf would overflow");
+            }
+            if (cellIndex >= NodeLayout.LeafNodeMaxCells)
+            {
+                throw new InvalidOperationException("CellIndex out of bounds");
+            }
+            if (cellIndex > node.CellCount)
+            {
+                throw new InvalidOperationException("CellIndex would leave gaps");
+            }
+
+            if (cellIndex < node.CellCount && node.GetCellKey(cellIndex) == key)
+            {
+                return new Result.DuplicateKey(key);
+            }
+
+            if (cellIndex < node.CellCount)
+            {
+                for (var i = node.CellCount; i > cellIndex; i--)
+                {
+                    node.CopyCell(node, i - 1, i);
+                }
+            }
+
+            node.CellCount += 1;
+            node.SetCell(cellIndex, key, row);
+
+            return new Result.Success();
+        }
+
+        private Result InternalInsert(InternalNode node, int key, Row row)
+        {
+            if (node.KeyCount < NodeLayout.InternalNodeMaxCells)
+            {
+                return InnerInsertNonFull(node, key, row);
+            }
+
+            // this split is pre-emptive as there might be space in the children
+            // all the B+ tree invariants still hold though
+
+            var newPage = _pager.GetUnusedPage();
+            var newNode = InternalNode.New(newPage);
+
+            var threshold = NodeLayout.InternalNodeLeftSplitCount;
+            var splitKey = node.GetKey(threshold - 1);
+
+            newNode.KeyCount = NodeLayout.InternalNodeRightSplitCount;
+            for (var j = 0; j < NodeLayout.InternalNodeRightSplitCount; ++j)
+            {
+                newNode.CopyCell(node, threshold + j, j);
+            }
+
+            newNode.SetChild(NodeLayout.InternalNodeRightSplitCount, node.RightChild);
+            var rightChild = node.GetChild(threshold - 1);
+            node.KeyCount = threshold - 1;
+            node.SetChild(threshold - 1, rightChild);
+
+            InnerInsertNonFull(key < splitKey ? node : newNode, key, row);
+            
+            return new Result.WasSplit(splitKey, node.PageNumber, newNode.PageNumber);
+        }
+
+        private Result InnerInsertNonFull(InternalNode node, int key, Row row)
+        {
+            var cellIndex = new TreeKeySearcher(key).FindCell(node);
+
+            var childPageNumber = node.GetChild(cellIndex);
+            var childPage = _pager.Get(childPageNumber);
+            var childNode = Node.Read(childPage);
+
+            Result result;
+            switch (childNode)
+            {
+                case LeafNode leafNode:
+                    result = LeafInsert(leafNode, key, row);
+                    break;
+                case InternalNode internalNode:
+                    result = InternalInsert(internalNode, key, row);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            switch (result)
+            {
+                case Result.WasSplit split:
+                    if (cellIndex == node.KeyCount)
+                    {
+                        node.KeyCount += 1;
+                        node.SetCell(cellIndex, split.Left, split.Key);
+                        node.SetChild(cellIndex + 1, split.Right);
+                    }
+                    else
+                    {
+                        node.KeyCount += 1;
+                        for (var i = node.KeyCount; i > cellIndex; i--)
+                        {
+                            node.CopyCell(node, i - 1, i);
+                        }
+
+                        node.SetCell(cellIndex, split.Left, split.Key);
+                        node.SetChild(cellIndex + 1, split.Right);
+                    }
+
+                    return new Result.Success();
+
+                default:
+                    return result;
+            }
+        }
+
+        private abstract class Result
+        {
+            public class Success : Result { }
+
+            public class DuplicateKey : Result
+            {
+                public DuplicateKey(int key)
+                {
+                    Key = key;
+                }
+
+                public int Key { get; }
+            }
+
+            public class WasSplit : Result
+            {
+                public WasSplit(int key, int left, int right)
+                {
+                    Key = key;
+                    Left = left;
+                    Right = right;
+                }
+
+                public int Key { get; }
+                public int Left { get; }
+                public int Right { get; }
+            }
+        }
     }
 }

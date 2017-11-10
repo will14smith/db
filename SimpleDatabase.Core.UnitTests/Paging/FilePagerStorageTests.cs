@@ -18,7 +18,7 @@ namespace SimpleDatabase.Core.UnitTests.Paging
         public void WriteThenRead_ShouldReturnOriginalData()
         {
             var page = 1;
-            var data = GetData();
+            var data = GetData(page);
 
             using (var storage = new FilePagerStorage(_file))
             {
@@ -33,7 +33,7 @@ namespace SimpleDatabase.Core.UnitTests.Paging
         public void SameFileSecondInstance_ShouldReadOriginalData()
         {
             var page = 1;
-            var data = GetData();
+            var data = GetData(page);
 
             using (var storage = new FilePagerStorage(_file))
             {
@@ -51,7 +51,7 @@ namespace SimpleDatabase.Core.UnitTests.Paging
         public void ByteLength_ShouldBeFileLength()
         {
             var page = 1;
-            var data = GetData();
+            var data = GetData(page);
 
             var expectedSize = (page + 1) * Pager.PageSize;
 
@@ -66,7 +66,7 @@ namespace SimpleDatabase.Core.UnitTests.Paging
         public void ByteLengthOnSecondInstance_ShouldBeFileLength()
         {
             var page = 1;
-            var data = GetData();
+            var data = GetData(page);
 
             var expectedSize = (page + 1) * Pager.PageSize;
 
@@ -80,7 +80,7 @@ namespace SimpleDatabase.Core.UnitTests.Paging
             }
         }
 
-        private static Page GetData()
+        private static Page GetData(int pageNumber)
         {
             var page = new byte[Pager.PageSize];
 
@@ -89,7 +89,7 @@ namespace SimpleDatabase.Core.UnitTests.Paging
                 page[i] = (byte)i;
             }
 
-            return new Page(page);
+            return new Page(pageNumber, page);
         }
 
         public void Dispose()

@@ -1,17 +1,15 @@
-﻿using SimpleDatabase.Core.Paging;
-
-namespace SimpleDatabase.Core.Trees
+﻿namespace SimpleDatabase.Core.Trees
 {
-    public class TreeKeySearcher : BaseTreeSearcher
+    public class TreeKeySearcher : ITreeSearchStrategy
     {
         private readonly int _key;
 
-        public TreeKeySearcher(IPager pager, int key) : base(pager)
+        public TreeKeySearcher(int key)
         {
             _key = key;
         }
 
-        public override int LeafNodeFindCell(LeafNode node)
+        public int FindCell(LeafNode node)
         {
             var minIndex = 0;
             var onePastMaxIndex = node.CellCount;
@@ -37,7 +35,7 @@ namespace SimpleDatabase.Core.Trees
             return minIndex;
         }
 
-        public override int InternalNodeFindCell(InternalNode node)
+        public int FindCell(InternalNode node)
         {
             var minIndex = 0;
             var maxIndex = node.KeyCount; // there is one more child than key
