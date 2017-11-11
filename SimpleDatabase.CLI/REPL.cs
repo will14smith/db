@@ -124,7 +124,7 @@ namespace SimpleDatabase.CLI
             {
                 var tokens = input.Split(" ");
                 if (tokens.Length != 2)
-                {
+                {;
                     return new PrepareStatementResponse.SyntaxError("Expected 1 parameter (id) for delete");
                 }
 

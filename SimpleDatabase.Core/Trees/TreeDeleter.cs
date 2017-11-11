@@ -39,18 +39,25 @@ namespace SimpleDatabase.Core.Trees
                     return new DeleteResult.KeyNotFound(keyNotFound.Key);
 
                 default:
-                    throw new NotImplementedException();
+                    throw new ArgumentOutOfRangeException($"Unhandled result: {result}");
             }
         }
 
         private Result LeafDelete(LeafNode node, int key)
         {
-            if (node.IsRoot || node.CellCount > NodeLayout.LeafNodeMinCells)
+            var result = LeafDeleteNoMerge(node, key);
+            if (result is Result.KeyNotFound)
             {
-                return LeafDeleteNoMerge(node, key);
+                return result;
             }
 
-            throw new NotImplementedException("Need to redistribute / merge");
+            var leafIsValid = node.IsRoot || node.CellCount > NodeLayout.LeafNodeMinCells;
+            if (leafIsValid)
+            {
+                return result;
+            }
+
+            return new Result.NodeUnderflow(node);
         }
 
         private Result LeafDeleteNoMerge(LeafNode node, int key)
@@ -88,19 +95,35 @@ namespace SimpleDatabase.Core.Trees
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            
+
             switch (childResult)
             {
                 case Result.Success _:
                 case Result.KeyNotFound _:
                     return childResult;
 
+                case Result.NodeUnderflow _:
+                    return ResolveUnderflow(internalNode, childIndex, childNode);
+
                 default:
-                    throw new NotImplementedException();
+                    throw new ArgumentOutOfRangeException($"Unhandled result: {childResult}");
             }
+        }
 
+        private Result ResolveUnderflow(InternalNode internalNode, int childIndex, Node childNode)
+        {
+            var hasPrevSibling = childIndex > 0;
+            var hasNextSibling = childIndex < internalNode.KeyCount;
 
-            throw new NotImplementedException();
+            // if !hasPrev && !hasNext => panic!
+
+            // if hasPrev && prevNode has spares => move max(prevNode) -> start(childNode), update key in internalNode
+            // if hasNext && nextNode has spares => move min(prevNode) -> end(childNode),   update key in internalNode
+
+            // if hasPrev => merge prev & child
+            // if hasNext => merge child & next
+
+            throw new NotImplementedException("Implement ResolveUnderflow");
         }
 
         private abstract class Result
@@ -114,7 +137,16 @@ namespace SimpleDatabase.Core.Trees
                 public KeyNotFound(int key)
                 {
                     Key = key;
-                    throw new NotImplementedException();
+                }
+            }
+
+            public class NodeUnderflow : Result
+            {
+                public Node Node { get; }
+
+                public NodeUnderflow(Node node)
+                {
+                    Node = node;
                 }
             }
         }
