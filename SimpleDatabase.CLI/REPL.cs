@@ -119,6 +119,20 @@ namespace SimpleDatabase.CLI
 
                 return new PrepareStatementResponse.Success(new InsertStatement(row));
             }
+
+            if (input.StartsWith("delete"))
+            {
+                var tokens = input.Split(" ");
+                if (tokens.Length != 2)
+                {
+                    return new PrepareStatementResponse.SyntaxError("Expected 1 parameter (id) for delete");
+                }
+
+                var id = int.Parse(tokens[1]);
+
+                return new PrepareStatementResponse.Success(new DeleteStatement(id));
+            }
+
             if (input.StartsWith("select"))
             {
                 return new PrepareStatementResponse.Success(new SelectStatement());
@@ -134,8 +148,15 @@ namespace SimpleDatabase.CLI
                 case InsertStatement insert:
                     ExecuteInsert(insert);
                     break;
+                case DeleteStatement delete:
+                    ExecuteDelete(delete);
+                    break;
                 case SelectStatement select:
                     ExecuteSelect(select);
+                    break;
+
+                default:
+                    _output.WriteLine($"Unhandled Statement: {statement}");
                     break;
             }
         }
@@ -150,6 +171,28 @@ namespace SimpleDatabase.CLI
                     break;
                 case InsertResult.DuplicateKey _:
                     _output.WriteLine("Error: Duplicate key.");
+                    break;
+
+                default:
+                    _output.WriteLine($"Unhandled InsertResult: {result}");
+                    break;
+            }
+        }
+
+        private void ExecuteDelete(DeleteStatement delete)
+        {
+            var result = _table.Delete(delete);
+            switch (result)
+            {
+                case DeleteResult.Success _:
+                    _output.WriteLine("Executed.");
+                    break;
+                case DeleteResult.KeyNotFound knf:
+                    _output.WriteLine($"Error: Key not found {knf.Key}.");
+                    break;
+
+                default:
+                    _output.WriteLine($"Unhandled InsertResult: {result}");
                     break;
             }
         }
@@ -166,6 +209,10 @@ namespace SimpleDatabase.CLI
                     }
 
                     _output.WriteLine("Executed.");
+                    break;
+
+                default:
+                    _output.WriteLine($"Unhandled SelectResult: {result}");
                     break;
             }
 

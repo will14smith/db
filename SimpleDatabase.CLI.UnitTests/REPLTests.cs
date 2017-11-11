@@ -214,7 +214,7 @@ namespace SimpleDatabase.CLI.UnitTests
             var outputs = new List<string>();
             for (var i = 0; i < 48; i++)
             {
-                commands[i] = $"insert {47-i} user{47 - i} person{47 - i}@example.com";
+                commands[i] = $"insert {47 - i} user{47 - i} person{47 - i}@example.com";
                 outputs.Add((i == 0 ? "db > " : "") + $"({i}, user{i}, person{i}@example.com)");
             }
             commands[48] = "select";
@@ -260,5 +260,117 @@ namespace SimpleDatabase.CLI.UnitTests
 
             RunningCommands_HasCorrectSnapshot(commands, outputs, 6998, ExitCode.Success);
         }
+
+        [Fact]
+        public void DeleteRootLeaf()
+        {
+            var commands = new string[6];
+            for (var i = 0; i < 3; i++)
+                commands[i] = $"insert {i} user{i} person{i}@example.com";
+            commands[3] = "delete 1";
+            commands[4] = ".btree";
+            commands[5] = ".exit";
+
+            var outputs = new[]
+            {
+                "db > Executed.",
+                "db > Tree:",
+                "- leaf (size 2)",
+                "  - 0",
+                "  - 2",
+                "db >"
+            };
+
+            RunningCommands_HasCorrectSnapshot(commands, outputs, 3, ExitCode.Success);
+        }
+        [Fact]
+        public void DeleteRootLeaf_Single()
+        {
+            var commands = new string[4];
+            commands[0] = "insert 0 user0 person0@example.com";
+            commands[1] = "delete 0";
+            commands[2] = ".btree";
+            commands[3] = ".exit";
+
+            var outputs = new[]
+            {
+                "db > Executed.",
+                "db > Tree:",
+                "- leaf (size 0)",
+                "db >"
+            };
+
+            RunningCommands_HasCorrectSnapshot(commands, outputs, 1, ExitCode.Success);
+        }
+        [Fact]
+        public void DeleteInternalNodes_Borrow()
+        {
+            var commands = new string[18];
+            for (var i = 0; i < 14; i++)
+                commands[i] = $"insert {i} user{i} person{i}@example.com";
+            commands[14] = "delete 1";
+            commands[15] = "delete 2";
+            commands[16] = ".btree";
+            commands[17] = ".exit";
+
+            var outputs = new[]
+            {
+                "db > Tree:",
+                "- internal (size 1)",
+                "  - leaf (size 6)",
+                "    - 0",
+                "    - 3",
+                "    - 4",
+                "    - 5",
+                "    - 6",
+                "    - 7",
+                "- key 7",
+                "  - leaf (size 6)",
+                "    - 8",
+                "    - 9",
+                "    - 10",
+                "    - 11",
+                "    - 12",
+                "    - 13",
+                "db > Executed.",
+                "db >"
+            };
+
+            RunningCommands_HasCorrectSnapshot(commands, outputs, 16, ExitCode.Success);
+        }
+        [Fact]
+        public void DeleteInternalNodes_Merge()
+        {
+            var commands = new string[18];
+            for (var i = 0; i < 14; i++)
+                commands[i] = $"insert {i} user{i} person{i}@example.com";
+            commands[14] = "delete 1";
+            commands[15] = "delete 7";
+            commands[15] = "delete 2";
+            commands[16] = ".btree";
+            commands[17] = ".exit";
+
+            var outputs = new[]
+            {
+                "db > Tree:",
+                "- leaf (size 11)",
+                "  - 0",
+                "  - 3",
+                "  - 4",
+                "  - 5",
+                "  - 6",
+                "  - 8",
+                "  - 9",
+                "  - 10",
+                "  - 11",
+                "  - 12",
+                "  - 13",
+                "db > Executed.",
+                "db >"
+            };
+
+            RunningCommands_HasCorrectSnapshot(commands, outputs, 16, ExitCode.Success);
+        }
+
     }
 }

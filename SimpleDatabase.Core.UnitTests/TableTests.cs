@@ -30,7 +30,6 @@ namespace SimpleDatabase.Core.UnitTests
 
             var success = Assert.IsType<InsertResult.Success>(result);
             Assert.Equal(2, success.Key);
-
         }
 
         [Fact]

@@ -58,6 +58,8 @@ namespace SimpleDatabase.Core.Trees
             var rootPage = _pager.Get(split.Left);
 
             Array.Copy(rootPage.Data, leftPage.Data, Pager.PageSize);
+            var leftNode = Node.Read(leftPage);
+            leftNode.IsRoot = false;
 
             var rootNode = InternalNode.New(rootPage);
             rootNode.IsRoot = true;

@@ -12,6 +12,15 @@
         {
             Row = row;
         }
-    };
+    }
+    public class DeleteStatement : IStatement
+    {
+        public int Key { get; }
+
+        public DeleteStatement(int key)
+        {
+            Key = key;
+        }
+    }
     public class SelectStatement : IStatement { }
 }

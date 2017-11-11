@@ -53,6 +53,11 @@ namespace SimpleDatabase.Core
             return new SelectResult.Success(rows);
         }
 
+        public DeleteResult Delete(DeleteStatement delete)
+        {
+            return new TreeDeleter(_pager).Delete(RootPageNumber, delete.Key);
+        }
+
         private Cursor FindCursor(int key)
         {
             var strategy = new TreeKeySearcher(key);
@@ -84,6 +89,29 @@ namespace SimpleDatabase.Core
             public int Key { get; }
 
             public DuplicateKey(int key)
+            {
+                Key = key;
+            }
+        }
+    }
+
+    public abstract class DeleteResult
+    {
+        public class Success : DeleteResult
+        {
+            public int Key { get; }
+
+            public Success(int key)
+            {
+                Key = key;
+            }
+        }
+
+        public class KeyNotFound : DeleteResult
+        {
+            public int Key { get; }
+
+            public KeyNotFound(int key)
             {
                 Key = key;
             }

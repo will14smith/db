@@ -32,7 +32,8 @@ namespace SimpleDatabase.Core.Trees
 
         public const int LeafNodeSpaceForCells = Pager.PageSize - LeafNodeHeaderSize;
         public const int LeafNodeMaxCells = LeafNodeSpaceForCells / LeafNodeCellSize;
-        public const int LeafNodeRightSplitCount = (LeafNodeMaxCells) / 2;
+        public const int LeafNodeMinCells = (LeafNodeMaxCells + 1) / 2 - 1; // ceil(MaxCells / 2) - 1
+        public const int LeafNodeRightSplitCount = LeafNodeMinCells;
         public const int LeafNodeLeftSplitCount = LeafNodeMaxCells - LeafNodeRightSplitCount;
 
         // Internal Node Header
