@@ -332,7 +332,6 @@ namespace SimpleDatabase.CLI.UnitTests
                 "    - 11",
                 "    - 12",
                 "    - 13",
-                "db > Executed.",
                 "db >"
             };
 
@@ -341,14 +340,14 @@ namespace SimpleDatabase.CLI.UnitTests
         [Fact]
         public void DeleteInternalNodes_Merge()
         {
-            var commands = new string[18];
+            var commands = new List<string>();
             for (var i = 0; i < 14; i++)
-                commands[i] = $"insert {i} user{i} person{i}@example.com";
-            commands[14] = "delete 1";
-            commands[15] = "delete 7";
-            commands[15] = "delete 2";
-            commands[16] = ".btree";
-            commands[17] = ".exit";
+                commands.Add($"insert {i} user{i} person{i}@example.com");
+            commands.Add("delete 1");
+            commands.Add("delete 7");
+            commands.Add("delete 2");
+            commands.Add(".btree");
+            commands.Add(".exit");
 
             var outputs = new[]
             {
@@ -365,11 +364,10 @@ namespace SimpleDatabase.CLI.UnitTests
                 "  - 11",
                 "  - 12",
                 "  - 13",
-                "db > Executed.",
                 "db >"
             };
 
-            RunningCommands_HasCorrectSnapshot(commands, outputs, 16, ExitCode.Success);
+            RunningCommands_HasCorrectSnapshot(commands, outputs, 0, ExitCode.Success);
         }
 
     }

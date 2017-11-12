@@ -51,7 +51,7 @@ namespace SimpleDatabase.Core.Trees
                 return result;
             }
 
-            var leafIsValid = node.IsRoot || node.CellCount > NodeLayout.LeafNodeMinCells;
+            var leafIsValid = node.IsRoot || node.CellCount >= NodeLayout.LeafNodeMinCells;
             if (leafIsValid)
             {
                 return result;
@@ -132,9 +132,9 @@ namespace SimpleDatabase.Core.Trees
 
             if (hasNextSibling && HasMoreThanMinimumChildren(nextNode))
             {
-                // move min(nextNode) -> end(childNode),
-                // update key in internalNode to new max(childNode)
-                throw new NotImplementedException("borrow from next");
+                var newKey = BorrowFromNext(childNode, nextNode);
+                internalNode.SetKey(childIndex, newKey);
+                return new Result.Success();
             }
             
             if (hasPrevSibling)
@@ -156,16 +156,39 @@ namespace SimpleDatabase.Core.Trees
             return new Result.Success();
         }
 
+        private int BorrowFromNext(Node node, Node nextNode)
+        {
+            switch (node)
+            {
+                case LeafNode leafNode:
+                    var leafNextNode = (LeafNode) nextNode;
+                    var key = leafNextNode.GetCellKey(0);
+
+                    leafNode.CellCount += 1;
+                    leafNode.CopyCell(leafNextNode, 0, leafNode.CellCount - 1);
+
+                    for (var i = 0; i < leafNextNode.CellCount; i++)
+                    {
+                        leafNextNode.CopyCell(leafNextNode, i + 1, i);
+                    }
+                    leafNextNode.CellCount -= 1;
+
+                    return key;
+                case InternalNode internalNode:
+                    throw new NotImplementedException("BorrowFromNext InternalNode");
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
         private bool HasMoreThanMinimumChildren(Node node)
         {
             switch (node)
             {
                 case LeafNode leafNode:
                     return leafNode.CellCount > NodeLayout.LeafNodeMinCells;
-                    break;
                 case InternalNode internalNode:
                     return internalNode.KeyCount > NodeLayout.InternalNodeMinCells;
-                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
