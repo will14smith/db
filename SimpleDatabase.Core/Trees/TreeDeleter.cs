@@ -125,9 +125,9 @@ namespace SimpleDatabase.Core.Trees
 
             if (hasPrevSibling && HasMoreThanMinimumChildren(prevNode))
             {
-                // move max(prevNode) -> start(childNode)
-                // update key-1 in internalNode to new max(prevNode)
-                throw new NotImplementedException("borrow from prev");
+                var newKey = BorrowFromPrev(childNode, prevNode);
+                internalNode.SetKey(childIndex - 1, newKey);
+                return new Result.Success();
             }
 
             if (hasNextSibling && HasMoreThanMinimumChildren(nextNode))
@@ -156,8 +156,36 @@ namespace SimpleDatabase.Core.Trees
             return new Result.Success();
         }
 
+        private int BorrowFromPrev(Node node, Node prevNode)
+        {
+            // move max(prevNode) -> start(node)
+
+            switch (node)
+            {
+                case LeafNode leafNode:
+                    var leafPrevNode = (LeafNode)prevNode;
+
+                    leafNode.CellCount += 1;
+                    for (var i = leafNode.CellCount - 1; i > 0; i--)
+                    {
+                        leafNode.CopyCell(leafNode, i - 1, i);
+                    }
+                    leafNode.CopyCell(leafPrevNode, leafPrevNode.CellCount - 1, 0);
+
+                    leafPrevNode.CellCount -= 1;
+
+                    return leafPrevNode.GetCellKey(leafPrevNode.CellCount - 1);
+                case InternalNode internalNode:
+                    throw new NotImplementedException("BorrowFromNext InternalNode");
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
         private int BorrowFromNext(Node node, Node nextNode)
         {
+            // move min(nextNode) -> end(node)
+
             switch (node)
             {
                 case LeafNode leafNode:
