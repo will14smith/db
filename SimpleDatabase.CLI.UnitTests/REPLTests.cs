@@ -303,7 +303,7 @@ namespace SimpleDatabase.CLI.UnitTests
             RunningCommands_HasCorrectSnapshot(commands, outputs, 1, ExitCode.Success);
         }
         [Fact]
-        public void DeleteInternalNodes_Borrow()
+        public void DeleteInternalNodes_BorrowFromNext()
         {
             var commands = new string[18];
             for (var i = 0; i < 14; i++)
@@ -338,13 +338,48 @@ namespace SimpleDatabase.CLI.UnitTests
             RunningCommands_HasCorrectSnapshot(commands, outputs, 16, ExitCode.Success);
         }
         [Fact]
-        public void DeleteInternalNodes_Merge()
+        public void DeleteInternalNodes_BorrowFromPrev()
+        {
+            var commands = new string[18];
+            for (var i = 0; i < 14; i++)
+                commands[i] = $"insert {i} user{i} person{i}@example.com";
+            commands[14] = "delete 7";
+            commands[15] = "delete 8";
+            commands[16] = ".btree";
+            commands[17] = ".exit";
+
+            var outputs = new[]
+            {
+                "db > Tree:",
+                "- internal (size 1)",
+                "  - leaf (size 6)",
+                "    - 0",
+                "    - 1",
+                "    - 2",
+                "    - 3",
+                "    - 4",
+                "    - 5",
+                "- key 5",
+                "  - leaf (size 6)",
+                "    - 6",
+                "    - 9",
+                "    - 10",
+                "    - 11",
+                "    - 12",
+                "    - 13",
+                "db >"
+            };
+
+            RunningCommands_HasCorrectSnapshot(commands, outputs, 16, ExitCode.Success);
+        }
+        [Fact]
+        public void DeleteInternalNodes_MergeWithNext()
         {
             var commands = new List<string>();
             for (var i = 0; i < 14; i++)
                 commands.Add($"insert {i} user{i} person{i}@example.com");
-            commands.Add("delete 1");
             commands.Add("delete 7");
+            commands.Add("delete 1");
             commands.Add("delete 2");
             commands.Add(".btree");
             commands.Add(".exit");
@@ -359,6 +394,39 @@ namespace SimpleDatabase.CLI.UnitTests
                 "  - 5",
                 "  - 6",
                 "  - 8",
+                "  - 9",
+                "  - 10",
+                "  - 11",
+                "  - 12",
+                "  - 13",
+                "db >"
+            };
+
+            RunningCommands_HasCorrectSnapshot(commands, outputs, 0, ExitCode.Success);
+        }
+        [Fact]
+        public void DeleteInternalNodes_MergeWithPrev()
+        {
+            var commands = new List<string>();
+            for (var i = 0; i < 14; i++)
+                commands.Add($"insert {i} user{i} person{i}@example.com");
+            commands.Add("delete 1");
+            commands.Add("delete 7");
+            commands.Add("delete 8");
+            commands.Add(".btree");
+            commands.Add(".exit");
+
+            var outputs = new[]
+            {
+                "db > Tree:",
+                "- leaf (size 11)",
+                "  - 0",
+                "  - 1",
+                "  - 2",
+                "  - 3",
+                "  - 4",
+                "  - 5",
+                "  - 6",
                 "  - 9",
                 "  - 10",
                 "  - 11",
