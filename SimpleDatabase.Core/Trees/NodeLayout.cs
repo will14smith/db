@@ -53,7 +53,8 @@ namespace SimpleDatabase.Core.Trees
 
         public const int InternalNodeSpaceForCells = Pager.PageSize - InternalNodeHeaderSize;
         public const int InternalNodeMaxCells = InternalNodeSpaceForCells / InternalNodeCellSize;
-        public const int InternalNodeRightSplitCount = (InternalNodeMaxCells) / 2;
+        public const int InternalNodeMinCells = (InternalNodeMaxCells) / 2 - 1;
+        public const int InternalNodeRightSplitCount = InternalNodeMinCells + 1;
         public const int InternalNodeLeftSplitCount = InternalNodeMaxCells - InternalNodeRightSplitCount;
 
     }

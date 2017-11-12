@@ -1,5 +1,5 @@
-﻿using System;
-using SimpleDatabase.Core.Paging;
+﻿using SimpleDatabase.Core.Paging;
+using System;
 
 namespace SimpleDatabase.Core.Trees
 {
@@ -45,7 +45,7 @@ namespace SimpleDatabase.Core.Trees
 
         private Result LeafDelete(LeafNode node, int key)
         {
-            var result = LeafDeleteNoMerge(node, key);
+            var result = LeafDeleteNoUnderflow(node, key);
             if (result is Result.KeyNotFound)
             {
                 return result;
@@ -60,7 +60,7 @@ namespace SimpleDatabase.Core.Trees
             return new Result.NodeUnderflow(node);
         }
 
-        private Result LeafDeleteNoMerge(LeafNode node, int key)
+        private Result LeafDeleteNoUnderflow(LeafNode node, int key)
         {
             var cellIndex = new TreeKeySearcher(key).FindCell(node);
             if (node.GetCellKey(cellIndex) != key)
@@ -115,15 +115,60 @@ namespace SimpleDatabase.Core.Trees
             var hasPrevSibling = childIndex > 0;
             var hasNextSibling = childIndex < internalNode.KeyCount;
 
-            // if !hasPrev && !hasNext => panic!
+            if (!hasPrevSibling && !hasNextSibling)
+            {
+                throw new InvalidOperationException("Cannot have a node with no siblings unless we are root (in which case this shouldn't have been called)");
+            }
 
-            // if hasPrev && prevNode has spares => move max(prevNode) -> start(childNode), update key in internalNode
-            // if hasNext && nextNode has spares => move min(prevNode) -> end(childNode),   update key in internalNode
+            var prevNode = hasPrevSibling ? Node.Read(_pager.Get(internalNode.GetChild(childIndex - 1))) : null;
+            var nextNode = hasNextSibling ? Node.Read(_pager.Get(internalNode.GetChild(childIndex + 1))) : null;
 
-            // if hasPrev => merge prev & child
-            // if hasNext => merge child & next
+            if (hasPrevSibling && HasMoreThanMinimumChildren(prevNode))
+            {
+                // move max(prevNode) -> start(childNode)
+                // update key-1 in internalNode to new max(prevNode)
+                throw new NotImplementedException("borrow from prev");
+            }
 
-            throw new NotImplementedException("Implement ResolveUnderflow");
+            if (hasNextSibling && HasMoreThanMinimumChildren(nextNode))
+            {
+                // move min(nextNode) -> end(childNode),
+                // update key in internalNode to new max(childNode)
+                throw new NotImplementedException("borrow from next");
+            }
+            
+            if (hasPrevSibling)
+            {
+                // merge prev & child
+                throw new NotImplementedException("merge with prev");
+            }
+            else
+            {
+                // merge child & next   
+                throw new NotImplementedException("merge with next");
+            }
+
+            if (internalNode.KeyCount <= NodeLayout.InternalNodeMinCells)
+            {
+                return new Result.NodeUnderflow(childNode);
+            }
+
+            return new Result.Success();
+        }
+
+        private bool HasMoreThanMinimumChildren(Node node)
+        {
+            switch (node)
+            {
+                case LeafNode leafNode:
+                    return leafNode.CellCount > NodeLayout.LeafNodeMinCells;
+                    break;
+                case InternalNode internalNode:
+                    return internalNode.KeyCount > NodeLayout.InternalNodeMinCells;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         private abstract class Result
