@@ -402,7 +402,7 @@ namespace SimpleDatabase.CLI.UnitTests
                 "db >"
             };
 
-            RunningCommands_HasCorrectSnapshot(commands, outputs, 0, ExitCode.Success);
+            RunningCommands_HasCorrectSnapshot(commands, outputs, 17, ExitCode.Success);
         }
         [Fact]
         public void DeleteInternalNodes_MergeWithPrev()
@@ -421,7 +421,6 @@ namespace SimpleDatabase.CLI.UnitTests
                 "db > Tree:",
                 "- leaf (size 11)",
                 "  - 0",
-                "  - 1",
                 "  - 2",
                 "  - 3",
                 "  - 4",
@@ -435,7 +434,7 @@ namespace SimpleDatabase.CLI.UnitTests
                 "db >"
             };
 
-            RunningCommands_HasCorrectSnapshot(commands, outputs, 0, ExitCode.Success);
+            RunningCommands_HasCorrectSnapshot(commands, outputs, 17, ExitCode.Success);
         }
 
     }

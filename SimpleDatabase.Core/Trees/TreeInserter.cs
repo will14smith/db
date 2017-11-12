@@ -53,7 +53,7 @@ namespace SimpleDatabase.Core.Trees
                 throw new InvalidOperationException("Uhm...?");
             }
 
-            var leftPage = _pager.GetUnusedPage();
+            var leftPage = _pager.Allocate();
             var rightPage = _pager.Get(split.Right);
             var rootPage = _pager.Get(split.Left);
 
@@ -78,7 +78,7 @@ namespace SimpleDatabase.Core.Trees
                 return LeafInsertNonFull(node, key, row, cellIndex);
             }
 
-            var newPage = _pager.GetUnusedPage();
+            var newPage = _pager.Allocate();
             var newNode = LeafNode.New(newPage);
 
             newNode.NextLeaf = node.NextLeaf;
@@ -153,7 +153,7 @@ namespace SimpleDatabase.Core.Trees
             // this split is pre-emptive as there might be space in the children
             // all the B+ tree invariants still hold though
 
-            var newPage = _pager.GetUnusedPage();
+            var newPage = _pager.Allocate();
             var newNode = InternalNode.New(newPage);
 
             var threshold = NodeLayout.InternalNodeLeftSplitCount;

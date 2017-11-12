@@ -1,5 +1,6 @@
 ﻿using SimpleDatabase.Core.Paging;
 using System;
+using System.Runtime.CompilerServices;
 
 namespace SimpleDatabase.Core.Trees
 {
@@ -38,9 +39,31 @@ namespace SimpleDatabase.Core.Trees
                 case Result.KeyNotFound keyNotFound:
                     return new DeleteResult.KeyNotFound(keyNotFound.Key);
 
+                case Result.NodeUnderflow underflow:
+                    PromoteSingleChildToRoot(page, (InternalNode)underflow.Node);
+                    return new DeleteResult.Success(key);
+
                 default:
                     throw new ArgumentOutOfRangeException($"Unhandled result: {result}");
             }
+        }
+
+        private void PromoteSingleChildToRoot(Page page, InternalNode underflowNode)
+        {
+            if (!underflowNode.IsRoot)
+            {
+                throw new InvalidOperationException("Cannot promote from non-root");
+            }
+            if (underflowNode.KeyCount != 0)
+            {
+                throw new InvalidOperationException("There isn't a single child to promote.");
+            }
+
+            var childPageNumber = underflowNode.GetChild(0);
+            var childPage = _pager.Get(childPageNumber);
+
+            Array.Copy(childPage.Data, page.Data, Pager.PageSize);
+            _pager.Free(childPageNumber);
         }
 
         private Result LeafDelete(LeafNode node, int key)
@@ -110,6 +133,23 @@ namespace SimpleDatabase.Core.Trees
             }
         }
 
+        private void InternalDeleteNoUnderflow(InternalNode internalNode, int childIndex)
+        {
+            if (childIndex == internalNode.KeyCount)
+            {
+                internalNode.RightChild = internalNode.GetChild(internalNode.KeyCount - 1);
+            }
+            else
+            {
+                for (var i = childIndex; i < internalNode.KeyCount; i++)
+                {
+                    internalNode.CopyCell(internalNode, i + 1, i);
+                }
+            }
+
+            internalNode.KeyCount -= 1;
+        }
+
         private Result ResolveUnderflow(InternalNode internalNode, int childIndex, Node childNode)
         {
             var hasPrevSibling = childIndex > 0;
@@ -139,21 +179,37 @@ namespace SimpleDatabase.Core.Trees
             
             if (hasPrevSibling)
             {
-                // merge prev & child
-                throw new NotImplementedException("merge with prev");
+                Merge(prevNode, childNode);
+                InternalDeleteNoUnderflow(internalNode, childIndex);
+                _pager.Free(childNode.PageNumber);
             }
             else
             {
-                // merge child & next   
-                throw new NotImplementedException("merge with next");
+                Merge(childNode, nextNode);
+                InternalDeleteNoUnderflow(internalNode, childIndex + 1);
+                _pager.Free(nextNode.PageNumber);
             }
 
-            if (internalNode.KeyCount <= NodeLayout.InternalNodeMinCells)
+            var isValidInternalNode = (internalNode.IsRoot && internalNode.KeyCount > 0) || internalNode.KeyCount >= NodeLayout.InternalNodeMinCells;
+            if (isValidInternalNode)
             {
-                return new Result.NodeUnderflow(childNode);
+                return new Result.Success();
             }
 
-            return new Result.Success();
+            return new Result.NodeUnderflow(internalNode);
+        }
+
+        private bool HasMoreThanMinimumChildren(Node node)
+        {
+            switch (node)
+            {
+                case LeafNode leafNode:
+                    return leafNode.CellCount > NodeLayout.LeafNodeMinCells;
+                case InternalNode internalNode:
+                    return internalNode.KeyCount > NodeLayout.InternalNodeMinCells;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         private int BorrowFromPrev(Node node, Node prevNode)
@@ -181,7 +237,6 @@ namespace SimpleDatabase.Core.Trees
                     throw new ArgumentOutOfRangeException();
             }
         }
-
         private int BorrowFromNext(Node node, Node nextNode)
         {
             // move min(nextNode) -> end(node)
@@ -209,14 +264,26 @@ namespace SimpleDatabase.Core.Trees
             }
         }
 
-        private bool HasMoreThanMinimumChildren(Node node)
+        private void Merge(Node prevNode, Node node)
         {
+            // move all from node -> prevNode
+
             switch (node)
             {
                 case LeafNode leafNode:
-                    return leafNode.CellCount > NodeLayout.LeafNodeMinCells;
+                    var leafPrevNode = (LeafNode)prevNode;
+
+                    var offset = leafPrevNode.CellCount;
+                    leafPrevNode.CellCount += leafNode.CellCount;
+                    for (var i = 0; i < leafNode.CellCount; i++)
+                    {
+                        leafPrevNode.CopyCell(leafNode, i, offset + i);
+                    }
+
+                    leafPrevNode.NextLeaf = leafNode.NextLeaf;
+                    break;
                 case InternalNode internalNode:
-                    return internalNode.KeyCount > NodeLayout.InternalNodeMinCells;
+                    throw new NotImplementedException("BorrowFromNext InternalNode");
                 default:
                     throw new ArgumentOutOfRangeException();
             }

@@ -10,6 +10,7 @@ namespace SimpleDatabase.Core.Paging
         Page Get(int index);
         void Flush(int index);
 
-        Page GetUnusedPage();
+        Page Allocate();
+        void Free(int index);
     }
 }
