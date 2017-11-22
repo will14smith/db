@@ -42,36 +42,45 @@ namespace SimpleDatabase.Core.Trees
             set => BitConverter.GetBytes(value).CopyTo(Page.Data, NodeLayout.LeafNodeNextLeafOffset);
         }
 
-        public int GetCellOffset(int index)
+        public Span<byte> GetCellOffset(int index)
         {
-            return NodeLayout.LeafNodeHeaderSize + index * NodeLayout.LeafNodeCellSize;
+            return Page[NodeLayout.LeafNodeHeaderSize + index * NodeLayout.LeafNodeCellSize].Slice(0, NodeLayout.LeafNodeCellSize);
         }
-        public int GetCellKeyOffset(int index)
+        public Span<byte> GetCellKeyOffset(int index)
         {
             return GetCellOffset(index);
         }
-        public int GetCellValueOffset(int index)
+        public Span<byte> GetCellValueOffset(int index)
         {
-            return GetCellOffset(index) + NodeLayout.LeafNodeKeySize;
+            return GetCellOffset(index).Slice(NodeLayout.LeafNodeKeySize);
         }
 
         public int GetCellKey(int cellNumber)
         {
-            return BitConverter.ToInt32(Page.Data, GetCellKeyOffset(cellNumber));
+            return GetCellKeyOffset(cellNumber).Read<int>();
+        }
+        public Row GetCellValue(int cellNumber)
+        {
+            return Row.Deserialize(GetCellValueOffset(cellNumber));
+        }
+        public object GetCellColumn(int cellNumber, int columnIndex)
+        {
+            // TODO optimise this, don't need to read the whole row
+            return GetCellValue(cellNumber).GetColumn(columnIndex);
         }
 
         public void SetCell(int cellNumber, int key, Row value)
         {
-            BitConverter.GetBytes(key).CopyTo(Page.Data, GetCellKeyOffset(cellNumber));
-            value.Serialize(Page.Data, GetCellValueOffset(cellNumber));
+            GetCellKeyOffset(cellNumber).Write(key);
+            value.Serialize(GetCellValueOffset(cellNumber));
         }
 
         public void CopyCell(LeafNode source, int sourceCell, int destinationCell)
         {
-            Array.Copy(
-                source.Page.Data, GetCellOffset(sourceCell),
-                Page.Data, GetCellOffset(destinationCell),
-                NodeLayout.LeafNodeCellSize);
+            var src = source.GetCellOffset(sourceCell);
+            var dst = GetCellOffset(destinationCell);
+
+            src.CopyTo(dst);
         }
     }
 }

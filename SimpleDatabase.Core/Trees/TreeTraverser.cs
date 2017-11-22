@@ -5,21 +5,19 @@ namespace SimpleDatabase.Core.Trees
 {
     public class TreeTraverser
     {
-        private readonly Table _table;
         private readonly IPager _pager;
 
-        public TreeTraverser(Table table, IPager pager)
+        public TreeTraverser(IPager pager)
         {
-            _table = table;
             _pager = pager;
         }
 
-        public Cursor StartCursor()
+        public Cursor StartCursor(int rootPageNumber)
         {
             var strategy = new TreeStartSearcher();
             var seacher = new TreeSearcher(_pager, strategy);
 
-            return seacher.FindCursor(_table.RootPageNumber);
+            return seacher.FindCursor(rootPageNumber);
         }
 
         public Cursor AdvanceCursor(Cursor cursor)

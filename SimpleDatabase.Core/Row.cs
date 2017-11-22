@@ -34,52 +34,32 @@ namespace SimpleDatabase.Core
             return $"({Id}, {Username}, {Email})";
         }
 
-        public void Serialize(byte[] destination, int offset)
+        public void Serialize(Span<byte> dest)
         {
-            var idBytes = BitConverter.GetBytes(Id);
-
-            Array.Copy(idBytes, 0, destination, offset + IdOffset, IdSize);
-            WriteString(Username, destination, offset + UsernameOffset, UsernameSize);
-            WriteString(Email, destination, offset + EmailOffset, EmailSize);
+            dest.Write(Id);
+            dest.Slice(UsernameOffset, UsernameSize).WriteString(Username);
+            dest.Slice(EmailOffset, EmailSize).WriteString(Email);
         }
 
-        public static Row Deserialize(byte[] source, int offset)
+        public static Row Deserialize(Span<byte> source)
         {
-            var id = BitConverter.ToInt32(source, offset + IdOffset);
-            var username = ReadString(source, offset + UsernameOffset, UsernameSize);
-            var email = ReadString(source, offset + EmailOffset, EmailSize);
+            var id = source.Read<int>();
+            var username = source.Slice(UsernameOffset, UsernameSize).ReadString();
+            var email = source.Slice(EmailOffset, EmailSize).ReadString();
 
             return new Row(id, username, email);
         }
 
-        private static void WriteString(string source, byte[] destination, int offset, int size)
+        public object GetColumn(int columnIndex)
         {
-            // TODO handle UTF8
-            var encoding = Encoding.ASCII;
-
-            if (encoding.GetByteCount(source) > size)
+            switch (columnIndex)
             {
-                throw new ArgumentOutOfRangeException(nameof(source), $"Length must be < {size}");
-            }
+                case 0: return Id;
+                case 1: return Username;
+                case 2: return Email;
 
-            var count = encoding.GetBytes(source, 0, source.Length, destination, offset);
-            if (count < size)
-            {
-                destination[offset + count] = 0;
+                default: throw new ArgumentOutOfRangeException(nameof(columnIndex));
             }
-        }
-        private static string ReadString(byte[] source, int offset, int size)
-        {
-            var len = 0;
-            while (len < size && source[offset + len] != 0)
-            {
-                len++;
-            }
-
-            // TODO handle UTF8
-            var encoding = Encoding.ASCII;
-
-            return encoding.GetString(source, offset, len);
         }
     }
 }

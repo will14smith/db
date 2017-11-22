@@ -1,3 +1,5 @@
+using System;
+
 namespace SimpleDatabase.Core.Paging
 {
     public class Page
@@ -10,5 +12,7 @@ namespace SimpleDatabase.Core.Paging
 
         public int Number { get; }
         public byte[] Data { get; }
+
+        public Span<byte> this[int index] => new Span<byte>(Data, index);
     }
 }

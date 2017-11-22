@@ -33,27 +33,28 @@ namespace SimpleDatabase.Core.Trees
 
         public int KeyCount
         {
-            get => BitConverter.ToInt32(Page.Data, NodeLayout.InternalNodeKeyCountOffset);
-            set => BitConverter.GetBytes(value).CopyTo(Page.Data, NodeLayout.InternalNodeKeyCountOffset);
+            get => Page[NodeLayout.InternalNodeKeyCountOffset].Read<int>();
+            set => Page[NodeLayout.InternalNodeKeyCountOffset].Write(value);
         }
 
         public int RightChild
         {
-            get => BitConverter.ToInt32(Page.Data, NodeLayout.InternalNodeRightChildOffset);
-            set => BitConverter.GetBytes(value).CopyTo(Page.Data, NodeLayout.InternalNodeRightChildOffset);
+            get => Page[NodeLayout.InternalNodeRightChildOffset].Read<int>();
+            set => Page[NodeLayout.InternalNodeRightChildOffset].Write(value);
+
         }
 
-        public int GetCellOffset(int cellNumber)
+        public Span<byte> GetCellOffset(int cellNumber)
         {
-            return NodeLayout.InternalNodeHeaderSize + cellNumber * NodeLayout.InternalNodeCellSize;
+            return Page[NodeLayout.InternalNodeHeaderSize + cellNumber * NodeLayout.InternalNodeCellSize].Slice(0, NodeLayout.InternalNodeCellSize);
         }
-        public int GetChildOffset(int cellNumber)
+        public Span<byte> GetChildOffset(int cellNumber)
         {
             return GetCellOffset(cellNumber);
         }
-        public int GetKeyOffset(int cellNumber)
+        public Span<byte> GetKeyOffset(int cellNumber)
         {
-            return GetCellOffset(cellNumber) + NodeLayout.InternalNodeChildSize;
+            return GetCellOffset(cellNumber).Slice(NodeLayout.InternalNodeChildSize);
         }
 
         public int GetChild(int childNumber)
@@ -68,7 +69,7 @@ namespace SimpleDatabase.Core.Trees
                 return RightChild;
             }
 
-            return BitConverter.ToInt32(Page.Data, GetChildOffset(childNumber));
+            return GetChildOffset(childNumber).Read<int>();
         }
         public void SetChild(int childNumber, int child)
         {
@@ -83,17 +84,17 @@ namespace SimpleDatabase.Core.Trees
             }
             else
             {
-                BitConverter.GetBytes(child).CopyTo(Page.Data, GetChildOffset(childNumber));
+                GetChildOffset(childNumber).Write(child);
             }
         }
 
         public int GetKey(int keyNumber)
         {
-            return BitConverter.ToInt32(Page.Data, GetKeyOffset(keyNumber));
+            return GetKeyOffset(keyNumber).Read<int>();
         }
         public void SetKey(int keyNumber, int key)
         {
-            BitConverter.GetBytes(key).CopyTo(Page.Data, GetKeyOffset(keyNumber));
+            GetKeyOffset(keyNumber).Write(key);
         }
 
         public void SetCell(int cellNumber, int child, int key)
@@ -104,10 +105,10 @@ namespace SimpleDatabase.Core.Trees
 
         public void CopyCell(InternalNode source, int sourceCell, int destinationCell)
         {
-            Array.Copy(
-                source.Page.Data, GetCellOffset(sourceCell),
-                Page.Data, GetCellOffset(destinationCell),
-                NodeLayout.InternalNodeCellSize);
+            var src = source.GetCellOffset(sourceCell);
+            var dst = GetCellOffset(destinationCell);
+
+            src.CopyTo(dst);
         }
 
         public override string ToString()
@@ -121,7 +122,7 @@ namespace SimpleDatabase.Core.Trees
             }
 
             sb.Append($"p{GetChild(KeyCount)}");
-            
+
             return sb.ToString();
         }
     }
