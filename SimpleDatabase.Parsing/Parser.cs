@@ -12,6 +12,9 @@ using SimpleDatabase.Parsing.Visitors;namespace SimpleDatabase.Parsing
             var parser = new SQLParser(new CommonTokenStream(lexer));
 
             var x = parser.program();
+
+            var visitor = new ProgramVisitor();
+            var statements = x.Accept(visitor);
         }
     }
 }
