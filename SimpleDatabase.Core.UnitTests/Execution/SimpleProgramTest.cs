@@ -18,14 +18,20 @@ namespace SimpleDatabase.Core.UnitTests.Execution
             {
                 // cursor = first(open(RootPageNumber))
                 new OpenReadOperation(RootPageNumber),
-                new FirstOperation(12),
+                new FirstOperation(16),
                 // loop:
                 new StoreOperation(CursorSlot),
+
+                // if cursor.Key == 2 -> jump to next
+                new LoadOperation(CursorSlot),
+                new KeyOperation(),
+                new ConstIntOperation(2),
+                new ConditionalJumpOperation(Comparison.Equal, 14),
 
                 // id = cursor.Key
                 new LoadOperation(CursorSlot),
                 new KeyOperation(),
-
+                
                 // username = cursor.Column[Username]
                 new LoadOperation(CursorSlot),
                 new ColumnOperation(1),
@@ -63,7 +69,7 @@ namespace SimpleDatabase.Core.UnitTests.Execution
 
                     var result = new ProgramExecutor(Program, pager).Execute().ToList();
 
-                    Assert.Equal(2, result.Count);
+                    Assert.Equal(1, result.Count);
                 }
             }
             finally

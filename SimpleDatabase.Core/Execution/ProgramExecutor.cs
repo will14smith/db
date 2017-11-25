@@ -184,6 +184,33 @@ namespace SimpleDatabase.Core.Execution
                         return (state, new Result.Next());
                     }
 
+                // Jumps
+                case ConditionalJumpOperation conditionalJump:
+                    {
+                        Value value1, value2;
+                        (state, value1) = state.PopValue();
+                        (state, value2) = state.PopValue();
+
+                        if (Compare(conditionalJump.Comparison, value1, value2))
+                        {
+                            return (state, new Result.Jump(conditionalJump.Address));
+                        }
+
+                        return (state, new Result.Next());
+                    }
+                case JumpOperation jump:
+                    {
+                        return (state, new Result.Jump(jump.Address));
+                    }
+
+                // Constants
+                case ConstIntOperation constInt:
+                    {
+                        state = state.PushValue(new ObjectValue(constInt.Value));
+
+                        return (state, new Result.Next());
+                    }
+
                 // Other
                 case YieldRowOperation yield:
                     {
@@ -207,6 +234,22 @@ namespace SimpleDatabase.Core.Execution
 
                 default:
                     throw new NotImplementedException($"Unsupported operation type: {operation.GetType().Name}");
+            }
+        }
+
+        private bool Compare(Comparison comparison, Value value1, Value value2)
+        {
+            if (!(value1 is ObjectValue o1) || !(value2 is ObjectValue o2))
+                throw new NotImplementedException();
+
+            switch (comparison)
+            {
+                case Comparison.Equal:
+                    return Equals(o1.Value, o2.Value);
+                case Comparison.NotEqual:
+                    return !Equals(o1.Value, o2.Value);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(comparison), comparison, null);
             }
         }
 
