@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SimpleDatabase.Core\SimpleDatabase.Core.csproj" />
+    <ProjectReference Include="..\SimpleDatabase.Parsing\SimpleDatabase.Parsing.csproj" />
   </ItemGroup>
 
 </Project>
