@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleDatabase.Execution", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleDatabase.Execution.UnitTests", "SimpleDatabase.Execution.UnitTests\SimpleDatabase.Execution.UnitTests.csproj", "{944F4892-C09D-4060-BAC0-1BFE2C0011C9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleDatabase.Planning.UnitTests", "SimpleDatabase.Planning.UnitTests\SimpleDatabase.Planning.UnitTests.csproj", "{F81833A2-2DEE-4437-B384-D13DF338096B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,6 +77,10 @@ Global
 		{944F4892-C09D-4060-BAC0-1BFE2C0011C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{944F4892-C09D-4060-BAC0-1BFE2C0011C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{944F4892-C09D-4060-BAC0-1BFE2C0011C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F81833A2-2DEE-4437-B384-D13DF338096B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F81833A2-2DEE-4437-B384-D13DF338096B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F81833A2-2DEE-4437-B384-D13DF338096B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F81833A2-2DEE-4437-B384-D13DF338096B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
