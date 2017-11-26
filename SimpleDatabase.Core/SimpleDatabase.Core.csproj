@@ -13,10 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Execution\Types\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\SimpleDatabase.Utils\SimpleDatabase.Utils.csproj" />
   </ItemGroup>
 
