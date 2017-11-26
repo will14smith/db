@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 
 namespace SimpleDatabase.Utils
 {
@@ -13,7 +14,7 @@ namespace SimpleDatabase.Utils
         {
             return HasValue ? new Option<TOut>(fn(Value)) : new Option<TOut>();
         }
-        public TOut Map<TOut>(Func<T, TOut> some, Func<TOut> none)
+        public TOut Map<TOut>([InstantHandle] Func<T, TOut> some, [InstantHandle] Func<TOut> none)
         {
             return HasValue ? some(Value) : none();
         }

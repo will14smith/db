@@ -1,5 +1,6 @@
 ﻿using System;
 using SimpleDatabase.Parsing.Statements;
+using SimpleDatabase.Planning.Nodes;
 
 namespace SimpleDatabase.Planning
 {
@@ -7,7 +8,19 @@ namespace SimpleDatabase.Planning
     {
         public Plan Plan(Statement statment)
         {
-            throw new NotImplementedException();
+            if (!(statment is SelectStatement select))
+            {
+                throw new NotImplementedException();
+            }
+
+            Node root = new ScanTableNode(((Table.TableName) select.Table).Name);
+            root = select.Where.Map(
+                pred => new FilterNode(root, pred),
+                () => root
+            );
+            root = new ProjectionNode(root, select.Columns);
+
+            return new Plan(root);
         }
     }
 }
