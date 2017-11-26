@@ -5,7 +5,7 @@
     /// 
     /// Reads the key of the row pointed at by the cursor and pushes it onto the stack
     /// </summary>
-    public class KeyOperation : Operation
+    public class KeyOperation : IOperation
     {
 
     }

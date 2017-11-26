@@ -6,11 +6,11 @@
     /// Creates a cursor T2 pointing to the next entry after T1
     /// If there is a next entry it jumps to successAddress, otherwise it moves to the next instruction
     /// </summary>
-    public class NextOperation : Operation
+    public class NextOperation : IOperation
     {
-        public int SuccessAddress { get; }
+        public ProgramLabel SuccessAddress { get; }
 
-        public NextOperation(int successAddress)
+        public NextOperation(ProgramLabel successAddress)
         {
             SuccessAddress = successAddress;
         }

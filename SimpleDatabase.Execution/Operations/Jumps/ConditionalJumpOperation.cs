@@ -5,12 +5,12 @@
     /// 
     /// Pops 2 values off stack then jumps to the address iff (x COMP y)
     /// </summary>
-    public class ConditionalJumpOperation : Operation
+    public class ConditionalJumpOperation : IOperation
     {
         public Comparison Comparison { get; }
-        public int Address { get; }
+        public ProgramLabel Address { get; }
 
-        public ConditionalJumpOperation(Comparison comparison, int address)
+        public ConditionalJumpOperation(Comparison comparison, ProgramLabel address)
         {
             Address = address;
             Comparison = comparison;

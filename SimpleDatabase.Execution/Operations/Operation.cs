@@ -1,6 +1,6 @@
 ﻿namespace SimpleDatabase.Execution.Operations
 {
-    public abstract class Operation
+    public interface IOperation
     {
         // TODO
     }

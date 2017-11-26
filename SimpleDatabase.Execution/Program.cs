@@ -5,10 +5,10 @@ namespace SimpleDatabase.Execution
 {
     public class Program
     {
-        public IReadOnlyList<Operation> Operations { get; }
-        public IReadOnlyList<SlotDefinition> Slots { get; }
+        public IReadOnlyList<IOperation> Operations { get; }
+        public IReadOnlyDictionary<SlotLabel, SlotDefinition> Slots { get; }
 
-        public Program(IReadOnlyList<Operation> operations, IReadOnlyList<SlotDefinition> slots)
+        public Program(IReadOnlyList<IOperation> operations, IReadOnlyDictionary<SlotLabel, SlotDefinition> slots)
         {
             Operations = operations;
             Slots = slots;

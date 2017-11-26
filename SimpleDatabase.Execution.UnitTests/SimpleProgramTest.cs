@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using SimpleDatabase.Core;
 using SimpleDatabase.Core.Paging;
-using SimpleDatabase.Execution;
 using SimpleDatabase.Execution.Operations;
 using SimpleDatabase.Execution.Operations.Columns;
 using SimpleDatabase.Execution.Operations.Constants;
@@ -11,53 +11,59 @@ using SimpleDatabase.Execution.Operations.Jumps;
 using SimpleDatabase.Execution.Operations.Slots;
 using Xunit;
 
-namespace SimpleDatabase.Core.UnitTests.Execution
+namespace SimpleDatabase.Execution.UnitTests
 {
     public class SimpleProgramTest
     {
         private const int RootPageNumber = 0;
-        private const int CursorSlot = 0;
+
+        private static readonly ProgramLabel Loop = ProgramLabel.Create();
+        private static readonly ProgramLabel Next = ProgramLabel.Create();
+        private static readonly ProgramLabel Finish = ProgramLabel.Create();
+        private static readonly SlotLabel Cursor = SlotLabel.Create();
 
         private static readonly Program Program = new Program(
-            new List<Operation>
+            new List<IOperation>
             {
                 // cursor = first(open(RootPageNumber))
                 new OpenReadOperation(RootPageNumber),
-                new FirstOperation(16),
-                // loop:
-                new StoreOperation(CursorSlot),
+                new FirstOperation(Finish),
+                Loop,
+                new StoreOperation(Cursor),
 
                 // if cursor.Key == 2 -> jump to next
-                new LoadOperation(CursorSlot),
+                new LoadOperation(Cursor),
                 new KeyOperation(),
                 new ConstIntOperation(2),
-                new ConditionalJumpOperation(Comparison.Equal, 14),
+                new ConditionalJumpOperation(Comparison.Equal, Next),
 
                 // id = cursor.Key
-                new LoadOperation(CursorSlot),
+                new LoadOperation(Cursor),
                 new KeyOperation(),
                 
                 // username = cursor.Column[Username]
-                new LoadOperation(CursorSlot),
+                new LoadOperation(Cursor),
                 new ColumnOperation(1),
 
                 // email = cursor.Column[Email]
-                new LoadOperation(CursorSlot),
+                new LoadOperation(Cursor),
                 new ColumnOperation(2),
 
                 // yield (id, username, email)
                 new YieldRowOperation(3),
 
                 // cursor = next(cursor) -> loop
-                new LoadOperation(CursorSlot),
-                new NextOperation(2),
+                Next,
+                new LoadOperation(Cursor),
+                new NextOperation(Loop),
 
                 // finish
+                Finish,
                 new FinishOperation(),
             },
-            new List<SlotDefinition>
+            new Dictionary<SlotLabel, SlotDefinition>
             {
-                new SlotDefinition() // cursor
+                { Cursor, new SlotDefinition() }
             });
 
         [Fact]

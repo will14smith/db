@@ -5,7 +5,7 @@
     /// 
     /// Duplicates the value at the top of the stack
     /// </summary>
-    public class DupOperation : Operation
+    public class DupOperation : IOperation
     {
 
     }

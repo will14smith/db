@@ -1,10 +1,10 @@
 ﻿namespace SimpleDatabase.Execution.Operations.Jumps
 {
-    public class JumpOperation : Operation
+    public class JumpOperation : IOperation
     {
-        public int Address { get; }
+        public ProgramLabel Address { get; }
 
-        public JumpOperation(int address)
+        public JumpOperation(ProgramLabel address)
         {
             Address = address;
         }

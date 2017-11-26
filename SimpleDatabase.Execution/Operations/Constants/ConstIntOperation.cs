@@ -5,7 +5,7 @@
     /// 
     /// Pushes a constant int on to the stack
     /// </summary>
-    public class ConstIntOperation : Operation
+    public class ConstIntOperation : IOperation
     {
         public int Value { get; }
 

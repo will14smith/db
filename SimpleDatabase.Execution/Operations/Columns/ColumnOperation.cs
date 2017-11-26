@@ -5,7 +5,7 @@
     /// 
     /// Reads the nth column of the row pointed at by the cursor and pushes it onto the stack
     /// </summary>
-    public class ColumnOperation : Operation
+    public class ColumnOperation : IOperation
     {
         public int ColumnIndex { get; }
 

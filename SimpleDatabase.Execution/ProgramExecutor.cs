@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using SimpleDatabase.Core.Paging;
 using SimpleDatabase.Core.Trees;
 using SimpleDatabase.Execution.Operations;
@@ -17,15 +18,19 @@ namespace SimpleDatabase.Execution
         private readonly Program _program;
         private readonly IPager _pager;
 
+        private readonly IReadOnlyDictionary<ProgramLabel, int> _labelAddresses;
+
         public ProgramExecutor(Program program, IPager pager)
         {
             _program = program;
             _pager = pager;
+
+            _labelAddresses = program.Operations.Select((x, i) => (x, i)).Where(x => x.Item1 is ProgramLabel).ToDictionary(x => (ProgramLabel)x.Item1, x => x.Item2);
         }
 
         public IEnumerable<IReadOnlyCollection<Value>> Execute()
         {
-            var state = new ProgramState(_program.Slots.Count);
+            var state = new ProgramState(_program.Slots);
 
             while (true)
             {
@@ -47,7 +52,7 @@ namespace SimpleDatabase.Execution
                         break;
 
                     case Result.Jump jump:
-                        state = nextState.SetPC(jump.Address);
+                        state = nextState.SetPC(_labelAddresses[jump.Address]);
                         break;
 
                     case Result.Finished _:
@@ -60,7 +65,7 @@ namespace SimpleDatabase.Execution
             }
         }
 
-        private Operation GetOperation(ProgramState state)
+        private IOperation GetOperation(ProgramState state)
         {
             var pc = state.GetPC();
             if (pc >= _program.Operations.Count)
@@ -71,7 +76,7 @@ namespace SimpleDatabase.Execution
             return _program.Operations[pc];
         }
 
-        private (ProgramState, Result) Execute(ProgramState state, Operation operation)
+        private (ProgramState, Result) Execute(ProgramState state, IOperation operation)
         {
             switch (operation)
             {
@@ -217,6 +222,9 @@ namespace SimpleDatabase.Execution
                     }
 
                 // Other
+                case ProgramLabel _:
+                    return (state, new Result.Next());
+
                 case YieldRowOperation yield:
                     {
                         if (state.StackCount < yield.ColumnCount)
@@ -263,9 +271,9 @@ namespace SimpleDatabase.Execution
             public class Next : Result { }
             public class Jump : Result
             {
-                public int Address { get; }
+                public ProgramLabel Address { get; }
 
-                public Jump(int address)
+                public Jump(ProgramLabel address)
                 {
                     Address = address;
                 }

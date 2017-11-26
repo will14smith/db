@@ -5,7 +5,7 @@
     /// 
     /// Finishes the query, clears anything left open up (transactions, locks, etc...)
     /// </summary>
-    public class FinishOperation : Operation
+    public class FinishOperation : IOperation
     {
 
     }

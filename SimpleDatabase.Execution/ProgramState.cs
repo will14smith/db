@@ -9,19 +9,18 @@ namespace SimpleDatabase.Execution
         // TODO make this class immutable
         private int _pc;
         private readonly Stack<Value> _stack = new Stack<Value>();
-        private readonly Value[] _slots;
+        private readonly IDictionary<SlotLabel, Value> _slots = new Dictionary<SlotLabel, Value>();
 
         public int StackCount => _stack.Count;
 
-        public ProgramState(int slotCount)
+        public ProgramState(IReadOnlyDictionary<SlotLabel, SlotDefinition> slotDefinitions)
         {
-            if(slotCount < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(slotCount), "slotCount must not be negative");
-            }
-
             _pc = 0;
-            _slots = new Value[slotCount];
+
+            foreach (var (label, _) in slotDefinitions)
+            {
+                _slots.Add(label, null);
+            }
         }
 
 
@@ -52,23 +51,13 @@ namespace SimpleDatabase.Execution
             return this;
         }
 
-        public Value GetSlot(int index)
+        public Value GetSlot(SlotLabel label)
         {
-            if (index < 0 || index >= _slots.Length)
-            {
-                throw new ArgumentOutOfRangeException(nameof(index), "index must be a valid index in the slots");
-            }
-
-            return _slots[index];
+            return _slots[label];
         }
-        public ProgramState SetSlot(int index, Value value)
+        public ProgramState SetSlot(SlotLabel label, Value value)
         {
-            if (index < 0 || index >= _slots.Length)
-            {
-                throw new ArgumentOutOfRangeException(nameof(index), "index must be a valid index in the slots");
-            }
-
-            _slots[index] = value;
+            _slots[label] = value;
 
             return this;
         }

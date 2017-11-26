@@ -5,11 +5,11 @@
     /// 
     /// Reads the value in the slot and pushes on to the stack
     /// </summary>
-    public class LoadOperation : Operation
+    public class LoadOperation : IOperation
     {
-        public int Slot { get; }
+        public SlotLabel Slot { get; }
 
-        public LoadOperation(int slot)
+        public LoadOperation(SlotLabel slot)
         {
             Slot = slot;
         }

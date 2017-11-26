@@ -5,11 +5,11 @@
     /// 
     /// Pops a value off the stack and stores it in the slot
     /// </summary>
-    public class StoreOperation : Operation
+    public class StoreOperation : IOperation
     {
-        public int Slot { get; }
+        public SlotLabel Slot { get; }
 
-        public StoreOperation(int slot)
+        public StoreOperation(SlotLabel slot)
         {
             Slot = slot;
         }
