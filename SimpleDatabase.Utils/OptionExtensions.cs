@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace SimpleDatabase.Options
+namespace SimpleDatabase.Utils
 {
     public static class OptionExtensions
     {

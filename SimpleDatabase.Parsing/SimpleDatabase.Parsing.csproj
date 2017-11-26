@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SimpleDatabase.Options\SimpleDatabase.Options.csproj" />
+    <ProjectReference Include="..\SimpleDatabase.Utils\SimpleDatabase.Utils.csproj" />
   </ItemGroup>
 
 </Project>

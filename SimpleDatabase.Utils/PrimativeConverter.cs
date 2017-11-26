@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace SimpleDatabase.Core
+namespace SimpleDatabase.Utils
 {
     public static class PrimativeConverter
     {
@@ -51,6 +51,7 @@ namespace SimpleDatabase.Core
                 throw new ArgumentOutOfRangeException(nameof(value), $"Length must be < {span.Length}");
             }
 
+            // TODO make this use Spans better
             var bytes = encoding.GetBytes(value);
             bytes.CopyTo(span);
 

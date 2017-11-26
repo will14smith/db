@@ -15,9 +15,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleDatabase.Parsing", "S
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleDatabase.Planning", "SimpleDatabase.Planning\SimpleDatabase.Planning.csproj", "{EF455001-C0A8-4386-8177-DBA038A9C099}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleDatabase.Options", "SimpleDatabase.Options\SimpleDatabase.Options.csproj", "{21AFD0A4-5633-4996-BB4F-E7F4892849B9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleDatabase.Parsing.UnitTests", "SimpleDatabase.Parsing.UnitTests\SimpleDatabase.Parsing.UnitTests.csproj", "{A1B28714-86DF-46E1-AF7A-EA6DD191BE3D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleDatabase.Parsing.UnitTests", "SimpleDatabase.Parsing.UnitTests\SimpleDatabase.Parsing.UnitTests.csproj", "{A1B28714-86DF-46E1-AF7A-EA6DD191BE3D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleDatabase.Schemas", "SimpleDatabase.Schemas\SimpleDatabase.Schemas.csproj", "{D6E4BE9E-DD45-451B-9D44-D344123D9EBB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleDatabase.Utils", "SimpleDatabase.Utils\SimpleDatabase.Utils.csproj", "{155927CB-5720-4791-92FA-57BF73657203}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -49,14 +51,18 @@ Global
 		{EF455001-C0A8-4386-8177-DBA038A9C099}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EF455001-C0A8-4386-8177-DBA038A9C099}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EF455001-C0A8-4386-8177-DBA038A9C099}.Release|Any CPU.Build.0 = Release|Any CPU
-		{21AFD0A4-5633-4996-BB4F-E7F4892849B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{21AFD0A4-5633-4996-BB4F-E7F4892849B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{21AFD0A4-5633-4996-BB4F-E7F4892849B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{21AFD0A4-5633-4996-BB4F-E7F4892849B9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A1B28714-86DF-46E1-AF7A-EA6DD191BE3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A1B28714-86DF-46E1-AF7A-EA6DD191BE3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1B28714-86DF-46E1-AF7A-EA6DD191BE3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1B28714-86DF-46E1-AF7A-EA6DD191BE3D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6E4BE9E-DD45-451B-9D44-D344123D9EBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6E4BE9E-DD45-451B-9D44-D344123D9EBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6E4BE9E-DD45-451B-9D44-D344123D9EBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6E4BE9E-DD45-451B-9D44-D344123D9EBB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{155927CB-5720-4791-92FA-57BF73657203}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{155927CB-5720-4791-92FA-57BF73657203}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{155927CB-5720-4791-92FA-57BF73657203}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{155927CB-5720-4791-92FA-57BF73657203}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

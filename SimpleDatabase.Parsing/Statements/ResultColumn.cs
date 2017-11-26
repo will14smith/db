@@ -1,6 +1,4 @@
-using SimpleDatabase.Options;
-
-namespace SimpleDatabase.Parsing.Statements
+using SimpleDatabase.Utils;namespace SimpleDatabase.Parsing.Statements
 {
     public abstract class ResultColumn
     {

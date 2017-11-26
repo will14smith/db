@@ -1,7 +1,4 @@
-﻿using System;
-using System.Text;
-
-namespace SimpleDatabase.Core
+﻿using System;using SimpleDatabase.Utils;namespace SimpleDatabase.Core
 {
     public class Row
     {

@@ -1,11 +1,4 @@
-﻿using System;
-using System.Linq;
-using SimpleDatabase.Options;
-using SimpleDatabase.Parsing.Antlr;
-using SimpleDatabase.Parsing.Expressions;
-using SimpleDatabase.Parsing.Statements;
-
-namespace SimpleDatabase.Parsing.Visitors
+﻿using System;using System.Linq;using SimpleDatabase.Parsing.Antlr;using SimpleDatabase.Parsing.Expressions;using SimpleDatabase.Parsing.Statements;using SimpleDatabase.Utils;namespace SimpleDatabase.Parsing.Visitors
 {
     public class StatementVisitor : SQLBaseVisitor<Statement>
     {

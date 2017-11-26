@@ -1,8 +1,5 @@
 using System.Collections.Generic;
-using SimpleDatabase.Options;
-using SimpleDatabase.Parsing.Expressions;
-
-namespace SimpleDatabase.Parsing.Statements
+using SimpleDatabase.Parsing.Expressions;using SimpleDatabase.Utils;namespace SimpleDatabase.Parsing.Statements
 {
     public class SelectStatement : Statement
     {

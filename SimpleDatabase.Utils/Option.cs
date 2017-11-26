@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SimpleDatabase.Options
+namespace SimpleDatabase.Utils
 {
     public struct Option<T>
     {
