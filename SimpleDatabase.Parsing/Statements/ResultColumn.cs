@@ -16,10 +16,10 @@ namespace SimpleDatabase.Parsing.Statements
 
         public class Expression : ResultColumn
         {
-            public Expression Value { get; }
+            public Expressions.Expression Value { get; }
             public Option<string> Alias { get; }
 
-            public Expression(Expression value, Option<string> alias)
+            public Expression(Expressions.Expression value, Option<string> alias)
             {
                 Value = value;
                 Alias = alias;

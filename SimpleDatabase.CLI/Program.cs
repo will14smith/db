@@ -1,5 +1,4 @@
 ﻿using System;
-using SimpleDatabase.Parsing;
 
 namespace SimpleDatabase.CLI
 {
@@ -7,8 +6,6 @@ namespace SimpleDatabase.CLI
     {
         static void Main(string[] args)
         {
-            Parser.Test();
-
             var input = new ConsoleREPLInput();
             var output = new ConsoleREPLOutput();
 

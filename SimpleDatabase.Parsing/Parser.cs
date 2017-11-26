@@ -1,20 +1,25 @@
-﻿using Antlr4.Runtime;
-using Antlr4.Runtime.Tree;
+﻿using System.Collections.Generic;
+using Antlr4.Runtime;
 using SimpleDatabase.Parsing.Antlr;
-using SimpleDatabase.Parsing.Visitors;namespace SimpleDatabase.Parsing
+using SimpleDatabase.Parsing.Statements;
+using SimpleDatabase.Parsing.Visitors;
+
+namespace SimpleDatabase.Parsing
 {
     public class Parser
     {
-        public static void Test()
+        public IReadOnlyCollection<Statement> Parse(string input)
         {
-            var input = new CodePointCharStream("SELECT * FROM table WHERE name = 'a'");
-            var lexer = new SQLLexer(input);
-            var parser = new SQLParser(new CommonTokenStream(lexer));
+            var inputStream = new CodePointCharStream(input);
+            var lexer = new SQLLexer(inputStream);
+            var parser = new SQLParser(new CommonTokenStream(lexer))
+            {
+                ErrorHandler = new BailErrorStrategy()
+            };
 
-            var x = parser.program();
+            var context = parser.program();
 
-            var visitor = new ProgramVisitor();
-            var statements = x.Accept(visitor);
+            return context.Accept(new ProgramVisitor());
         }
     }
 }

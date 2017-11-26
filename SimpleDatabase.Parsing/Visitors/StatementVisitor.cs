@@ -45,6 +45,13 @@ namespace SimpleDatabase.Parsing.Visitors
 
                         return new ResultColumn.Star(table);
                     }
+                case SQLParser.Result_column_exprContext expression:
+                    {
+                        var parsedExpression = HandleExpression(expression.expression());
+                        var alias = expression.column_alias().ToOption().Select(x => x.IDENTIFIER().GetText());
+
+                        return new ResultColumn.Expression(parsedExpression, alias);
+                    }
                 default:
                     throw new NotImplementedException(context.GetType().FullName);
             }
