@@ -7,7 +7,7 @@ using Xunit;
 
 namespace SimpleDatabase.Planning.UnitTests
 {
-    public class SimplePlanTests
+    public class SimplePlannerTests
     {
         [Fact]
         public void Test_Star_NoFilter()
