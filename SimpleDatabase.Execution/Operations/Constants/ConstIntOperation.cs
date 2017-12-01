@@ -13,5 +13,10 @@
         {
             Value = value;
         }
+
+        public override string ToString()
+        {
+            return $"CONST.I {Value}";
+        }
     }
 }

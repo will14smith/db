@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using SimpleDatabase.Parsing.Expressions;
 using SimpleDatabase.Parsing.Statements;
 using SimpleDatabase.Planning.Nodes;
@@ -6,12 +7,20 @@ using SimpleDatabase.Schemas;
 using SimpleDatabase.Schemas.Types;
 using SimpleDatabase.Utils;
 using Xunit;
+using Xunit.Abstractions;
 using Table = SimpleDatabase.Schemas.Table;
 
 namespace SimpleDatabase.Planning.UnitTests
 {
     public class SimplePlanCompilerTests
     {
+        private readonly ITestOutputHelper output;
+
+        public SimplePlanCompilerTests(ITestOutputHelper output)
+        {
+            this.output = output;
+        }
+
         public static IReadOnlyCollection<object[]> Plans = new List<object[]>
         {
             new object[] {"Scan", new Plan(new ScanTableNode("table")) },
@@ -53,6 +62,8 @@ namespace SimpleDatabase.Planning.UnitTests
             var program = compiler.Compile(plan);
 
             Assert.NotNull(program);
+
+            output.WriteLine(program.ToString());
         }
     }
 }

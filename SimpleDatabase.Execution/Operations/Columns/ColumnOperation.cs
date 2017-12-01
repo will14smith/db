@@ -13,5 +13,10 @@
         {
             ColumnIndex = columnIndex;
         }
+
+        public override string ToString()
+        {
+            return $"COL {ColumnIndex}";
+        }
     }
 }

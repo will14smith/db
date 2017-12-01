@@ -14,5 +14,10 @@
         {
             SuccessAddress = successAddress;
         }
+
+        public override string ToString()
+        {
+            return $"CUR.NEXT {SuccessAddress}";
+        }
     }
 }

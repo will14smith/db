@@ -13,5 +13,10 @@
         {
             Slot = slot;
         }
+
+        public override string ToString()
+        {
+            return $"STORE {Slot}";
+        }
     }
 }

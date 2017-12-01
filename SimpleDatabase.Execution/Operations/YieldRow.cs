@@ -14,5 +14,10 @@
         {
             ColumnCount = columnCount;
         }
+
+        public override string ToString()
+        {
+            return $"YIELD {ColumnCount}";
+        }
     }
 }

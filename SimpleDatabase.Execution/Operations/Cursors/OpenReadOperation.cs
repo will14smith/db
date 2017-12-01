@@ -14,5 +14,10 @@
         {
             RootPageNumber = rootPageNumber;
         }
+
+        public override string ToString()
+        {
+            return $"CUR.OPEN.R {RootPageNumber}";
+        }
     }
 }

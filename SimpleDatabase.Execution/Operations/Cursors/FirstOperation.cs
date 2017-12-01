@@ -14,5 +14,10 @@
         {
             EmptyAddress = emptyAddress;
         }
+
+        public override string ToString()
+        {
+            return $"CUR.FIRST {EmptyAddress}";
+        }
     }
 }

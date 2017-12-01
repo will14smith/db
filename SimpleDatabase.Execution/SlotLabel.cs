@@ -21,7 +21,7 @@ namespace SimpleDatabase.Execution
 
         public override string ToString()
         {
-            return $"Slot {_id}";
+            return $"S{_id}";
         }
 
         public override bool Equals(object obj)

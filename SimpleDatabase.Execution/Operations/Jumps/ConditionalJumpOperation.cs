@@ -15,6 +15,11 @@
             Address = address;
             Comparison = comparison;
         }
+
+        public override string ToString()
+        {
+            return $"J.{Comparison.ToString().ToUpper()} {Address}";
+        }
     }
 
     public enum Comparison

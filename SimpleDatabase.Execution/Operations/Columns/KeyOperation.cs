@@ -7,6 +7,9 @@
     /// </summary>
     public class KeyOperation : IOperation
     {
-
+        public override string ToString()
+        {
+            return "KEY";
+        }
     }
 }

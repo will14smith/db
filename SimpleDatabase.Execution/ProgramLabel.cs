@@ -22,7 +22,7 @@ namespace SimpleDatabase.Execution
 
         public override string ToString()
         {
-            return $"Program {_id}";
+            return $"L{_id}";
         }
 
         public override bool Equals(object obj)

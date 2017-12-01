@@ -7,6 +7,9 @@
     /// </summary>
     public class FinishOperation : IOperation
     {
-
+        public override string ToString()
+        {
+            return "FINISH";
+        }
     }
 }

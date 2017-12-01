@@ -8,5 +8,10 @@
         {
             Address = address;
         }
+
+        public override string ToString()
+        {
+            return $"J {Address}";
+        }
     }
 }

@@ -7,6 +7,9 @@
     /// </summary>
     public class DupOperation : IOperation
     {
-
+        public override string ToString()
+        {
+            return "DUP";
+        }
     }
 }
