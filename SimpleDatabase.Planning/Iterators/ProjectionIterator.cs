@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using SimpleDatabase.Execution;
 using SimpleDatabase.Execution.Operations;
+using SimpleDatabase.Parsing.Expressions;
 using SimpleDatabase.Parsing.Statements;
+using SimpleDatabase.Schemas.Types;
 
 namespace SimpleDatabase.Planning.Iterators
 {
@@ -41,9 +44,17 @@ namespace SimpleDatabase.Planning.Iterators
                 switch (column)
                 {
                     case ResultColumn.Star star:
-                        if(star.Table.HasValue) { throw new NotImplementedException(); }
-                        
+                        if (star.Table.HasValue) { throw new NotImplementedException(); }
+
                         outputs.AddRange(_input.Outputs);
+                        break;
+
+                    case ResultColumn.Expression expr:
+                        var (operations, type) = Compile(expr.Value);
+
+                        var name = expr.Alias.Map<IteratorOutputName>(x => new IteratorOutputName.Constant(x), () => new IteratorOutputName.Expression(expr.Value));
+
+                        outputs.Add(new IteratorOutput(name, type, operations));
                         break;
 
                     default: throw new ArgumentOutOfRangeException(nameof(column), $"Unhandled type: {column.GetType().FullName}");
@@ -51,6 +62,19 @@ namespace SimpleDatabase.Planning.Iterators
             }
 
             return outputs;
+        }
+
+        private (IReadOnlyCollection<IOperation>, ColumnType) Compile(Expression expr)
+        {
+            switch (expr)
+            {
+                case ColumnNameExpression column:
+                    var result = _input.Outputs.Single(x => x.Name.Matches(column.Name));
+
+                    return (result.LoadOperations, result.Type);
+
+                default: throw new ArgumentOutOfRangeException(nameof(expr), $"Unhandled type: {expr.GetType().FullName}");
+            }
         }
     }
 }

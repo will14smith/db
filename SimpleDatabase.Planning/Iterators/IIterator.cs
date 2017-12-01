@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using SimpleDatabase.Execution;
 using SimpleDatabase.Execution.Operations;
+using SimpleDatabase.Parsing.Statements;
 using SimpleDatabase.Schemas.Types;
 
 namespace SimpleDatabase.Planning.Iterators
@@ -52,6 +54,8 @@ namespace SimpleDatabase.Planning.Iterators
 
     public abstract class IteratorOutputName
     {
+        public abstract bool Matches(string name);
+
         public class TableColumn : IteratorOutputName
         {
             public string Table { get; }
@@ -61,6 +65,42 @@ namespace SimpleDatabase.Planning.Iterators
             {
                 Table = table;
                 Column = column;
+            }
+
+            public override bool Matches(string name)
+            {
+                // TODO table?
+                return string.Equals(Column, name, StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        public class Expression : IteratorOutputName
+        {
+            public Parsing.Expressions.Expression Expr { get; }
+
+            public Expression(Parsing.Expressions.Expression expr)
+            {
+                Expr = expr;
+            }
+
+            public override bool Matches(string name)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public class Constant : IteratorOutputName
+        {
+            public string Name { get; }
+
+            public Constant(string name)
+            {
+                Name = name;
+            }
+
+            public override bool Matches(string name)
+            {
+                return string.Equals(Name, name, StringComparison.OrdinalIgnoreCase);
             }
         }
     }
