@@ -50,7 +50,7 @@ K_WHERE: W H E R E;
 // tokens
 IDENTIFIER: [a-zA-Z_] [a-zA-Z_0-9]*;
 NUMBER_LITERAL: [0-9]+;
-STRING_LITERAL: '\'' (~'\'') '\''; // TODO handle escapes
+STRING_LITERAL: '\'' (~'\'')* '\''; // TODO handle escapes
 
 WS: [ \t\r\n] -> channel(HIDDEN);
 
