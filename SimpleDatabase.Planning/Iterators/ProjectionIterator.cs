@@ -23,6 +23,7 @@ namespace SimpleDatabase.Planning.Iterators
         }
 
         public IReadOnlyDictionary<SlotLabel, SlotDefinition> Slots => _input.Slots;
+        public IReadOnlyDictionary<FunctionLabel, Function> Functions => _input.Functions;
         public IReadOnlyList<IteratorOutput> Outputs { get; }
 
         public IEnumerable<IOperation> Init(ProgramLabel emptyTarget)

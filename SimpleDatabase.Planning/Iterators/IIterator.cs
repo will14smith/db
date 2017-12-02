@@ -22,6 +22,10 @@ namespace SimpleDatabase.Planning.Iterators
         /// </summary>
         IReadOnlyDictionary<SlotLabel, SlotDefinition> Slots { get; }
         /// <summary>
+        /// Defines subfunctions used by this iterator
+        /// </summary>
+        IReadOnlyDictionary<FunctionLabel, Function> Functions { get; }
+        /// <summary>
         /// Describes the outputs of the iterator (name & type)
         /// </summary>
         IReadOnlyList<IteratorOutput> Outputs { get; }

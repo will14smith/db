@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Antlr4.Runtime.Misc;
 using SimpleDatabase.Parsing.Expressions;
 using SimpleDatabase.Parsing.Statements;
 using SimpleDatabase.Planning.Nodes;
@@ -23,6 +24,14 @@ namespace SimpleDatabase.Planning.UnitTests
 
         public static IReadOnlyCollection<object[]> Plans = new List<object[]>
         {
+            new object[] {"Constant", new Plan(new ConstantNode(
+                new [] { "a", "b", },
+                new []
+                {
+                    new Expression[] { new NumberLiteralExpression(1), new StringLiteralExpression("a") },
+                    new Expression[] { new NumberLiteralExpression(2), new StringLiteralExpression("b") },
+                }
+            )) },
             new object[] {"Scan", new Plan(new ScanTableNode("table")) },
             new object[] {"Project *", new Plan(new ProjectionNode(new ScanTableNode("table"), new []{ new ResultColumn.Star(Option.None<string>()) })) },
             new object[] {"Project column", new Plan(new ProjectionNode(new ScanTableNode("table"), new[]{ new ResultColumn.Expression(new ColumnNameExpression("name"), Option.None<string>()) })) },

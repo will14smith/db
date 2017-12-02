@@ -1,53 +1,37 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text;
-using SimpleDatabase.Execution.Operations;
 
 namespace SimpleDatabase.Execution
 {
     public class Program
     {
-        public IReadOnlyList<IOperation> Operations { get; }
-        public IReadOnlyDictionary<SlotLabel, SlotDefinition> Slots { get; }
+        public FunctionLabel Entry { get; }
+        public IReadOnlyDictionary<FunctionLabel, Function> Functions { get; }
 
-        public Program(IReadOnlyList<IOperation> operations, IReadOnlyDictionary<SlotLabel, SlotDefinition> slots)
+        public Program(FunctionLabel entry, IReadOnlyDictionary<FunctionLabel, Function> functions)
         {
-            Operations = operations;
-            Slots = slots;
+            Entry = entry;
+            Functions = functions;
         }
 
         public override string ToString()
         {
+            var entryFunction = Functions[Entry];
+            var otherFunctions = Functions.Where(x => x.Key != Entry);
+
             var sb = new StringBuilder();
 
-            sb.AppendLine("[");
+            sb.AppendLine(entryFunction.ToString());
 
-            foreach (var (slot, def) in Slots)
+            foreach (var (l, f) in otherFunctions)
             {
-                sb.AppendLine("\t" + slot + ": " + def);
+                sb.AppendLine();
+                sb.AppendLine("func " + l + ":");
+                sb.AppendLine(f.ToString());
             }
-
-            sb.AppendLine("] {");
-
-            foreach (var op in Operations)
-            {
-                if (op is ProgramLabel)
-                {
-                    sb.AppendLine(op + ":");
-                }
-                else
-                {
-                    sb.AppendLine("\t" + op);
-                }
-            }
-
-            sb.AppendLine("}");
 
             return sb.ToString();
         }
-    }
-
-    public class SlotDefinition
-    {
-        // TODO type
     }
 }
