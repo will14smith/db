@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace SimpleDatabase.Storage
 {
@@ -6,9 +7,9 @@ namespace SimpleDatabase.Storage
     {
         private readonly IReadOnlyDictionary<string, StoredTable> _tables;
 
-        public Database(IReadOnlyDictionary<string, StoredTable> tables)
+        public Database(IEnumerable<StoredTable> tables)
         {
-            _tables = tables;
+            _tables = tables.ToDictionary(x => x.Table.Name);
         }
 
         public StoredTable GetTable(string name) { return _tables[name]; }

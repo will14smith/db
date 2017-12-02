@@ -30,6 +30,7 @@ namespace SimpleDatabase.Planning
             operations.AddRange(iter.Init(done));
             operations.Add(start);
             operations.AddRange(iter.Outputs.SelectMany(x => x.LoadOperations));
+            operations.Add(new YieldRowOperation(iter.Outputs.Count));
             operations.AddRange(iter.MoveNext(start));
             operations.Add(done);
             operations.Add(new FinishOperation());

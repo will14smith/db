@@ -50,9 +50,9 @@ namespace SimpleDatabase.Planning.UnitTests
         [MemberData(nameof(Plans))]
         public void TestCanCompile(string name, Plan plan)
         {
-            var database = new Database(new Dictionary<string, StoredTable>
+            var database = new Database(new[]
             {
-                { "table", new StoredTable(new Table("table", new []{ new Column("id", new ColumnType.Integer()), new Column("name", new ColumnType.String(127)), new Column("email", new ColumnType.String(255)) }), 0) }
+                new StoredTable(new Table("table", new []{ new Column("id", new ColumnType.Integer()), new Column("name", new ColumnType.String(127)), new Column("email", new ColumnType.String(255)) }), 0)
             });
             var compiler = new PlanCompiler(database);
 

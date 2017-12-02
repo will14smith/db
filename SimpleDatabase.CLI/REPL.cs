@@ -1,6 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using SimpleDatabase.Execution;
 using SimpleDatabase.Execution.Trees;
+using SimpleDatabase.Parsing;
 using SimpleDatabase.Parsing.Statements;
+using SimpleDatabase.Planning;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Schemas.Types;
 using SimpleDatabase.Storage;
@@ -194,7 +199,28 @@ namespace SimpleDatabase.CLI
                 return new ExecuteStatementResponse.Success();
             }
 
-            throw new NotImplementedException("use new pipeline");
+            var parser = new Parser();
+            var statements = parser.Parse(input);
+            
+            var planner = new Planner();
+            var plans = statements.Select(planner.Plan);
+
+            var planCompiler = new PlanCompiler(new Database(new[] { _table }));
+            var programs = plans.Select(planCompiler.Compile);
+
+            foreach (var program in programs)
+            {
+                var executor = new ProgramExecutor(program, _pager);
+
+                foreach (var result in executor.Execute())
+                {
+                    _output.WriteLine("(" + string.Join(", ", result) + ")");
+                }
+            }
+
+            _output.WriteLine("Executed.");
+
+            return new ExecuteStatementResponse.Success();
         }
 
         public void Dispose()

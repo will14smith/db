@@ -4,6 +4,7 @@ using SimpleDatabase.Execution;
 using SimpleDatabase.Execution.Operations;
 using SimpleDatabase.Execution.Operations.Columns;
 using SimpleDatabase.Execution.Operations.Cursors;
+using SimpleDatabase.Execution.Operations.Jumps;
 using SimpleDatabase.Execution.Operations.Slots;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage;
@@ -40,7 +41,17 @@ namespace SimpleDatabase.Planning.Iterators
 
         public IEnumerable<IOperation> MoveNext(ProgramLabel loopStartTarget)
         {
-            yield return new NextOperation(loopStartTarget);
+            var s = ProgramLabel.Create();
+            var e = ProgramLabel.Create();
+
+            yield return new LoadOperation(_cursor);
+            yield return new NextOperation(s);
+            yield return new JumpOperation(e);
+            yield return s;
+            yield return new StoreOperation(_cursor);
+            yield return new JumpOperation(loopStartTarget);
+            yield return e;
+
         }
 
         private IReadOnlyList<IteratorOutput> ComputeOutputs()

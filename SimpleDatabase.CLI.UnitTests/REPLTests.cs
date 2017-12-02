@@ -44,7 +44,7 @@ namespace SimpleDatabase.CLI.UnitTests
         [InlineData(new[]
         {
             "insert 0 a b",
-            "select",
+            "SELECT * FROM table",
             ".exit"
         }, new[]
         {
@@ -86,7 +86,7 @@ namespace SimpleDatabase.CLI.UnitTests
             "insert 3 a b",
             "insert 1 a b",
             "insert 2 a b",
-            "select",
+            "SELECT * FROM table",
             ".exit"
         }, new[]
         {
@@ -100,7 +100,7 @@ namespace SimpleDatabase.CLI.UnitTests
         {
             "insert 1 a b",
             "insert 1 a b",
-            "select",
+            "SELECT * FROM table",
             ".exit"
         }, new[]
         {
@@ -202,7 +202,7 @@ namespace SimpleDatabase.CLI.UnitTests
                 commands[i] = $"insert {47 - i} user{47 - i} person{47 - i}@example.com";
                 outputs.Add((i == 0 ? "db > " : "") + $"({i}, user{i}, person{i}@example.com)");
             }
-            commands[48] = "select";
+            commands[48] = "SELECT * FROM table";
             commands[49] = ".exit";
             outputs.Add("Executed.");
             outputs.Add("db >");
@@ -220,7 +220,7 @@ namespace SimpleDatabase.CLI.UnitTests
                 commands[i] = $"insert {i} user{i} person{i}@example.com";
                 outputs.Add((i == 0 ? "db > " : "") + $"({i}, user{i}, person{i}@example.com)");
             }
-            commands[14] = "select";
+            commands[14] = "SELECT * FROM table";
             commands[15] = ".exit";
             outputs.Add("Executed.");
             outputs.Add("db >");
@@ -238,7 +238,7 @@ namespace SimpleDatabase.CLI.UnitTests
                 commands[i] = $"insert {i} user{i} person{i}@example.com";
                 outputs.Add((i == 0 ? "db > " : "") + $"({i}, user{i}, person{i}@example.com)");
             }
-            commands[6998] = "select";
+            commands[6998] = "SELECT * FROM table";
             commands[6999] = ".exit";
             outputs.Add("Executed.");
             outputs.Add("db >");
