@@ -62,7 +62,8 @@ namespace SimpleDatabase.Execution.UnitTests
                 new ColumnOperation(2),
 
                 // yield (id, username, email)
-                new YieldRowOperation(3),
+                new MakeRowOperation(3),
+                new YieldOperation(),
 
                 // cursor = next(cursor) -> loop
                 Next,

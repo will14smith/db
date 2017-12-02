@@ -234,21 +234,34 @@ namespace SimpleDatabase.Execution
                 case ProgramLabel _:
                     return (state, new Result.Next());
 
-                case YieldRowOperation yield:
+                case MakeRowOperation makeRow:
                     {
-                        if (state.StackCount < yield.ColumnCount)
+                        if (state.StackCount < makeRow.ColumnCount)
                         {
                             throw new InvalidOperationException("Stack doesn't contain enough elements for this row");
                         }
 
-                        var row = new Value[yield.ColumnCount];
+                        var row = new Value[makeRow.ColumnCount];
 
-                        for (var i = yield.ColumnCount - 1; i >= 0; i--)
+                        for (var i = makeRow.ColumnCount - 1; i >= 0; i--)
                         {
                             (state, row[i]) = state.PopValue();
                         }
 
-                        return (state, new Result.Yield(new Result.Next(), row));
+                        state = state.PushValue(new RowValue(row));
+
+                        return (state, new Result.Next());
+                    }
+
+                case YieldOperation _:
+                    {
+                        Value value;
+                        (state, value) = state.PopValue();
+
+                        // TODO can this be relaxed to allow arbitrary returns?
+                        var rowValue = (RowValue) value;
+
+                        return (state, new Result.Yield(new Result.Next(), rowValue.Values));
                     }
 
                 case FinishOperation _:

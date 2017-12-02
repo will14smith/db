@@ -67,6 +67,11 @@ namespace SimpleDatabase.Planning.Iterators
                 });
         }
 
+        public IEnumerable<IOperation> Yield()
+        {
+            return _input.Yield();
+        }
+
         private IEnumerable<IOperation> Compile(ProgramLabel trueTarget)
         {
             var output = new List<IOperation>();
@@ -79,8 +84,7 @@ namespace SimpleDatabase.Planning.Iterators
 
                     output.AddRange(left);
                     output.AddRange(right);
-
-
+                    
                     switch (binary.Operator)
                     {
                         case BinaryOperator.Equal: output.Add(new ConditionalJumpOperation(Comparison.Equal, trueTarget)); break;

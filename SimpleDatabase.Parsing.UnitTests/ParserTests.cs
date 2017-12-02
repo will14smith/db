@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Xunit;
+﻿using Xunit;
 
 namespace SimpleDatabase.Parsing.UnitTests
 {
@@ -17,6 +14,10 @@ namespace SimpleDatabase.Parsing.UnitTests
 
         [InlineData("SELECT * FROM table WHERE column = 1")]
         [InlineData("SELECT * FROM table WHERE column = 'a'")]
+
+        [InlineData("INSERT INTO table VALUES (1, 2)")]
+        [InlineData("INSERT INTO table (a, b) VALUES ('a', 'b')")]
+        
         public void CanParse(string input)
         {
             var parser = new Parser();

@@ -1,23 +1,16 @@
 ﻿namespace SimpleDatabase.Execution.Operations
 {
     /// <summary>
-    /// ..., c1, c2, ..., cN -> ...
+    /// ..., R -> ...
     /// 
-    /// Pops N columns from the stack and yields them as a row result
-    /// Note that the column order is the opposite of the pop order
+    /// Yields the item at the top of the stack to the execution environment
+    /// Generally R is a Row
     /// </summary>
-    public class YieldRowOperation : IOperation
+    public class YieldOperation : IOperation
     {
-        public int ColumnCount { get; }
-
-        public YieldRowOperation(int columnCount)
-        {
-            ColumnCount = columnCount;
-        }
-
         public override string ToString()
         {
-            return $"YIELD {ColumnCount}";
+            return "YIELD";
         }
     }
 }

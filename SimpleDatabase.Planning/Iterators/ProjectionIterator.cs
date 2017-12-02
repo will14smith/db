@@ -35,6 +35,20 @@ namespace SimpleDatabase.Planning.Iterators
             return _input.MoveNext(loopStartTarget);
         }
 
+        public IEnumerable<IOperation> Yield()
+        {
+            foreach (var output in Outputs)
+            {
+                foreach (var op in output.LoadOperations)
+                {
+                    yield return op;
+                }
+            }
+
+            yield return new MakeRowOperation(Outputs.Count);
+            yield return new YieldOperation();
+        }
+
         private IReadOnlyList<IteratorOutput> CalculateOutputs()
         {
             var outputs = new List<IteratorOutput>();

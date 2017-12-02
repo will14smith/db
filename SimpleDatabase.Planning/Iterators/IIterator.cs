@@ -36,6 +36,8 @@ namespace SimpleDatabase.Planning.Iterators
         /// If there are more items it should jump to the label
         /// </summary>
         IEnumerable<IOperation> MoveNext(ProgramLabel loopStartTarget);
+
+        IEnumerable<IOperation> Yield();
     }
 
     public class IteratorOutput
