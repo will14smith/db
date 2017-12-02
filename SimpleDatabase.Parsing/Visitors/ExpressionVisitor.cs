@@ -20,7 +20,9 @@ namespace SimpleDatabase.Parsing.Visitors
             var str = context.STRING_LITERAL();
             if (str != null)
             {
-                return new StringLiteralExpression(str.GetText());
+                var value = str.GetText();
+
+                return new StringLiteralExpression(value.Substring(1, value.Length - 2));
             }
 
             return base.VisitLiteral_value(context);
