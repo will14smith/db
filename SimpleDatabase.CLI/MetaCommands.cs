@@ -1,35 +1,25 @@
 ﻿using System;
-using SimpleDatabase.Core;
-using SimpleDatabase.Core.Paging;
-using SimpleDatabase.Core.Trees;
+using SimpleDatabase.Schemas;
+using SimpleDatabase.Storage;
+using SimpleDatabase.Storage.Nodes;
+using SimpleDatabase.Storage.Paging;
+using SimpleDatabase.Storage.Serialization;
 
 namespace SimpleDatabase.CLI
 {
     public class MetaCommands
     {
-        public static void PrintConstants(IREPLOutput output)
-        {
-            output.WriteLine("Constants:");
-
-            output.WriteLine("RowSize: {0}", Row.RowSize);
-            output.WriteLine("CommonNodeHeaderSize: {0}", NodeLayout.CommonNodeHeaderSize);
-            output.WriteLine("LeafNodeHeaderSize: {0}", NodeLayout.LeafNodeHeaderSize);
-            output.WriteLine("LeafNodeCellSize: {0}", NodeLayout.LeafNodeCellSize);
-            output.WriteLine("LeafNodeSpaceForCells: {0}", NodeLayout.LeafNodeSpaceForCells);
-            output.WriteLine("LeafNodeMaxCells: {0}", NodeLayout.LeafNodeMaxCells);
-        }
-
-        public static void PrintBTree(IREPLOutput output, Pager pager, int rootPageNumber)
+        public static void PrintBTree(IREPLOutput output, Pager pager, StoredTable table)
         {
             output.WriteLine("Tree:");
 
-            PrintNode(output, pager, rootPageNumber, 0);
+            PrintNode(output, pager, table.Table, table.RootPageNumber, 0);
         }
 
-        private static void PrintNode(IREPLOutput output, Pager pager, int pageNumber, int level)
+        private static void PrintNode(IREPLOutput output, Pager pager, Table table, int pageNumber, int level)
         {
             var page = pager.Get(pageNumber);
-            var node = Node.Read(page);
+            var node = Node.Read(new RowSerializer(table, new ColumnTypeSerializerFactory()), page);
 
             switch (node)
             {
@@ -49,13 +39,13 @@ namespace SimpleDatabase.CLI
 
                     for (var i = 0; i < internalNode.KeyCount; i++)
                     {
-                        PrintNode(output, pager, internalNode.GetChild(i), level + 1);
+                        PrintNode(output, pager, table, internalNode.GetChild(i), level + 1);
 
                         output.Indent(level);
                         output.WriteLine("- key {0}", internalNode.GetKey(i));
                     }
 
-                    PrintNode(output, pager, internalNode.RightChild, level + 1);
+                    PrintNode(output, pager, table, internalNode.RightChild, level + 1);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

@@ -1,6 +1,13 @@
 ﻿using System;
-using SimpleDatabase.Core;
-using SimpleDatabase.Core.Paging;
+using SimpleDatabase.Execution.Trees;
+using SimpleDatabase.Parsing.Statements;
+using SimpleDatabase.Schemas;
+using SimpleDatabase.Schemas.Types;
+using SimpleDatabase.Storage;
+using SimpleDatabase.Storage.Nodes;
+using SimpleDatabase.Storage.Paging;
+using SimpleDatabase.Storage.Serialization;
+using Table = SimpleDatabase.Schemas.Table;
 
 namespace SimpleDatabase.CLI
 {
@@ -10,7 +17,7 @@ namespace SimpleDatabase.CLI
         private readonly IREPLOutput _output;
 
         private readonly Pager _pager;
-        private readonly Table _table;
+        private readonly StoredTable _table;
 
         public REPL(IREPLInput input, IREPLOutput output, string file)
         {
@@ -19,7 +26,30 @@ namespace SimpleDatabase.CLI
 
             var storage = new FilePagerStorage(file);
             _pager = new Pager(storage);
-            _table = new Table(_pager);
+
+            _table = CreateTable("table", new[]
+            {
+                new Column("id", new ColumnType.Integer()),
+                new Column("name", new ColumnType.String(31)),
+                new Column("email", new ColumnType.String(255)),
+            });
+        }
+
+        private StoredTable CreateTable(string name, Column[] columns)
+        {
+            var table = new Table(name, columns);
+
+            var rootPage = _pager.Allocate();
+            var rowSerializer = CreateRowSerializer(table);
+            var node = LeafNode.New(rowSerializer, rootPage);
+            node.IsRoot = true;
+            _pager.Flush(rootPage.Number);
+
+            return new StoredTable(table, rootPage.Number);
+        }
+        private static RowSerializer CreateRowSerializer(Table table)
+        {
+            return new RowSerializer(table, new ColumnTypeSerializerFactory());
         }
 
         public ExitCode Run()
@@ -47,18 +77,17 @@ namespace SimpleDatabase.CLI
                     }
                 }
 
-                var statementResponse = PrepareStatement(line);
+                var statementResponse = ExecuteStatement(line);
                 switch (statementResponse)
                 {
-                    case PrepareStatementResponse.Success resp:
-                        ExecuteStatement(resp.Statement);
+                    case ExecuteStatementResponse.Success _:
                         break;
 
-                    case PrepareStatementResponse.SyntaxError resp:
+                    case ExecuteStatementResponse.SyntaxError resp:
                         _output.WriteLine("Syntax error '{0}'.", resp.Error);
                         break;
 
-                    case PrepareStatementResponse.Unrecognised resp:
+                    case ExecuteStatementResponse.Unrecognised resp:
                         _output.WriteLine("Unrecognized keyword at start of '{0}'.", resp.Input);
                         break;
 
@@ -84,144 +113,93 @@ namespace SimpleDatabase.CLI
         {
             if (input == ".exit")
             {
-                _table.Dispose();
                 return new MetaCommandResponse.Exit(ExitCode.Success);
-            }
-            if (input == ".constants")
-            {
-                MetaCommands.PrintConstants(_output);
-                return new MetaCommandResponse.Success();
             }
             if (input == ".btree")
             {
-                MetaCommands.PrintBTree(_output, _pager, _table.RootPageNumber);
+                MetaCommands.PrintBTree(_output, _pager, _table);
                 return new MetaCommandResponse.Success();
             }
 
             return new MetaCommandResponse.Unrecognised(input);
         }
 
-        private PrepareStatementResponse PrepareStatement(string input)
+        private ExecuteStatementResponse ExecuteStatement(string input)
         {
             if (input.StartsWith("insert"))
             {
                 var tokens = input.Split(" ");
                 if (tokens.Length != 4)
                 {
-                    return new PrepareStatementResponse.SyntaxError("Expected 3 parameters (id, username, email) for insert");
+                    return new ExecuteStatementResponse.SyntaxError("Expected 3 parameters (id, username, email) for insert");
                 }
 
                 var id = int.Parse(tokens[1]);
                 var username = tokens[2];
                 var email = tokens[3];
 
-                var row = new Row(id, username, email);
+                var result = new TreeInserter(_pager, CreateRowSerializer(_table.Table), _table).Insert(id, new Row(new[]
+                {
+                    new ColumnValue(id),
+                    new ColumnValue(username),
+                    new ColumnValue(email)
+                }));
 
-                return new PrepareStatementResponse.Success(new InsertStatement(row));
+                switch (result)
+                {
+                    case TreeInsertResult.Success _:
+                        _output.WriteLine("Executed.");
+                        break;
+                    case TreeInsertResult.DuplicateKey _:
+                        _output.WriteLine("Error: Duplicate key.");
+                        break;
+
+                    default:
+                        _output.WriteLine($"Unhandled InsertResult: {result}");
+                        break;
+                }
+
+
+                return new ExecuteStatementResponse.Success();
             }
 
             if (input.StartsWith("delete"))
             {
                 var tokens = input.Split(" ");
                 if (tokens.Length != 2)
-                {;
-                    return new PrepareStatementResponse.SyntaxError("Expected 1 parameter (id) for delete");
+                {
+                    ;
+                    return new ExecuteStatementResponse.SyntaxError("Expected 1 parameter (id) for delete");
                 }
 
                 var id = int.Parse(tokens[1]);
 
-                return new PrepareStatementResponse.Success(new DeleteStatement(id));
+                var result = new TreeDeleter(_pager, CreateRowSerializer(_table.Table), _table).Delete(id);
+
+                switch (result)
+                {
+                    case TreeDeleteResult.Success _:
+                        _output.WriteLine("Executed.");
+                        break;
+                    case TreeDeleteResult.KeyNotFound knf:
+                        _output.WriteLine($"Error: Key not found {knf.Key}.");
+                        break;
+
+                    default:
+                        _output.WriteLine($"Unhandled InsertResult: {result}");
+                        break;
+                }
+
+
+                return new ExecuteStatementResponse.Success();
             }
 
-            if (input.StartsWith("select"))
-            {
-                return new PrepareStatementResponse.Success(new SelectStatement());
-            }
-
-            return new PrepareStatementResponse.Unrecognised(input);
-        }
-
-        private void ExecuteStatement(IStatement statement)
-        {
-            switch (statement)
-            {
-                case InsertStatement insert:
-                    ExecuteInsert(insert);
-                    break;
-                case DeleteStatement delete:
-                    ExecuteDelete(delete);
-                    break;
-                case SelectStatement select:
-                    ExecuteSelect(select);
-                    break;
-
-                default:
-                    _output.WriteLine($"Unhandled Statement: {statement}");
-                    break;
-            }
-        }
-
-        private void ExecuteInsert(InsertStatement insert)
-        {
-            var result = _table.Insert(insert);
-            switch (result)
-            {
-                case InsertResult.Success _:
-                    _output.WriteLine("Executed.");
-                    break;
-                case InsertResult.DuplicateKey _:
-                    _output.WriteLine("Error: Duplicate key.");
-                    break;
-
-                default:
-                    _output.WriteLine($"Unhandled InsertResult: {result}");
-                    break;
-            }
-        }
-
-        private void ExecuteDelete(DeleteStatement delete)
-        {
-            var result = _table.Delete(delete);
-            switch (result)
-            {
-                case DeleteResult.Success _:
-                    _output.WriteLine("Executed.");
-                    break;
-                case DeleteResult.KeyNotFound knf:
-                    _output.WriteLine($"Error: Key not found {knf.Key}.");
-                    break;
-
-                default:
-                    _output.WriteLine($"Unhandled InsertResult: {result}");
-                    break;
-            }
-        }
-
-        private void ExecuteSelect(SelectStatement select)
-        {
-            var result = _table.Select(select);
-            switch (result)
-            {
-                case SelectResult.Success success:
-                    foreach (var row in success.Rows)
-                    {
-                        _output.WriteLine(row.ToString());
-                    }
-
-                    _output.WriteLine("Executed.");
-                    break;
-
-                default:
-                    _output.WriteLine($"Unhandled SelectResult: {result}");
-                    break;
-            }
-
-            _table.Select(select);
+            throw new NotImplementedException("use new pipeline");
         }
 
         public void Dispose()
         {
-            _table?.Dispose();
+            _pager?.Dispose();
         }
     }
 }

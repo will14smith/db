@@ -64,21 +64,6 @@ namespace SimpleDatabase.CLI.UnitTests
         }, 0, ExitCode.Success)]
         [InlineData(new[]
         {
-            ".constants",
-            ".exit"
-        }, new[]
-        {
-            "db > Constants:",
-            "RowSize: 291",
-            "CommonNodeHeaderSize: 2",
-            "LeafNodeHeaderSize: 10",
-            "LeafNodeCellSize: 295",
-            "LeafNodeSpaceForCells: 4086",
-            "LeafNodeMaxCells: 13",
-            "db >"
-        }, 0, ExitCode.Success)]
-        [InlineData(new[]
-        {
             "insert 3 a b",
             "insert 1 a b",
             "insert 2 a b",
