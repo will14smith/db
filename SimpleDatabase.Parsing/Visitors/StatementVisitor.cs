@@ -1,4 +1,12 @@
-﻿using System;using System.Linq;using SimpleDatabase.Parsing.Antlr;using SimpleDatabase.Parsing.Expressions;using SimpleDatabase.Parsing.Statements;using SimpleDatabase.Utils;namespace SimpleDatabase.Parsing.Visitors
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using SimpleDatabase.Parsing.Antlr;
+using SimpleDatabase.Parsing.Expressions;
+using SimpleDatabase.Parsing.Statements;
+using SimpleDatabase.Utils;
+
+namespace SimpleDatabase.Parsing.Visitors
 {
     public class StatementVisitor : SQLBaseVisitor<Statement>
     {
@@ -21,6 +29,21 @@
             var where = context.Where.ToOption().Select(HandleExpression);
 
             return new SelectStatement(columns, table, where);
+        }
+
+        public override Statement VisitStatement_insert(SQLParser.Statement_insertContext context)
+        {
+            var table = context.Table.IDENTIFIER().GetText();
+            var columns = context._Columns.Select(x => x.IDENTIFIER().GetText()).ToList();
+
+            var values = context._Values.Select(HandleValues).ToList();
+
+            return new InsertStatement(table, columns, values);
+
+            IReadOnlyList<Expression> HandleValues(SQLParser.Statement_insert_valueContext arg)
+            {
+                return arg._Values.Select(HandleExpression).ToList();
+            }
         }
 
         private Expression HandleExpression(SQLParser.ExpressionContext context)
