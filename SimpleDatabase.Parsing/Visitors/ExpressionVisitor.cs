@@ -38,7 +38,7 @@ namespace SimpleDatabase.Parsing.Visitors
             var left = context.expression(0).Accept(this);
             var right = context.expression(1).Accept(this);
 
-            var op = context.NOT() == null ? BinaryOperator.Equal : BinaryOperator.NotEqual;
+            var op = context.Operator.Text != "!=" ? BinaryOperator.Equal : BinaryOperator.NotEqual;
 
             return new BinaryExpression(op, left, right);
         }
