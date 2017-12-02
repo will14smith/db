@@ -21,21 +21,21 @@ namespace SimpleDatabase.Execution.UnitTests
     public class SimpleProgramTest
     {
         private static readonly StoredTable Table = new StoredTable(
-            new Table("table", new []
+            new Table("table", new[]
             {
                 new Column("id", new ColumnType.Integer()),
                 new Column("name", new ColumnType.String(63)),
                 new Column("email", new ColumnType.String(255)),
             }),
             0);
-        
+
+        private static readonly FunctionLabel MainLabel = FunctionLabel.Create();
         private static readonly ProgramLabel Loop = ProgramLabel.Create();
         private static readonly ProgramLabel Next = ProgramLabel.Create();
         private static readonly ProgramLabel Finish = ProgramLabel.Create();
         private static readonly SlotLabel Cursor = SlotLabel.Create();
 
-        private static readonly Program Program = new Program(
-            new List<IOperation>
+        private static readonly Function Main = new Function(new List<IOperation>
             {
                 // cursor = first(open(RootPageNumber))
                 new OpenReadOperation(Table),
@@ -79,6 +79,8 @@ namespace SimpleDatabase.Execution.UnitTests
                 { Cursor, new SlotDefinition() }
             });
 
+        private static readonly Program Program = new Program(MainLabel, new Dictionary<FunctionLabel, Function> { { MainLabel, Main } });
+
         [Fact]
         public void RunProgram()
         {
@@ -97,8 +99,8 @@ namespace SimpleDatabase.Execution.UnitTests
                     pager.Flush(Table.RootPageNumber);
 
                     // Insert some data
-                    new TreeInserter(pager, rowSerializer, Table).Insert(1, new Row(new []{ new ColumnValue(1), new ColumnValue("a"), new ColumnValue("a@a.a") }));
-                    new TreeInserter(pager, rowSerializer, Table).Insert(1, new Row(new []{ new ColumnValue(2), new ColumnValue("b"), new ColumnValue("b@b.b") }));
+                    new TreeInserter(pager, rowSerializer, Table).Insert(1, new Row(new[] { new ColumnValue(1), new ColumnValue("a"), new ColumnValue("a@a.a") }));
+                    new TreeInserter(pager, rowSerializer, Table).Insert(1, new Row(new[] { new ColumnValue(2), new ColumnValue("b"), new ColumnValue("b@b.b") }));
 
                     var result = new ProgramExecutor(Program, pager).Execute().ToList();
 

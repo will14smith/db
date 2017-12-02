@@ -2,9 +2,9 @@
 
 namespace SimpleDatabase.Execution
 {
-    public static class ProgramStateExtensions
+    public static class FunctionStateExtensions
     {
-        public static (ProgramState, CursorValue) PopCursor(this ProgramState state)
+        public static (FunctionState, CursorValue) PopCursor(this FunctionState state)
         {
             var (newState, value) = state.PopValue();
 
