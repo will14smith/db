@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using SimpleDatabase.Execution;
 using SimpleDatabase.Execution.Trees;
 using SimpleDatabase.Parsing;
-using SimpleDatabase.Parsing.Statements;
 using SimpleDatabase.Planning;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Schemas.Types;
@@ -131,49 +129,11 @@ namespace SimpleDatabase.CLI
 
         private ExecuteStatementResponse ExecuteStatement(string input)
         {
-            if (input.StartsWith("insert"))
-            {
-                var tokens = input.Split(" ");
-                if (tokens.Length != 4)
-                {
-                    return new ExecuteStatementResponse.SyntaxError("Expected 3 parameters (id, username, email) for insert");
-                }
-
-                var id = int.Parse(tokens[1]);
-                var username = tokens[2];
-                var email = tokens[3];
-
-                var result = new TreeInserter(_pager, CreateRowSerializer(_table.Table), _table).Insert(id, new Row(new[]
-                {
-                    new ColumnValue(id),
-                    new ColumnValue(username),
-                    new ColumnValue(email)
-                }));
-
-                switch (result)
-                {
-                    case TreeInsertResult.Success _:
-                        _output.WriteLine("Executed.");
-                        break;
-                    case TreeInsertResult.DuplicateKey _:
-                        _output.WriteLine("Error: Duplicate key.");
-                        break;
-
-                    default:
-                        _output.WriteLine($"Unhandled InsertResult: {result}");
-                        break;
-                }
-
-
-                return new ExecuteStatementResponse.Success();
-            }
-
             if (input.StartsWith("delete"))
             {
                 var tokens = input.Split(" ");
                 if (tokens.Length != 2)
                 {
-                    ;
                     return new ExecuteStatementResponse.SyntaxError("Expected 1 parameter (id) for delete");
                 }
 

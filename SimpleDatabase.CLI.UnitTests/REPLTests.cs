@@ -43,7 +43,7 @@ namespace SimpleDatabase.CLI.UnitTests
         }, 0, ExitCode.Success)]
         [InlineData(new[]
         {
-            "insert 0 a b",
+            "INSERT INTO table VALUES(0, 'a', 'b')",
             "SELECT * FROM table",
             ".exit"
         }, new[]
@@ -64,9 +64,9 @@ namespace SimpleDatabase.CLI.UnitTests
         }, 0, ExitCode.Success)]
         [InlineData(new[]
         {
-            "insert 3 a b",
-            "insert 1 a b",
-            "insert 2 a b",
+            "INSERT INTO table VALUES(3, 'a', 'b')",
+            "INSERT INTO table VALUES(1, 'a', 'b')",
+            "INSERT INTO table VALUES(2, 'a', 'b')",
             ".btree",
             ".exit"
         }, new[]
@@ -83,9 +83,9 @@ namespace SimpleDatabase.CLI.UnitTests
         }, 0, ExitCode.Success)]
         [InlineData(new[]
         {
-            "insert 3 a b",
-            "insert 1 a b",
-            "insert 2 a b",
+            "INSERT INTO table VALUES(3, 'a', 'b')",
+            "INSERT INTO table VALUES(1, 'a', 'b')",
+            "INSERT INTO table VALUES(2, 'a', 'b')",
             "SELECT * FROM table",
             ".exit"
         }, new[]
@@ -98,8 +98,8 @@ namespace SimpleDatabase.CLI.UnitTests
         }, 3, ExitCode.Success)]
         [InlineData(new[]
         {
-            "insert 1 a b",
-            "insert 1 a b",
+            "INSERT INTO table VALUES(1, 'a', 'b')",
+            "INSERT INTO table VALUES(1, 'a', 'b')",
             "SELECT * FROM table",
             ".exit"
         }, new[]
@@ -159,9 +159,9 @@ namespace SimpleDatabase.CLI.UnitTests
         {
             var commands = new string[17];
             for (var i = 0; i < 14; i++)
-                commands[i] = $"insert {i} user{i} person{i}@example.com";
+                commands[i] = $"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')";
             commands[14] = ".btree";
-            commands[15] = "insert 14 user14 person14@example.com";
+            commands[15] = "INSERT INTO table VALUES(14, 'user14', 'person14@example.com')";
             commands[16] = ".exit";
 
             var outputs = new[]
@@ -199,7 +199,7 @@ namespace SimpleDatabase.CLI.UnitTests
             var outputs = new List<string>();
             for (var i = 0; i < 48; i++)
             {
-                commands[i] = $"insert {47 - i} user{47 - i} person{47 - i}@example.com";
+                commands[i] = $"INSERT INTO table VALUES ({47 - i}, 'user{47 - i}', 'person{47 - i}@example.com')";
                 outputs.Add((i == 0 ? "db > " : "") + $"({i}, user{i}, person{i}@example.com)");
             }
             commands[48] = "SELECT * FROM table";
@@ -217,7 +217,7 @@ namespace SimpleDatabase.CLI.UnitTests
             var outputs = new List<string>();
             for (var i = 0; i < 14; i++)
             {
-                commands[i] = $"insert {i} user{i} person{i}@example.com";
+                commands[i] = $"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')";
                 outputs.Add((i == 0 ? "db > " : "") + $"({i}, user{i}, person{i}@example.com)");
             }
             commands[14] = "SELECT * FROM table";
@@ -235,7 +235,7 @@ namespace SimpleDatabase.CLI.UnitTests
             var outputs = new List<string>();
             for (var i = 0; i < 6998; i++)
             {
-                commands[i] = $"insert {i} user{i} person{i}@example.com";
+                commands[i] = $"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')";
                 outputs.Add((i == 0 ? "db > " : "") + $"({i}, user{i}, person{i}@example.com)");
             }
             commands[6998] = "SELECT * FROM table";
@@ -251,7 +251,7 @@ namespace SimpleDatabase.CLI.UnitTests
         {
             var commands = new string[6];
             for (var i = 0; i < 3; i++)
-                commands[i] = $"insert {i} user{i} person{i}@example.com";
+                commands[i] = $"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')";
             commands[3] = "delete 1";
             commands[4] = ".btree";
             commands[5] = ".exit";
@@ -272,7 +272,7 @@ namespace SimpleDatabase.CLI.UnitTests
         public void DeleteRootLeaf_Single()
         {
             var commands = new string[4];
-            commands[0] = "insert 0 user0 person0@example.com";
+            commands[0] = "INSERT INTO table VALUES(0, 'user0', 'person0@example.com')";
             commands[1] = "delete 0";
             commands[2] = ".btree";
             commands[3] = ".exit";
@@ -292,7 +292,7 @@ namespace SimpleDatabase.CLI.UnitTests
         {
             var commands = new string[18];
             for (var i = 0; i < 14; i++)
-                commands[i] = $"insert {i} user{i} person{i}@example.com";
+                commands[i] = $"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')";
             commands[14] = "delete 1";
             commands[15] = "delete 2";
             commands[16] = ".btree";
@@ -327,7 +327,7 @@ namespace SimpleDatabase.CLI.UnitTests
         {
             var commands = new string[18];
             for (var i = 0; i < 14; i++)
-                commands[i] = $"insert {i} user{i} person{i}@example.com";
+                commands[i] = $"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')";
             commands[14] = "delete 7";
             commands[15] = "delete 8";
             commands[16] = ".btree";
@@ -362,7 +362,7 @@ namespace SimpleDatabase.CLI.UnitTests
         {
             var commands = new List<string>();
             for (var i = 0; i < 14; i++)
-                commands.Add($"insert {i} user{i} person{i}@example.com");
+                commands[i] = $"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')";
             commands.Add("delete 7");
             commands.Add("delete 1");
             commands.Add("delete 2");
@@ -394,7 +394,7 @@ namespace SimpleDatabase.CLI.UnitTests
         {
             var commands = new List<string>();
             for (var i = 0; i < 14; i++)
-                commands.Add($"insert {i} user{i} person{i}@example.com");
+                commands[i] = $"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')";
             commands.Add("delete 1");
             commands.Add("delete 7");
             commands.Add("delete 8");
