@@ -4,11 +4,12 @@ namespace SimpleDatabase.Execution
 {
     public static class FunctionStateExtensions
     {
-        public static (FunctionState, CursorValue) PopCursor(this FunctionState state)
+        public static (FunctionState, T) PopValue<T>(this FunctionState state)
+            where T : Value
         {
             var (newState, value) = state.PopValue();
 
-            return (newState, (CursorValue)value);
+            return (newState, (T)value);
         }
     }
 }
