@@ -8,19 +8,31 @@ namespace SimpleDatabase.Planning
     {
         public Plan Plan(Statement statment)
         {
-            if (!(statment is SelectStatement select))
+            switch (statment)
             {
-                throw new NotImplementedException();
+                case SelectStatement select:
+                    {
+                        Node root = new ScanTableNode(((Table.TableName)select.Table).Name);
+                        root = select.Where.Map(
+                            pred => new FilterNode(root, pred),
+                            () => root
+                        );
+                        root = new ProjectionNode(root, select.Columns);
+
+                        return new Plan(root);
+                    }
+
+                case InsertStatement insert:
+                    {
+                        var input = new ConstantNode(insert.Columns, insert.Values);
+
+                        var root = new InsertNode(insert.Table, input);
+
+                        return new Plan(root);
+                    }
+
+                default: throw new ArgumentOutOfRangeException(nameof(statment), $"Unhandled type: {statment.GetType().FullName}");
             }
-
-            Node root = new ScanTableNode(((Table.TableName) select.Table).Name);
-            root = select.Where.Map(
-                pred => new FilterNode(root, pred),
-                () => root
-            );
-            root = new ProjectionNode(root, select.Columns);
-
-            return new Plan(root);
         }
     }
 }
