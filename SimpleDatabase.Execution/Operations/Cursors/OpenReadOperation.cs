@@ -1,4 +1,6 @@
-﻿namespace SimpleDatabase.Execution.Operations.Cursors
+﻿using SimpleDatabase.Storage;
+
+namespace SimpleDatabase.Execution.Operations.Cursors
 {
     /// <summary>
     /// ... -> ..., ReadOnlyCursor
@@ -8,16 +10,16 @@
     /// </summary>
     public class OpenReadOperation : IOperation
     {
-        public int RootPageNumber { get; }
+        public StoredTable Table { get; }
 
-        public OpenReadOperation(int rootPageNumber)
+        public OpenReadOperation(StoredTable table)
         {
-            RootPageNumber = rootPageNumber;
+            Table = table;
         }
 
         public override string ToString()
         {
-            return $"CUR.OPEN.R {RootPageNumber}";
+            return $"CUR.OPEN.R {Table.Table.Name}";
         }
     }
 }

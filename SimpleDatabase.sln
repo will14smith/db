@@ -1,15 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27110.0
+VisualStudioVersion = 15.0.27128.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleDatabase.Core", "SimpleDatabase.Core\SimpleDatabase.Core.csproj", "{6FC119CC-6DB0-412D-B8CD-7A255E40D977}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleDatabase.CLI", "SimpleDatabase.CLI\SimpleDatabase.CLI.csproj", "{EE424103-7B96-49F5-B407-0EC8265F4783}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleDatabase.CLI.UnitTests", "SimpleDatabase.CLI.UnitTests\SimpleDatabase.CLI.UnitTests.csproj", "{220B01D9-AC34-4409-A63D-A809B3C6A4D7}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleDatabase.Core.UnitTests", "SimpleDatabase.Core.UnitTests\SimpleDatabase.Core.UnitTests.csproj", "{B868D35D-2BA3-4A88-8B27-81B617CB7991}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleDatabase.Parsing", "SimpleDatabase.Parsing\SimpleDatabase.Parsing.csproj", "{73C1BF4A-9CF9-47B0-BC3F-329D2A565D49}"
 EndProject
@@ -21,11 +17,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleDatabase.Schemas", "S
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleDatabase.Utils", "SimpleDatabase.Utils\SimpleDatabase.Utils.csproj", "{155927CB-5720-4791-92FA-57BF73657203}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleDatabase.Execution", "SimpleDatabase.Execution\SimpleDatabase.Execution.csproj", "{CC258708-03EE-430D-A8FF-B96D1E2B14EF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleDatabase.Execution", "SimpleDatabase.Execution\SimpleDatabase.Execution.csproj", "{CC258708-03EE-430D-A8FF-B96D1E2B14EF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleDatabase.Execution.UnitTests", "SimpleDatabase.Execution.UnitTests\SimpleDatabase.Execution.UnitTests.csproj", "{944F4892-C09D-4060-BAC0-1BFE2C0011C9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleDatabase.Execution.UnitTests", "SimpleDatabase.Execution.UnitTests\SimpleDatabase.Execution.UnitTests.csproj", "{944F4892-C09D-4060-BAC0-1BFE2C0011C9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleDatabase.Planning.UnitTests", "SimpleDatabase.Planning.UnitTests\SimpleDatabase.Planning.UnitTests.csproj", "{F81833A2-2DEE-4437-B384-D13DF338096B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleDatabase.Planning.UnitTests", "SimpleDatabase.Planning.UnitTests\SimpleDatabase.Planning.UnitTests.csproj", "{F81833A2-2DEE-4437-B384-D13DF338096B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleDatabase.Storage", "SimpleDatabase.Storage\SimpleDatabase.Storage.csproj", "{420E5BA7-7DD0-471D-A1B6-B8D8E8D5AAAF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleDatabase.Storage.UnitTests", "SimpleDatabase.Storage.UnitTests\SimpleDatabase.Storage.UnitTests.csproj", "{9DD9F0ED-D379-44A7-BAA8-100D78F506CA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,10 +33,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{6FC119CC-6DB0-412D-B8CD-7A255E40D977}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6FC119CC-6DB0-412D-B8CD-7A255E40D977}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6FC119CC-6DB0-412D-B8CD-7A255E40D977}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6FC119CC-6DB0-412D-B8CD-7A255E40D977}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EE424103-7B96-49F5-B407-0EC8265F4783}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{EE424103-7B96-49F5-B407-0EC8265F4783}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EE424103-7B96-49F5-B407-0EC8265F4783}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -45,10 +41,6 @@ Global
 		{220B01D9-AC34-4409-A63D-A809B3C6A4D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{220B01D9-AC34-4409-A63D-A809B3C6A4D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{220B01D9-AC34-4409-A63D-A809B3C6A4D7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B868D35D-2BA3-4A88-8B27-81B617CB7991}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B868D35D-2BA3-4A88-8B27-81B617CB7991}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B868D35D-2BA3-4A88-8B27-81B617CB7991}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B868D35D-2BA3-4A88-8B27-81B617CB7991}.Release|Any CPU.Build.0 = Release|Any CPU
 		{73C1BF4A-9CF9-47B0-BC3F-329D2A565D49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{73C1BF4A-9CF9-47B0-BC3F-329D2A565D49}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{73C1BF4A-9CF9-47B0-BC3F-329D2A565D49}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -81,6 +73,14 @@ Global
 		{F81833A2-2DEE-4437-B384-D13DF338096B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F81833A2-2DEE-4437-B384-D13DF338096B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F81833A2-2DEE-4437-B384-D13DF338096B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{420E5BA7-7DD0-471D-A1B6-B8D8E8D5AAAF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{420E5BA7-7DD0-471D-A1B6-B8D8E8D5AAAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{420E5BA7-7DD0-471D-A1B6-B8D8E8D5AAAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{420E5BA7-7DD0-471D-A1B6-B8D8E8D5AAAF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9DD9F0ED-D379-44A7-BAA8-100D78F506CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9DD9F0ED-D379-44A7-BAA8-100D78F506CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9DD9F0ED-D379-44A7-BAA8-100D78F506CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9DD9F0ED-D379-44A7-BAA8-100D78F506CA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

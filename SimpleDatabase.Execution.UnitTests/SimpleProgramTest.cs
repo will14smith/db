@@ -1,22 +1,34 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using SimpleDatabase.Core;
-using SimpleDatabase.Core.Paging;
 using SimpleDatabase.Execution.Operations;
 using SimpleDatabase.Execution.Operations.Columns;
 using SimpleDatabase.Execution.Operations.Constants;
 using SimpleDatabase.Execution.Operations.Cursors;
 using SimpleDatabase.Execution.Operations.Jumps;
 using SimpleDatabase.Execution.Operations.Slots;
+using SimpleDatabase.Execution.Trees;
+using SimpleDatabase.Schemas;
+using SimpleDatabase.Schemas.Types;
+using SimpleDatabase.Storage;
+using SimpleDatabase.Storage.Nodes;
+using SimpleDatabase.Storage.Paging;
+using SimpleDatabase.Storage.Serialization;
 using Xunit;
 
 namespace SimpleDatabase.Execution.UnitTests
 {
     public class SimpleProgramTest
     {
-        private const int RootPageNumber = 0;
-
+        private static readonly StoredTable Table = new StoredTable(
+            new Table("table", new []
+            {
+                new Column("id", new ColumnType.Integer()),
+                new Column("name", new ColumnType.String(63)),
+                new Column("email", new ColumnType.String(255)),
+            }),
+            0);
+        
         private static readonly ProgramLabel Loop = ProgramLabel.Create();
         private static readonly ProgramLabel Next = ProgramLabel.Create();
         private static readonly ProgramLabel Finish = ProgramLabel.Create();
@@ -26,7 +38,7 @@ namespace SimpleDatabase.Execution.UnitTests
             new List<IOperation>
             {
                 // cursor = first(open(RootPageNumber))
-                new OpenReadOperation(RootPageNumber),
+                new OpenReadOperation(Table),
                 new FirstOperation(Finish),
                 Loop,
                 new StoreOperation(Cursor),
@@ -73,10 +85,19 @@ namespace SimpleDatabase.Execution.UnitTests
             try
             {
                 using (var pager = new Pager(new FilePagerStorage(file)))
-                using (var table = new Table(pager))
                 {
-                    table.Insert(new InsertStatement(new Row(1, "a", "a@a.a")));
-                    table.Insert(new InsertStatement(new Row(2, "b", "b@b.b")));
+                    // TODO clean this up 
+
+                    // Create root page
+                    var rootPage = pager.Get(Table.RootPageNumber);
+                    var rowSerializer = new RowSerializer(Table.Table, new ColumnTypeSerializerFactory());
+                    var node = LeafNode.New(rowSerializer, rootPage);
+                    node.IsRoot = true;
+                    pager.Flush(Table.RootPageNumber);
+
+                    // Insert some data
+                    new TreeInserter(pager, rowSerializer, Table).Insert(1, new Row(new []{ new ColumnValue(1), new ColumnValue("a"), new ColumnValue("a@a.a") }));
+                    new TreeInserter(pager, rowSerializer, Table).Insert(1, new Row(new []{ new ColumnValue(2), new ColumnValue("b"), new ColumnValue("b@b.b") }));
 
                     var result = new ProgramExecutor(Program, pager).Execute().ToList();
 

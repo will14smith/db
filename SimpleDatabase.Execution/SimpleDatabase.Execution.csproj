@@ -9,7 +9,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SimpleDatabase.Core\SimpleDatabase.Core.csproj" />
+    <ProjectReference Include="..\SimpleDatabase.Schemas\SimpleDatabase.Schemas.csproj" />
+    <ProjectReference Include="..\SimpleDatabase.Storage\SimpleDatabase.Storage.csproj" />
   </ItemGroup>
 
 </Project>

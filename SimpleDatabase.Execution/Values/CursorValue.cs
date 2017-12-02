@@ -1,23 +1,24 @@
-﻿using SimpleDatabase.Core;
+﻿using SimpleDatabase.Execution.Trees;
+using SimpleDatabase.Storage;
 
 namespace SimpleDatabase.Execution.Values
 {
     public class CursorValue : Value
     {
-        public int RootPageNumber { get; }
+        public StoredTable Table { get; }
         public bool Writable { get; }
 
         public Cursor Cursor { get; }
 
-        public CursorValue(int rootPageNumber, bool writable)
+        public CursorValue(StoredTable table, bool writable)
         {
-            RootPageNumber = rootPageNumber;
+            Table = table;
             Writable = writable;
             Cursor = null;
         }
 
         private CursorValue(CursorValue val, Cursor newCursor)
-            : this(val.RootPageNumber, val.Writable)
+            : this(val.Table, val.Writable)
         {
             Cursor = newCursor;
         }

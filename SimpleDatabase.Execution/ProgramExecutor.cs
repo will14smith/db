@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using SimpleDatabase.Core.Paging;
-using SimpleDatabase.Core.Trees;
 using SimpleDatabase.Execution.Operations;
 using SimpleDatabase.Execution.Operations.Columns;
 using SimpleDatabase.Execution.Operations.Constants;
 using SimpleDatabase.Execution.Operations.Cursors;
 using SimpleDatabase.Execution.Operations.Jumps;
 using SimpleDatabase.Execution.Operations.Slots;
+using SimpleDatabase.Execution.Trees;
 using SimpleDatabase.Execution.Values;
+using SimpleDatabase.Storage;
+using SimpleDatabase.Storage.Nodes;
+using SimpleDatabase.Storage.Paging;
+using SimpleDatabase.Storage.Serialization;
 
 namespace SimpleDatabase.Execution
 {
@@ -84,7 +87,7 @@ namespace SimpleDatabase.Execution
                 case OpenReadOperation openRead:
                     {
                         // TODO aquire read lock
-                        var cursor = new CursorValue(openRead.RootPageNumber, false);
+                        var cursor = new CursorValue(openRead.Table, false);
                         state = state.PushValue(cursor);
                         return (state, new Result.Next());
                     }
@@ -94,8 +97,8 @@ namespace SimpleDatabase.Execution
                         CursorValue cursorValue;
                         (state, cursorValue) = state.PopCursor();
 
-                        var searcher = new TreeTraverser(_pager);
-                        var newCursor = searcher.StartCursor(cursorValue.RootPageNumber);
+                        var searcher = new TreeTraverser(_pager, CreateRowSerializer(cursorValue.Table), cursorValue.Table);
+                        var newCursor = searcher.StartCursor();
 
                         var newCursorValue = cursorValue.SetCursor(newCursor);
                         state = state.PushValue(newCursorValue);
@@ -119,7 +122,7 @@ namespace SimpleDatabase.Execution
                             throw new InvalidOperationException("Cursor is null, has a position been set of this cursor?");
                         }
 
-                        var searcher = new TreeTraverser(_pager);
+                        var searcher = new TreeTraverser(_pager, CreateRowSerializer(cursorValue.Table), cursorValue.Table);
                         var newCursor = searcher.AdvanceCursor(cursor);
 
                         var newCursorValue = cursorValue.SetCursor(newCursor);
@@ -146,7 +149,7 @@ namespace SimpleDatabase.Execution
                         }
 
                         var page = _pager.Get(cursor.PageNumber);
-                        var leaf = LeafNode.Read(page);
+                        var leaf = LeafNode.Read(CreateRowSerializer(cursorValue.Table), page);
 
                         var key = leaf.GetCellKey(cursor.CellNumber);
                         state.PushValue(new ObjectValue(key));
@@ -166,7 +169,7 @@ namespace SimpleDatabase.Execution
                         }
 
                         var page = _pager.Get(cursor.PageNumber);
-                        var leaf = LeafNode.Read(page);
+                        var leaf = LeafNode.Read(CreateRowSerializer(cursorValue.Table), page);
 
                         var value = leaf.GetCellColumn(cursor.CellNumber, column.ColumnIndex);
                         state.PushValue(new ObjectValue(value));
@@ -220,6 +223,12 @@ namespace SimpleDatabase.Execution
 
                         return (state, new Result.Next());
                     }
+                case ConstStringOperation constStr:
+                    {
+                        state = state.PushValue(new ObjectValue(constStr.Value));
+
+                        return (state, new Result.Next());
+                    }
 
                 // Other
                 case ProgramLabel _:
@@ -248,6 +257,14 @@ namespace SimpleDatabase.Execution
                 default:
                     throw new NotImplementedException($"Unsupported operation type: {operation.GetType().Name}");
             }
+        }
+
+        private IRowSerializer CreateRowSerializer(StoredTable table)
+        {
+            return new RowSerializer(
+                table.Table,
+                new ColumnTypeSerializerFactory()
+            );
         }
 
         private bool Compare(Comparison comparison, Value value1, Value value2)

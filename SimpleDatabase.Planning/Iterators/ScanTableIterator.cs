@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using SimpleDatabase.Execution;
@@ -7,6 +6,7 @@ using SimpleDatabase.Execution.Operations.Columns;
 using SimpleDatabase.Execution.Operations.Cursors;
 using SimpleDatabase.Execution.Operations.Slots;
 using SimpleDatabase.Schemas;
+using SimpleDatabase.Storage;
 
 namespace SimpleDatabase.Planning.Iterators
 {
@@ -33,7 +33,7 @@ namespace SimpleDatabase.Planning.Iterators
 
         public IEnumerable<IOperation> Init(ProgramLabel emptyTarget)
         {
-            yield return new OpenReadOperation(_database.GetRootPage(_table.Name));
+            yield return new OpenReadOperation(_database.GetTable(_table.Name));
             yield return new FirstOperation(emptyTarget);
             yield return new StoreOperation(_cursor);
         }

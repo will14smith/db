@@ -9,6 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\SimpleDatabase.Schemas\SimpleDatabase.Schemas.csproj" />
     <ProjectReference Include="..\SimpleDatabase.Utils\SimpleDatabase.Utils.csproj" />
   </ItemGroup>
 

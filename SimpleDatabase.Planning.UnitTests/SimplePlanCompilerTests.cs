@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using SimpleDatabase.Parsing.Expressions;
 using SimpleDatabase.Parsing.Statements;
 using SimpleDatabase.Planning.Nodes;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Schemas.Types;
+using SimpleDatabase.Storage;
 using SimpleDatabase.Utils;
 using Xunit;
 using Xunit.Abstractions;
@@ -14,11 +14,11 @@ namespace SimpleDatabase.Planning.UnitTests
 {
     public class SimplePlanCompilerTests
     {
-        private readonly ITestOutputHelper output;
+        private readonly ITestOutputHelper _output;
 
         public SimplePlanCompilerTests(ITestOutputHelper output)
         {
-            this.output = output;
+            this._output = output;
         }
 
         public static IReadOnlyCollection<object[]> Plans = new List<object[]>
@@ -50,12 +50,9 @@ namespace SimpleDatabase.Planning.UnitTests
         [MemberData(nameof(Plans))]
         public void TestCanCompile(string name, Plan plan)
         {
-            var database = new Database(new Dictionary<string, Table>
+            var database = new Database(new Dictionary<string, StoredTable>
             {
-                { "table", new Table("table", new []{ new Column("id", new ColumnType.Integer()), new Column("name", new ColumnType.String(127)), new Column("email", new ColumnType.String(255)) }) }
-            }, new Dictionary<string, int>
-            {
-                { "table", 0 },
+                { "table", new StoredTable(new Table("table", new []{ new Column("id", new ColumnType.Integer()), new Column("name", new ColumnType.String(127)), new Column("email", new ColumnType.String(255)) }), 0) }
             });
             var compiler = new PlanCompiler(database);
 
@@ -63,7 +60,7 @@ namespace SimpleDatabase.Planning.UnitTests
 
             Assert.NotNull(program);
 
-            output.WriteLine(program.ToString());
+            _output.WriteLine(program.ToString());
         }
     }
 }

@@ -5,7 +5,7 @@ using SimpleDatabase.Execution;
 using SimpleDatabase.Execution.Operations;
 using SimpleDatabase.Planning.Iterators;
 using SimpleDatabase.Planning.Nodes;
-using Table = SimpleDatabase.Schemas.Table;
+using SimpleDatabase.Storage;
 
 namespace SimpleDatabase.Planning
 {
@@ -41,27 +41,12 @@ namespace SimpleDatabase.Planning
         {
             switch (node)
             {
-                case ScanTableNode scan: return new ScanTableIterator(_database, _database.GetTable(scan.TableName));
+                case ScanTableNode scan: return new ScanTableIterator(_database, _database.GetTable(scan.TableName).Table);
                 case ProjectionNode projection: return new ProjectionIterator(Compile(projection.Input), projection.Columns);
                 case FilterNode filter: return new FilterIterator(Compile(filter.Input), filter.Predicate);
 
                 default: throw new ArgumentOutOfRangeException(nameof(node), $"Unhandled type: {node.GetType().FullName}");
             }
         }
-    }
-
-    public class Database
-    {
-        private readonly IReadOnlyDictionary<string, Table> _tables;
-        private readonly IReadOnlyDictionary<string, int> _tableRootPages;
-
-        public Database(IReadOnlyDictionary<string, Table> tables, IReadOnlyDictionary<string, int> tableRootPages)
-        {
-            _tables = tables;
-            _tableRootPages = tableRootPages;
-        }
-
-        public Table GetTable(string name) { return _tables[name]; }
-        public int GetRootPage(string name) { return _tableRootPages[name]; }
     }
 }

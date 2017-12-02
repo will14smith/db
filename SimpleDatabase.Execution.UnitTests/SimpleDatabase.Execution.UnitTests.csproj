@@ -13,7 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SimpleDatabase.Core\SimpleDatabase.Core.csproj" />
     <ProjectReference Include="..\SimpleDatabase.Execution\SimpleDatabase.Execution.csproj" />
   </ItemGroup>
 
