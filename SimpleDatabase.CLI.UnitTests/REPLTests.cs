@@ -362,7 +362,7 @@ namespace SimpleDatabase.CLI.UnitTests
         {
             var commands = new List<string>();
             for (var i = 0; i < 14; i++)
-                commands[i] = $"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')";
+                commands.Add($"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')");
             commands.Add("delete 7");
             commands.Add("delete 1");
             commands.Add("delete 2");
@@ -394,7 +394,7 @@ namespace SimpleDatabase.CLI.UnitTests
         {
             var commands = new List<string>();
             for (var i = 0; i < 14; i++)
-                commands[i] = $"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')";
+                commands.Add($"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')");
             commands.Add("delete 1");
             commands.Add("delete 7");
             commands.Add("delete 8");
