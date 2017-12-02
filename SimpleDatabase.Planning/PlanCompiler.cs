@@ -41,22 +41,12 @@ namespace SimpleDatabase.Planning
         {
             switch (node)
             {
-                case ScanTableNode scan: return CompileNode(scan);
-                case ProjectionNode projection: return CompileNode(projection);
+                case ScanTableNode scan: return new ScanTableIterator(_database, _database.GetTable(scan.TableName));
+                case ProjectionNode projection: return new ProjectionIterator(Compile(projection.Input), projection.Columns);
+                case FilterNode filter: return new FilterIterator(Compile(filter.Input), filter.Predicate);
 
                 default: throw new ArgumentOutOfRangeException(nameof(node), $"Unhandled type: {node.GetType().FullName}");
             }
-        }
-        
-        private IIterator CompileNode(ScanTableNode scan)
-        {
-            return new ScanTableIterator(_database, _database.GetTable(scan.TableName));
-        }
-
-        private IIterator CompileNode(ProjectionNode projection)
-        {
-            var input = Compile(projection.Input);
-            return new ProjectionIterator(input, projection.Columns);
         }
     }
 

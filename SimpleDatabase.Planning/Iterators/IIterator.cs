@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using SimpleDatabase.Execution;
 using SimpleDatabase.Execution.Operations;
-using SimpleDatabase.Parsing.Statements;
+using SimpleDatabase.Parsing.Expressions;
 using SimpleDatabase.Schemas.Types;
 
 namespace SimpleDatabase.Planning.Iterators
@@ -85,7 +85,13 @@ namespace SimpleDatabase.Planning.Iterators
 
             public override bool Matches(string name)
             {
-                throw new NotImplementedException();
+                switch (Expr)
+                {
+                    case ColumnNameExpression column:
+                        return name == column.Name;
+
+                    default: throw new ArgumentOutOfRangeException(nameof(Expr), $"Unhandled type: {Expr.GetType().FullName}");
+                }
             }
         }
 
