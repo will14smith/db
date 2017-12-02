@@ -9,7 +9,7 @@ statement: (K_EXPLAIN)?
 	);
 
 statement_select: K_SELECT Columns+=result_column (',' Columns+=result_column)* K_FROM Table=table_name (K_WHERE Where=expression)?;
-statement_insert: K_INSERT K_INTO Table=table_name (Columns+=column_name (',' Columns+=column_name)*)? K_VALUES Values+=statement_insert_value (',' Values+=statement_insert_value)*;
+statement_insert: K_INSERT K_INTO Table=table_name ('(' Columns+=column_name (',' Columns+=column_name)* ')')? K_VALUES Values+=statement_insert_value (',' Values+=statement_insert_value)*;
 statement_insert_value: '(' Values+=expression (',' Values+=expression)* ')';
 
 // columns
