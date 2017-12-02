@@ -43,7 +43,8 @@ namespace SimpleDatabase.Planning.UnitTests
                         new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a"))
                     ),
                     new[] { new ResultColumn.Expression(new ColumnNameExpression("name"), Option.None<string>()) }
-                )) },
+                ))
+            },
             new object[] {"Filter & Project", new Plan(
                 new FilterNode(
                     new ProjectionNode(
@@ -52,7 +53,21 @@ namespace SimpleDatabase.Planning.UnitTests
                     ),
                     new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a"))
                 ))
-            }
+            },
+            new object[] {"Filter constant", new Plan(
+                new FilterNode(
+                    new ConstantNode(
+                        new [] { "a", "b", },
+                        new []
+                        {
+                            new Expression[] { new NumberLiteralExpression(1), new StringLiteralExpression("a") },
+                            new Expression[] { new NumberLiteralExpression(2), new StringLiteralExpression("b") },
+                        }
+                    ),
+                    new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("b"), new StringLiteralExpression("a"))
+                ))
+            },
+
         };
 
         [Theory]
