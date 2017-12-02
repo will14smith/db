@@ -48,9 +48,10 @@ namespace SimpleDatabase.Planning
             switch (node)
             {
                 case ConstantNode constant: return new ConstantIterator(constant.Columns, constant.Values);
-                case ScanTableNode scan: return new ScanTableIterator(_database, _database.GetTable(scan.TableName).Table);
+                case ScanTableNode scan: return new ScanTableIterator(_database.GetTable(scan.TableName));
                 case ProjectionNode projection: return new ProjectionIterator(Compile(projection.Input), projection.Columns);
                 case FilterNode filter: return new FilterIterator(Compile(filter.Input), filter.Predicate);
+                case InsertNode insert: return new InsertIterator(Compile(insert.Input), _database.GetTable(insert.TableName));
 
                 default: throw new ArgumentOutOfRangeException(nameof(node), $"Unhandled type: {node.GetType().FullName}");
             }

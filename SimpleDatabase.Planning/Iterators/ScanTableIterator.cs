@@ -6,21 +6,18 @@ using SimpleDatabase.Execution.Operations.Columns;
 using SimpleDatabase.Execution.Operations.Cursors;
 using SimpleDatabase.Execution.Operations.Jumps;
 using SimpleDatabase.Execution.Operations.Slots;
-using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage;
 
 namespace SimpleDatabase.Planning.Iterators
 {
     public class ScanTableIterator : IIterator
     {
-        private readonly Database _database;
-        private readonly Table _table;
+        private readonly StoredTable _table;
 
         private readonly SlotLabel _cursor = SlotLabel.Create();
 
-        public ScanTableIterator(Database database, Table table)
+        public ScanTableIterator(StoredTable table)
         {
-            _database = database;
             _table = table;
 
             Outputs = ComputeOutputs();
@@ -35,7 +32,7 @@ namespace SimpleDatabase.Planning.Iterators
 
         public IEnumerable<IOperation> Init(ProgramLabel emptyTarget)
         {
-            yield return new OpenReadOperation(_database.GetTable(_table.Name));
+            yield return new OpenReadOperation(_table);
             yield return new FirstOperation(emptyTarget);
             yield return new StoreOperation(_cursor);
         }
@@ -72,8 +69,8 @@ namespace SimpleDatabase.Planning.Iterators
 
         private IReadOnlyList<IteratorOutput> ComputeOutputs()
         {
-            return _table.Columns.Select((x, i) => new IteratorOutput(
-                new IteratorOutputName.TableColumn(_table.Name, x.Name),
+            return _table.Table.Columns.Select((x, i) => new IteratorOutput(
+                new IteratorOutputName.TableColumn(_table.Table.Name, x.Name),
                 x.Type,
                 new IOperation[] { new LoadOperation(_cursor), new ColumnOperation(i) })).ToList();
         }
