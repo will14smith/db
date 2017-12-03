@@ -76,6 +76,27 @@ namespace SimpleDatabase.Planning.UnitTests
             Assert.Equal("table", scan.TableName);
         }
 
+        [Fact]
+        public void Test_Star_OrderBy()
+        {
+            var statement = new SelectStatement(
+                new List<ResultColumn> { new ResultColumn.Star(Option.None<string>()) },
+                new Table.TableName("table"),
+                Option.None<Expression>(),
+                new[] { new OrderExpression(new ColumnNameExpression("name"), Order.Ascending) }
+            );
+            var planner = new Planner(_database);
+
+            var plan = planner.Plan(statement);
+
+            var sort = Assert.IsType<SortNode>(plan.RootNode);
+            Assert.Single(sort.Orderings, x => x.Expression is ColumnNameExpression);
+            var project = Assert.IsType<ProjectionNode>(sort.Input);
+            Assert.Single(project.Columns, x => x is ResultColumn.Star);
+            var scan = Assert.IsType<ScanTableNode>(project.Input);
+            Assert.Equal("table", scan.TableName);
+        }
+
 
         [Fact]
         public void Test_Insert()

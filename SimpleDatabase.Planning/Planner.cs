@@ -28,6 +28,11 @@ namespace SimpleDatabase.Planning
                         );
                         root = new ProjectionNode(root, select.Columns);
 
+                        if (select.Ordering.Any())
+                        {
+                            root = new SortNode(root, select.Ordering);
+                        }
+
                         return new Plan(root);
                     }
 
