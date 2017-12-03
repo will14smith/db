@@ -22,7 +22,7 @@ namespace SimpleDatabase.Planning
 
             var generator = program.NewFunction();
 
-            var iter = Compile(plan.RootNode, generator);
+            var iter = Compile(plan.RootNode, generator, false);
 
             var start = generator.NewLabel();
             var done = generator.NewLabel();
@@ -46,16 +46,16 @@ namespace SimpleDatabase.Planning
             }
         }
 
-        private IIterator Compile(Node node, IOperationGenerator generator)
+        private IIterator Compile(Node node, IOperationGenerator generator, bool writable)
         {
             switch (node)
             {
                 case ConstantNode constant: return new ConstantIterator(generator, constant.Columns, constant.Values);
-                case ScanTableNode scan: return new ScanTableIterator(generator, _database.GetTable(scan.TableName));
-                case ProjectionNode projection: return new ProjectionIterator(Compile(projection.Input, generator), projection.Columns);
-                case FilterNode filter: return new FilterIterator(generator, Compile(filter.Input, generator), filter.Predicate);
-                case InsertNode insert: return new InsertIterator(generator, Compile(insert.Input, generator), _database.GetTable(insert.TableName));
-                case DeleteNode delete: return new DeleteIterator(Compile(delete.Input, generator));
+                case ScanTableNode scan: return new ScanTableIterator(generator, _database.GetTable(scan.TableName), writable);
+                case ProjectionNode projection: return new ProjectionIterator(Compile(projection.Input, generator, writable), projection.Columns);
+                case FilterNode filter: return new FilterIterator(generator, Compile(filter.Input, generator, writable), filter.Predicate);
+                case InsertNode insert: return new InsertIterator(generator, Compile(insert.Input, generator, true), _database.GetTable(insert.TableName));
+                case DeleteNode delete: return new DeleteIterator(Compile(delete.Input, generator, true));
 
                 default: throw new ArgumentOutOfRangeException(nameof(node), $"Unhandled type: {node.GetType().FullName}");
             }
