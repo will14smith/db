@@ -17,6 +17,9 @@ namespace SimpleDatabase.Parsing.UnitTests
 
         [InlineData("INSERT INTO table VALUES (1, 2)")]
         [InlineData("INSERT INTO table (a, b) VALUES ('a', 'b')")]
+
+        [InlineData("DELETE FROM table")]
+        [InlineData("DELETE FROM table WHERE column = 'a'")]
         
         public void CanParse(string input)
         {

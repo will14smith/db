@@ -6,11 +6,13 @@ program: statement (';' statement)* ';'?;
 statement: (K_EXPLAIN)? 
 	( statement_select
 	| statement_insert
+	| statement_delete
 	);
 
 statement_select: K_SELECT Columns+=result_column (',' Columns+=result_column)* K_FROM Table=table_name (K_WHERE Where=expression)?;
 statement_insert: K_INSERT K_INTO Table=table_name ('(' Columns+=column_name (',' Columns+=column_name)* ')')? K_VALUES Values+=statement_insert_value (',' Values+=statement_insert_value)*;
 statement_insert_value: '(' Values+=expression (',' Values+=expression)* ')';
+statement_delete: K_DELETE K_FROM Table=table_name (K_WHERE Where=expression)?;
 
 // columns
 result_column
@@ -39,6 +41,7 @@ literal_value
 
 // keywords
 K_AS: A S;
+K_DELETE: D E L E T E;
 K_EXPLAIN: E X P L A I N;
 K_FROM: F R O M;
 K_INSERT: I N S E R T;

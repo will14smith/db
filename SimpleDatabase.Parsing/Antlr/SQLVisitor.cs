@@ -63,6 +63,12 @@ public interface ISQLVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitStatement_insert_value([NotNull] SQLParser.Statement_insert_valueContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="SQLParser.statement_delete"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitStatement_delete([NotNull] SQLParser.Statement_deleteContext context);
+	/// <summary>
 	/// Visit a parse tree produced by the <c>result_column_star</c>
 	/// labeled alternative in <see cref="SQLParser.result_column"/>.
 	/// </summary>
