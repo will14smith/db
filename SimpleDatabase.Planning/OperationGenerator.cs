@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using SimpleDatabase.Execution;
 using SimpleDatabase.Execution.Operations;
 
@@ -7,12 +6,22 @@ namespace SimpleDatabase.Planning
 {
     internal class OperationGenerator : IOperationGenerator
     {
-        private Dictionary<SlotLabel, SlotDefinition> _slots = new Dictionary<SlotLabel, SlotDefinition>();
-        private List<IOperation> _operations = new List<IOperation>();
+        public FunctionLabel Label { get; }
 
-        public FunctionLabel NewFunction(Function function)
+        private readonly ProgramGenerator _programGenerator;
+
+        private readonly Dictionary<SlotLabel, SlotDefinition> _slots = new Dictionary<SlotLabel, SlotDefinition>();
+        private readonly List<IOperation> _operations = new List<IOperation>();
+
+        public OperationGenerator(ProgramGenerator programGenerator, FunctionLabel label)
         {
-            throw new NotImplementedException();
+            Label = label;
+            _programGenerator = programGenerator;
+        }
+
+        public IOperationGenerator NewFunction()
+        {
+            return _programGenerator.NewFunction();
         }
 
         public SlotLabel NewSlot(SlotDefinition definition)
@@ -46,15 +55,9 @@ namespace SimpleDatabase.Planning
             _operations.Add(operation);
         }
 
-        public Program CreateProgram()
+        public Function CreateFunction()
         {
-            var main = FunctionLabel.Create();
-            var functions = new Dictionary<FunctionLabel, Function>
-            {
-                { main, new Function(_operations, _slots) }
-            };
-
-            return new Program(main, functions);
+            return new Function(_operations, _slots);
         }
     }
 }

@@ -5,7 +5,9 @@ namespace SimpleDatabase.Planning
 {
     public interface IOperationGenerator
     {
-        FunctionLabel NewFunction(Function function);
+        FunctionLabel Label { get; }
+
+        IOperationGenerator NewFunction();
         SlotLabel NewSlot(SlotDefinition definition);
 
         ProgramLabel NewLabel();

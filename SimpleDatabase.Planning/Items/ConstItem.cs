@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using SimpleDatabase.Execution.Operations.Constants;
 
 namespace SimpleDatabase.Planning.Items
@@ -18,6 +16,10 @@ namespace SimpleDatabase.Planning.Items
         {
             switch (_value)
             {
+                case int num:
+                    Generator.Emit(new ConstIntOperation(num));
+                    break;
+
                 case string str:
                     Generator.Emit(new ConstStringOperation(str));
                     break;

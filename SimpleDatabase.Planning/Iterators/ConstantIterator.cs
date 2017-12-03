@@ -1,119 +1,117 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using SimpleDatabase.Execution;
+using SimpleDatabase.Execution.Operations;
+using SimpleDatabase.Execution.Operations.Functions;
+using SimpleDatabase.Execution.Operations.Jumps;
 using SimpleDatabase.Parsing.Expressions;
+using SimpleDatabase.Planning.Items;
 
 namespace SimpleDatabase.Planning.Iterators
 {
     public class ConstantIterator : IIterator
     {
+        private readonly IOperationGenerator _generator;
         private readonly IReadOnlyList<string> _columns;
         private readonly IReadOnlyList<IReadOnlyList<Expression>> _values;
 
-        private readonly FunctionLabel _generator = FunctionLabel.Create();
-        private readonly SlotLabel _generatorHandle = SlotLabel.Create();
-        private readonly SlotLabel _current = SlotLabel.Create();
+        private readonly FunctionLabel _itemSource;
+        private readonly SlotItem _itemSourceHandle;
+        private readonly SlotItem _current;
 
-        public ConstantIterator(IReadOnlyList<string> columns, IReadOnlyList<IReadOnlyList<Expression>> values)
+        public ConstantIterator(IOperationGenerator generator, IReadOnlyList<string> columns, IReadOnlyList<IReadOnlyList<Expression>> values)
         {
+            _generator = generator;
             _columns = columns;
             _values = values;
 
-            //Functions = new Dictionary<FunctionLabel, Function>
-            //{
-            //    { _generator, GenerateFunction() }
-            //};
-            //Outputs = columns.Select((x, i) => new IteratorOutput(new IteratorOutputName.Constant(x), null, new IOperation[]
-            //{
-            //    new LoadOperation(_current),
-            //    new ColumnOperation(i),
-            //})).ToList();
+            _itemSource = GenerateFunction();
+            _itemSourceHandle = new SlotItem(_generator, _generator.NewSlot(new SlotDefinition()));
+            _current = new SlotItem(_generator, _generator.NewSlot(new SlotDefinition()));
+
+            Output = GenerateOutput();
         }
 
-        //public IReadOnlyDictionary<SlotLabel, SlotDefinition> Slots => new Dictionary<SlotLabel, SlotDefinition>
-        //{
-        //    { _generatorHandle, new SlotDefinition() },
-        //    { _current, new SlotDefinition() },
-        //};
-        //public IReadOnlyDictionary<FunctionLabel, Function> Functions { get; }
-        //public IReadOnlyList<IteratorOutput> Outputs { get; }
-
-        //public IEnumerable<IOperation> Init(ProgramLabel emptyTarget)
-        //{
-        //    if (!_values.Any())
-        //    {
-        //        yield return new JumpOperation(emptyTarget);
-        //        yield break;
-        //    }
-
-        //    yield return new SetupCoroutineOperation(_generator, 0);
-        //    yield return new StoreOperation(_generatorHandle);
-        //    yield return new LoadOperation(_generatorHandle);
-        //    yield return new CallCoroutineOperation(emptyTarget);
-        //    yield return new StoreOperation(_current);
-        //}
-
-        //public IEnumerable<IOperation> MoveNext(ProgramLabel loopStartTarget)
-        //{
-        //    var done = ProgramLabel.Create();
-
-        //    yield return new LoadOperation(_generatorHandle);
-        //    yield return new CallCoroutineOperation(done);
-        //    yield return new StoreOperation(_current);
-        //    yield return new JumpOperation(loopStartTarget);
-        //    yield return done;
-        //}
-
-        //public IEnumerable<IOperation> Yield()
-        //{
-        //    yield return new LoadOperation(_current);
-        //    yield return new YieldOperation();
-        //}
-
-        //private Function GenerateFunction()
-        //{
-        //    var operations = new List<IOperation>();
-
-        //    foreach (var row in _values)
-        //    {
-        //        foreach (var value in row)
-        //        {
-        //            var (ops, _) = CompileExpr(value);
-        //            operations.AddRange(ops);
-        //        }
-
-        //        operations.Add(new MakeRowOperation(row.Count));
-        //        operations.Add(new ReturnOperation());
-        //    }
-
-        //    return new Function(operations, new Dictionary<SlotLabel, SlotDefinition>());
-        //}
-
-        //// TODO same as Compile in Projection iterator?
-        //private (IReadOnlyCollection<IOperation>, ColumnType) CompileExpr(Expression expr)
-        //{
-        //    switch (expr)
-        //    {
-        //        case NumberLiteralExpression num:
-        //            return (new[] { new ConstIntOperation(num.Value), }, new ColumnType.Integer());
-
-        //        case StringLiteralExpression str:
-        //            return (new[] { new ConstStringOperation(str.Value) }, new ColumnType.String(str.Value.Length));
-
-
-        //        default: throw new ArgumentOutOfRangeException(nameof(expr), $"Unhandled type: {expr.GetType().FullName}");
-        //    }
-        //}
-
         public IteratorOutput Output { get; }
+
         public void GenerateInit(ProgramLabel emptyTarget)
         {
-            throw new NotImplementedException();
+            if (!_values.Any())
+            {
+                _generator.Emit(new JumpOperation(emptyTarget));
+                return;
+            }
+
+            _generator.Emit(new SetupCoroutineOperation(_itemSource, 0));
+            _itemSourceHandle.Store();
+
+            _itemSourceHandle.Load();
+            _generator.Emit(new CallCoroutineOperation(emptyTarget));
+            _current.Store();
         }
 
         public void GenerateMoveNext(ProgramLabel loopStartTarget)
         {
-            throw new NotImplementedException();
+            var done = _generator.NewLabel();
+
+            _itemSourceHandle.Load();
+            _generator.Emit(new CallCoroutineOperation(done));
+            _current.Store();
+
+            _generator.Emit(new JumpOperation(loopStartTarget));
+            _generator.MarkLabel(done);
+        }
+
+        private IteratorOutput GenerateOutput()
+        {
+            var columns = new List<IteratorOutput.Named>();
+
+            for (var index = 0; index < _columns.Count; index++)
+            {
+                var column = _columns[index];
+
+                columns.Add(new IteratorOutput.Named(
+                    new IteratorOutputName.Constant(column), 
+                    new ColumnItem(_generator, _current, index)
+                ));
+            }
+
+            // TODO _current technically isn't a cursor...
+            return new IteratorOutput.Row(_current, columns);
+        }
+
+        private FunctionLabel GenerateFunction()
+        {
+            var generator = _generator.NewFunction();
+
+            foreach (var row in _values)
+            {
+                foreach (var value in row)
+                {
+                    CompileExpr(generator, value).Load();
+                }
+
+                generator.Emit(new MakeRowOperation(row.Count));
+                generator.Emit(new ReturnOperation());
+            }
+
+            return generator.Label;
+        }
+
+        // TODO same as Compile in Projection iterator?
+        private Item CompileExpr(IOperationGenerator generator, Expression expr)
+        {
+            switch (expr)
+            {
+                case NumberLiteralExpression num:
+                    return new ConstItem(generator, num.Value);
+
+                case StringLiteralExpression str:
+                    return new ConstItem(generator, str.Value);
+
+                default: throw new ArgumentOutOfRangeException(nameof(expr), $"Unhandled type: {expr.GetType().FullName}");
+            }
         }
     }
 }

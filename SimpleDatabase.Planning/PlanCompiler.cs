@@ -18,7 +18,9 @@ namespace SimpleDatabase.Planning
 
         public Program Compile(Plan plan)
         {
-            var generator = new OperationGenerator();
+            var program = new ProgramGenerator();
+
+            var generator = program.NewFunction();
 
             var iter = Compile(plan.RootNode, generator);
 
@@ -32,10 +34,10 @@ namespace SimpleDatabase.Planning
             generator.MarkLabel(done);
             generator.Emit(new FinishOperation());
 
-            return generator.CreateProgram();
+            return program.CreateProgram(generator);
         }
 
-        private void Yield(OperationGenerator generator, IteratorOutput output)
+        private void Yield(IOperationGenerator generator, IteratorOutput output)
         {
             switch (output)
             {
@@ -58,7 +60,7 @@ namespace SimpleDatabase.Planning
         {
             switch (node)
             {
-                case ConstantNode constant: return new ConstantIterator(constant.Columns, constant.Values);
+                case ConstantNode constant: return new ConstantIterator(generator, constant.Columns, constant.Values);
                 case ScanTableNode scan: return new ScanTableIterator(generator, _database.GetTable(scan.TableName));
                 case ProjectionNode projection: return new ProjectionIterator(Compile(projection.Input, generator), projection.Columns);
                 case FilterNode filter: return new FilterIterator(generator, Compile(filter.Input, generator), filter.Predicate);
