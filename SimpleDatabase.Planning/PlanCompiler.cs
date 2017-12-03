@@ -52,6 +52,7 @@ namespace SimpleDatabase.Planning
                 case ProjectionNode projection: return new ProjectionIterator(Compile(projection.Input), projection.Columns);
                 case FilterNode filter: return new FilterIterator(Compile(filter.Input), filter.Predicate);
                 case InsertNode insert: return new InsertIterator(Compile(insert.Input), _database.GetTable(insert.TableName));
+                case DeleteNode delete: return new DeleteIterator(Compile(delete.Input));
 
                 default: throw new ArgumentOutOfRangeException(nameof(node), $"Unhandled type: {node.GetType().FullName}");
             }

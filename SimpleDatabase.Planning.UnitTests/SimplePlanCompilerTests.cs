@@ -68,6 +68,7 @@ namespace SimpleDatabase.Planning.UnitTests
                 ))
             },
             new object[] {"Insert", new Plan(new InsertNode("table", new ScanTableNode("table"))) },
+            new object[] {"Delete", new Plan(new DeleteNode(new ScanTableNode("table"))) },
         };
 
         [Theory]
