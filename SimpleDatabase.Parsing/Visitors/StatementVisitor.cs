@@ -46,6 +46,14 @@ namespace SimpleDatabase.Parsing.Visitors
             }
         }
 
+        public override Statement VisitStatement_delete(SQLParser.Statement_deleteContext context)
+        {
+            var table = context.Table.IDENTIFIER().GetText();
+            var where = context.Where.ToOption().Select(HandleExpression);
+
+            return new DeleteStatement(table, where);
+        }
+
         private Expression HandleExpression(SQLParser.ExpressionContext context)
         {
             return context.Accept(new ExpressionVisitor());
