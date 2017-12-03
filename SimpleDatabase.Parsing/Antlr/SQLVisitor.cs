@@ -95,6 +95,12 @@ public interface ISQLVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitColumn_name([NotNull] SQLParser.Column_nameContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="SQLParser.ordering_term"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitOrdering_term([NotNull] SQLParser.Ordering_termContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="SQLParser.table_name"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

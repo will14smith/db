@@ -9,7 +9,7 @@ statement: (K_EXPLAIN)?
 	| statement_delete
 	);
 
-statement_select: K_SELECT Columns+=result_column (',' Columns+=result_column)* K_FROM Table=table_name (K_WHERE Where=expression)?;
+statement_select: K_SELECT Columns+=result_column (',' Columns+=result_column)* K_FROM Table=table_name (K_WHERE Where=expression)? (K_ORDER K_BY Ordering+=ordering_term (',' Ordering+=ordering_term)*)?;
 statement_insert: K_INSERT K_INTO Table=table_name ('(' Columns+=column_name (',' Columns+=column_name)* ')')? K_VALUES Values+=statement_insert_value (',' Values+=statement_insert_value)*;
 statement_insert_value: '(' Values+=expression (',' Values+=expression)* ')';
 statement_delete: K_DELETE K_FROM Table=table_name (K_WHERE Where=expression)?;
@@ -22,6 +22,8 @@ result_column
 
 column_alias: IDENTIFIER;
 column_name: IDENTIFIER;
+
+ordering_term: expression (K_ASC | K_DESC)?;
 
 // tables
 table_name: IDENTIFIER;
@@ -41,11 +43,15 @@ literal_value
 
 // keywords
 K_AS: A S;
+K_ASC: A S C;
+K_BY: B Y;
 K_DELETE: D E L E T E;
+K_DESC: D E S C;
 K_EXPLAIN: E X P L A I N;
 K_FROM: F R O M;
 K_INSERT: I N S E R T;
 K_INTO: I N T O;
+K_ORDER: O R D E R;
 K_SELECT: S E L E C T;
 K_VALUES: V A L U E S;
 K_WHERE: W H E R E;
