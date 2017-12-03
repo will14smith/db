@@ -10,7 +10,7 @@
     {
         public ProgramLabel DoneAddress { get; }
 
-        public NextOperation(ProgramLabel doneAddress, bool upgrade)
+        public NextOperation(ProgramLabel doneAddress)
         {
             DoneAddress = doneAddress;
         }

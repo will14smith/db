@@ -69,6 +69,8 @@ namespace SimpleDatabase.Planning.UnitTests
             new object[] {"Insert", new Plan(new InsertNode("table", new ScanTableNode("table"))) },
             new object[] {"Delete", new Plan(new DeleteNode(new ScanTableNode("table"))) },
             new object[] {"Delete & filter", new Plan(new DeleteNode(new FilterNode(new ScanTableNode("table"), new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a"))))) },
+            new object[] {"Sort", new Plan(new SortNode(new ScanTableNode("table"), new [] { new OrderExpression(new ColumnNameExpression("name"), Order.Ascending) })) },
+            new object[] {"Sort & filter", new Plan(new SortNode(new FilterNode(new ScanTableNode("table"), new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a"))), new [] { new OrderExpression(new ColumnNameExpression("name"), Order.Ascending) })) },
         };
 
         [Theory]

@@ -6,9 +6,9 @@ namespace SimpleDatabase.Planning.Nodes
     public class SortNode : Node
     {
         public Node Input { get; }
-        public IEnumerable<OrderExpression> Orderings { get; }
+        public IReadOnlyList<OrderExpression> Orderings { get; }
 
-        public SortNode(Node input, IEnumerable<OrderExpression> orderings)
+        public SortNode(Node input, IReadOnlyList<OrderExpression> orderings)
         {
             Input = input;
             Orderings = orderings;

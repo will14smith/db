@@ -45,7 +45,7 @@ namespace SimpleDatabase.Execution.UnitTests
                 // cursor = next(cursor)
                 Loop,
                 new LoadOperation(Cursor),
-                new NextOperation(Finish, true),
+                new NextOperation(Finish),
                 new StoreOperation(Cursor),
 
                 // if cursor.Key == 2 -> loop

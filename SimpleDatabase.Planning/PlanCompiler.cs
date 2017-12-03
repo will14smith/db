@@ -60,6 +60,7 @@ namespace SimpleDatabase.Planning
                 case FilterNode filter: return new FilterIterator(generator, Compile(filter.Input, generator, writable), filter.Predicate);
                 case InsertNode insert: return new InsertIterator(generator, Compile(insert.Input, generator, writable), _database.GetTable(insert.TableName));
                 case DeleteNode delete: return new DeleteIterator(generator, Compile(delete.Input, generator, true));
+                case SortNode sort: return new SortIterator(generator, Compile(sort.Input, generator, writable), sort.Orderings);
 
                 default: throw new ArgumentOutOfRangeException(nameof(node), $"Unhandled type: {node.GetType().FullName}");
             }

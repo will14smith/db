@@ -38,7 +38,7 @@ namespace SimpleDatabase.Planning.Iterators
         public void GenerateMoveNext(ProgramLabel loopStart, ProgramLabel loopEnd)
         {
             _cursor.Load(_generator);
-            _generator.Emit(new NextOperation(loopEnd, true));
+            _generator.Emit(new NextOperation(loopEnd));
             _cursor.Store(_generator);
         }
 
