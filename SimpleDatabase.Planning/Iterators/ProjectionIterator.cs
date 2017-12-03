@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using SimpleDatabase.Execution;
-using SimpleDatabase.Execution.Operations;
 using SimpleDatabase.Parsing.Expressions;
 using SimpleDatabase.Parsing.Statements;
-using SimpleDatabase.Schemas.Types;
+using SimpleDatabase.Planning.Items;
 
 namespace SimpleDatabase.Planning.Iterators
 {
@@ -19,87 +18,61 @@ namespace SimpleDatabase.Planning.Iterators
             _input = input;
             _columns = columns;
 
-            //Outputs = CalculateOutputs();
+            Output = CalculateOutput();
         }
 
-        //public IReadOnlyDictionary<SlotLabel, SlotDefinition> Slots => _input.Slots;
-        //public IReadOnlyDictionary<FunctionLabel, Function> Functions => _input.Functions;
-        //public IReadOnlyList<IteratorOutput> Outputs { get; }
-
-        //public IEnumerable<IOperation> Init(ProgramLabel emptyTarget)
-        //{
-        //    return _input.Init(emptyTarget);
-        //}
-
-        //public IEnumerable<IOperation> MoveNext(ProgramLabel loopStartTarget)
-        //{
-        //    return _input.MoveNext(loopStartTarget);
-        //}
-
-        //public IEnumerable<IOperation> Yield()
-        //{
-        //    foreach (var output in Outputs)
-        //    {
-        //        foreach (var op in output.LoadOperations)
-        //        {
-        //            yield return op;
-        //        }
-        //    }
-
-        //    yield return new MakeRowOperation(Outputs.Count);
-        //    yield return new YieldOperation();
-        //}
-
-        //private IReadOnlyList<IteratorOutput> CalculateOutputs()
-        //{
-        //    var outputs = new List<IteratorOutput>();
-
-        //    foreach (var column in _columns)
-        //    {
-        //        switch (column)
-        //        {
-        //            case ResultColumn.Star star:
-        //                if (star.Table.HasValue) { throw new NotImplementedException(); }
-
-        //                outputs.AddRange(_input.Outputs);
-        //                break;
-
-        //            case ResultColumn.Expression expr:
-        //                var (operations, type) = Compile(expr.Value);
-
-        //                var name = expr.Alias.Map<IteratorOutputName>(x => new IteratorOutputName.Constant(x), () => new IteratorOutputName.Expression(expr.Value));
-
-        //                outputs.Add(new IteratorOutput(name, type, operations));
-        //                break;
-
-        //            default: throw new ArgumentOutOfRangeException(nameof(column), $"Unhandled type: {column.GetType().FullName}");
-        //        }
-        //    }
-
-        //    return outputs;
-        //}
-
-        //private (IReadOnlyCollection<IOperation>, ColumnType) Compile(Expression expr)
-        //{
-        //    switch (expr)
-        //    {
-        //        case ColumnNameExpression column:
-        //            var result = _input.Outputs.Single(x => x.Name.Matches(column.Name));
-
-        //            return (result.LoadOperations, result.Type);
-
-        //        default: throw new ArgumentOutOfRangeException(nameof(expr), $"Unhandled type: {expr.GetType().FullName}");
-        //    }
-        //}
         public IteratorOutput Output { get; }
+
         public void GenerateInit(ProgramLabel emptyTarget)
         {
-            throw new NotImplementedException();
+            _input.GenerateInit(emptyTarget);
         }
 
         public void GenerateMoveNext(ProgramLabel loopStartTarget)
         {
-            throw new NotImplementedException();
+            _input.GenerateMoveNext(loopStartTarget);
+        }
+
+        private IteratorOutput CalculateOutput()
+        {
+            var innerOutput = (IteratorOutput.Row) _input.Output;
+
+            var columns = new List<IteratorOutput.Named>();
+            foreach (var column in _columns)
+            {
+                switch (column)
+                {
+                    case ResultColumn.Star star:
+                        if (star.Table.HasValue) { throw new NotImplementedException(); }
+
+                        columns.AddRange(innerOutput.Columns);
+                        break;
+
+                    case ResultColumn.Expression expr:
+                        var name = expr.Alias.Map<IteratorOutputName>(x => new IteratorOutputName.Constant(x), () => new IteratorOutputName.Expression(expr.Value));
+                        var item = Compile(innerOutput, expr.Value);
+                        
+                        columns.Add(new IteratorOutput.Named(name, item));
+                        break;
+
+                    default: throw new ArgumentOutOfRangeException(nameof(column), $"Unhandled type: {column.GetType().FullName}");
+                }
+            }
+
+            return new IteratorOutput.Row(innerOutput.Cursor, columns);
+        }
+
+        private Item Compile(IteratorOutput.Row input, Expression expr)
+        {
+            switch (expr)
+            {
+                case ColumnNameExpression column:
+                    var result = input.Columns.Single(x => x.Name.Matches(column.Name));
+
+                    return result.Value;
+
+                default: throw new ArgumentOutOfRangeException(nameof(expr), $"Unhandled type: {expr.GetType().FullName}");
+            }
         }
     }
 }
