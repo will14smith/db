@@ -31,6 +31,18 @@ namespace SimpleDatabase.Planning
                         return new Plan(root);
                     }
 
+                case DeleteStatement delete:
+                    {
+                        Node root = new ScanTableNode(delete.Table);
+                        root = delete.Where.Map(
+                            pred => new FilterNode(root, pred),
+                            () => root
+                        );
+                        root = new DeleteNode(root);
+
+                        return new Plan(root);
+                    }
+
                 default: throw new ArgumentOutOfRangeException(nameof(statment), $"Unhandled type: {statment.GetType().FullName}");
             }
         }

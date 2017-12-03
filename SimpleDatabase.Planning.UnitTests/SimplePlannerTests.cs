@@ -92,5 +92,23 @@ namespace SimpleDatabase.Planning.UnitTests
             Assert.Equal(statement.Columns, constant.Columns);
             Assert.Equal(statement.Values, constant.Values);
         }
+
+        [Fact]
+        public void Test_Delete()
+        {
+            var statement = new DeleteStatement(
+                "table",
+                Option.Some<Expression>(new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("a"), new StringLiteralExpression("a")))
+                );
+            var planner = new Planner();
+
+            var plan = planner.Plan(statement);
+
+            var delete = Assert.IsType<DeleteNode>(plan.RootNode);
+            var filter = Assert.IsType<FilterNode>(delete.Input);
+            Assert.IsType<BinaryExpression>(filter.Predicate);
+            var scan = Assert.IsType<ScanTableNode>(filter.Input);
+            Assert.Equal(statement.Table, scan.TableName);
+        }
     }
 }
