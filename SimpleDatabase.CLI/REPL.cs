@@ -129,36 +129,6 @@ namespace SimpleDatabase.CLI
 
         private ExecuteStatementResponse ExecuteStatement(string input)
         {
-            if (input.StartsWith("delete"))
-            {
-                var tokens = input.Split(" ");
-                if (tokens.Length != 2)
-                {
-                    return new ExecuteStatementResponse.SyntaxError("Expected 1 parameter (id) for delete");
-                }
-
-                var id = int.Parse(tokens[1]);
-
-                var result = new TreeDeleter(_pager, CreateRowSerializer(_table.Table), _table).Delete(id);
-
-                switch (result)
-                {
-                    case TreeDeleteResult.Success _:
-                        _output.WriteLine("Executed.");
-                        break;
-                    case TreeDeleteResult.KeyNotFound knf:
-                        _output.WriteLine($"Error: Key not found {knf.Key}.");
-                        break;
-
-                    default:
-                        _output.WriteLine($"Unhandled InsertResult: {result}");
-                        break;
-                }
-
-
-                return new ExecuteStatementResponse.Success();
-            }
-
             var parser = new Parser();
             var statements = parser.Parse(input);
             

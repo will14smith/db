@@ -252,7 +252,7 @@ namespace SimpleDatabase.CLI.UnitTests
             var commands = new string[6];
             for (var i = 0; i < 3; i++)
                 commands[i] = $"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')";
-            commands[3] = "delete 1";
+            commands[3] = "DELETE FROM table WHERE id = 1";
             commands[4] = ".btree";
             commands[5] = ".exit";
 
@@ -273,7 +273,7 @@ namespace SimpleDatabase.CLI.UnitTests
         {
             var commands = new string[4];
             commands[0] = "INSERT INTO table VALUES(0, 'user0', 'person0@example.com')";
-            commands[1] = "delete 0";
+            commands[1] = "DELETE FROM table WHERE id = 0";
             commands[2] = ".btree";
             commands[3] = ".exit";
 
@@ -293,8 +293,8 @@ namespace SimpleDatabase.CLI.UnitTests
             var commands = new string[18];
             for (var i = 0; i < 14; i++)
                 commands[i] = $"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')";
-            commands[14] = "delete 1";
-            commands[15] = "delete 2";
+            commands[14] = "DELETE FROM table WHERE id = 1";
+            commands[15] = "DELETE FROM table WHERE id = 2";
             commands[16] = ".btree";
             commands[17] = ".exit";
 
@@ -328,8 +328,8 @@ namespace SimpleDatabase.CLI.UnitTests
             var commands = new string[18];
             for (var i = 0; i < 14; i++)
                 commands[i] = $"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')";
-            commands[14] = "delete 7";
-            commands[15] = "delete 8";
+            commands[14] = "DELETE FROM table WHERE id = 7";
+            commands[15] = "DELETE FROM table WHERE id = 8";
             commands[16] = ".btree";
             commands[17] = ".exit";
 
@@ -363,9 +363,9 @@ namespace SimpleDatabase.CLI.UnitTests
             var commands = new List<string>();
             for (var i = 0; i < 14; i++)
                 commands.Add($"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')");
-            commands.Add("delete 7");
-            commands.Add("delete 1");
-            commands.Add("delete 2");
+            commands.Add("DELETE FROM table WHERE id = 7");
+            commands.Add("DELETE FROM table WHERE id = 1");
+            commands.Add("DELETE FROM table WHERE id = 2");
             commands.Add(".btree");
             commands.Add(".exit");
 
@@ -395,9 +395,9 @@ namespace SimpleDatabase.CLI.UnitTests
             var commands = new List<string>();
             for (var i = 0; i < 14; i++)
                 commands.Add($"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')");
-            commands.Add("delete 1");
-            commands.Add("delete 7");
-            commands.Add("delete 8");
+            commands.Add("DELETE FROM table WHERE id = 1");
+            commands.Add("DELETE FROM table WHERE id = 7");
+            commands.Add("DELETE FROM table WHERE id = 8");
             commands.Add(".btree");
             commands.Add(".exit");
 
