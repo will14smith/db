@@ -63,8 +63,8 @@ namespace SimpleDatabase.Planning.Iterators
             switch (_predicate)
             {
                 case BinaryExpression binary:
-                    CompileExpr(innerOutput, binary.Left).Load();
-                    CompileExpr(innerOutput, binary.Right).Load();
+                    CompileExpr(innerOutput, binary.Left).Load(_generator);
+                    CompileExpr(innerOutput, binary.Right).Load(_generator);
 
                     switch (binary.Operator)
                     {
@@ -89,7 +89,7 @@ namespace SimpleDatabase.Planning.Iterators
                     return result.Value;
 
                 case StringLiteralExpression str:
-                    return new ConstItem(_generator, str.Value);
+                    return new ConstItem(str.Value);
 
                 default: throw new ArgumentOutOfRangeException(nameof(expr), $"Unhandled type: {expr.GetType().FullName}");
             }

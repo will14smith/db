@@ -7,34 +7,22 @@ namespace SimpleDatabase.Planning.Items
     {
         private readonly SlotLabel _slot;
 
-        public SlotItem(IOperationGenerator generator, SlotLabel slot) : base(generator)
+        public SlotItem(SlotLabel slot)
         {
             _slot = slot;
         }
 
-        public override Item Load()
+        public override Item Load(IOperationGenerator generator)
         {
-            Generator.Emit(new LoadOperation(_slot));
+            generator.Emit(new LoadOperation(_slot));
 
             // TODO type
-            return new StackItem(Generator);
+            return new StackItem();
         }
 
-        public override void Store()
+        public override void Store(IOperationGenerator generator)
         {
-            Generator.Emit(new StoreOperation(_slot));
-        }
-    }
-
-    public class StackItem : Item
-    {
-        public StackItem(IOperationGenerator generator) : base(generator)
-        {
-        }
-
-        public override Item Load()
-        {
-            return this;
+            generator.Emit(new StoreOperation(_slot));
         }
     }
 }

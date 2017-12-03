@@ -19,8 +19,7 @@ namespace SimpleDatabase.Planning.Iterators
             _generator = generator;
             _table = table;
 
-            var cursorLabel = _generator.NewSlot(new SlotDefinition());
-            _cursor = new SlotItem(generator, cursorLabel);
+            _cursor = new SlotItem(_generator.NewSlot(new SlotDefinition()));
 
             Output = ComputeOutput();
         }
@@ -31,7 +30,7 @@ namespace SimpleDatabase.Planning.Iterators
         {
             _generator.Emit(new OpenReadOperation(_table));
             _generator.Emit(new FirstOperation(emptyTarget));
-            _cursor.Store();
+            _cursor.Store(_generator);
         }
 
         public void GenerateMoveNext(ProgramLabel loopStartTarget)
@@ -39,11 +38,11 @@ namespace SimpleDatabase.Planning.Iterators
             var s = _generator.NewLabel();
             var e = _generator.NewLabel();
 
-            _cursor.Load();
+            _cursor.Load(_generator);
             _generator.Emit(new NextOperation(s));
             _generator.Emit(new JumpOperation(e));
             _generator.MarkLabel(s);
-            _cursor.Store();
+            _cursor.Store(_generator);
             _generator.Emit(new JumpOperation(loopStartTarget));
             _generator.MarkLabel(e);
         }
@@ -56,7 +55,7 @@ namespace SimpleDatabase.Planning.Iterators
             {
                 var column = _table.Table.Columns[index];
                 var name = new IteratorOutputName.TableColumn(_table.Table.Name, column.Name);
-                var value = new ColumnItem(_generator, _cursor, index);
+                var value = new ColumnItem(_cursor, index);
 
                 columns.Add(new IteratorOutput.Named(name, value));
             }

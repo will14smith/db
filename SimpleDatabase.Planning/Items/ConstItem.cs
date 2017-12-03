@@ -7,28 +7,28 @@ namespace SimpleDatabase.Planning.Items
     {
         private readonly object _value;
 
-        public ConstItem(IOperationGenerator generator, object value) : base(generator)
+        public ConstItem(object value)
         {
             _value = value;
         }
 
-        public override Item Load()
+        public override Item Load(IOperationGenerator generator)
         {
             switch (_value)
             {
                 case int num:
-                    Generator.Emit(new ConstIntOperation(num));
+                    generator.Emit(new ConstIntOperation(num));
                     break;
 
                 case string str:
-                    Generator.Emit(new ConstStringOperation(str));
+                    generator.Emit(new ConstStringOperation(str));
                     break;
 
                 default: throw new ArgumentOutOfRangeException(nameof(_value), $"Unhandled type: {_value.GetType().FullName}");
         }
 
             // TODO type
-            return new StackItem(Generator);
+            return new StackItem();
         }
     }
 }

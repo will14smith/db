@@ -7,19 +7,19 @@ namespace SimpleDatabase.Planning.Items
         private readonly Item _cursor;
         private readonly int _index;
 
-        public ColumnItem(IOperationGenerator generator, Item cursor, int index) : base(generator)
+        public ColumnItem(Item cursor, int index)
         {
             _cursor = cursor;
             _index = index;
         }
 
-        public override Item Load()
+        public override Item Load(IOperationGenerator generator)
         {
-            _cursor.Load();
-            Generator.Emit(new ColumnOperation(_index));
+            _cursor.Load(generator);
+            generator.Emit(new ColumnOperation(_index));
 
             // TODO type
-            return new StackItem(Generator);
+            return new StackItem();
         }
     }
 }

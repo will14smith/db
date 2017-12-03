@@ -1,23 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace SimpleDatabase.Planning.Items
 {
     public abstract class Item
     {
-        protected IOperationGenerator Generator { get; }
-
-        protected Item(IOperationGenerator generator)
-        {
-            Generator = generator;
-        }
-
-        public virtual Item Load()
+        public virtual Item Load(IOperationGenerator generator)
         {
             throw new NotSupportedException();
         }
-        public virtual void Store()
+        public virtual void Store(IOperationGenerator generator)
         {
             throw new NotSupportedException();
         }

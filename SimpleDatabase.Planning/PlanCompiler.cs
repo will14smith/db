@@ -26,7 +26,7 @@ namespace SimpleDatabase.Planning
 
             var start = generator.NewLabel();
             var done = generator.NewLabel();
-            
+
             iter.GenerateInit(done);
             generator.MarkLabel(start);
             Yield(generator, iter.Output);
@@ -39,20 +39,10 @@ namespace SimpleDatabase.Planning
 
         private void Yield(IOperationGenerator generator, IteratorOutput output)
         {
-            switch (output)
+            output.Load(generator);
+            if (!(output is IteratorOutput.Void))
             {
-                case IteratorOutput.Row row:
-                    foreach (var column in row.Columns)
-                    {
-                        column.Value.Load();
-                    }
-
-                    generator.Emit(new MakeRowOperation(row.Columns.Count));
-                    generator.Emit(new YieldOperation());
-
-                    break;
-
-                default: throw new ArgumentOutOfRangeException(nameof(output), $"Unhandled type: {output.GetType().FullName}");
+                generator.Emit(new YieldOperation());
             }
         }
 
@@ -64,7 +54,7 @@ namespace SimpleDatabase.Planning
                 case ScanTableNode scan: return new ScanTableIterator(generator, _database.GetTable(scan.TableName));
                 case ProjectionNode projection: return new ProjectionIterator(Compile(projection.Input, generator), projection.Columns);
                 case FilterNode filter: return new FilterIterator(generator, Compile(filter.Input, generator), filter.Predicate);
-                case InsertNode insert: return new InsertIterator(Compile(insert.Input, generator), _database.GetTable(insert.TableName));
+                case InsertNode insert: return new InsertIterator(generator, Compile(insert.Input, generator), _database.GetTable(insert.TableName));
                 case DeleteNode delete: return new DeleteIterator(Compile(delete.Input, generator));
 
                 default: throw new ArgumentOutOfRangeException(nameof(node), $"Unhandled type: {node.GetType().FullName}");

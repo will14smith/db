@@ -27,8 +27,8 @@ namespace SimpleDatabase.Planning.Iterators
             _values = values;
 
             _itemSource = GenerateFunction();
-            _itemSourceHandle = new SlotItem(_generator, _generator.NewSlot(new SlotDefinition()));
-            _current = new SlotItem(_generator, _generator.NewSlot(new SlotDefinition()));
+            _itemSourceHandle = new SlotItem(_generator.NewSlot(new SlotDefinition()));
+            _current = new SlotItem(_generator.NewSlot(new SlotDefinition()));
 
             Output = GenerateOutput();
         }
@@ -44,20 +44,20 @@ namespace SimpleDatabase.Planning.Iterators
             }
 
             _generator.Emit(new SetupCoroutineOperation(_itemSource, 0));
-            _itemSourceHandle.Store();
+            _itemSourceHandle.Store(_generator);
 
-            _itemSourceHandle.Load();
+            _itemSourceHandle.Load(_generator);
             _generator.Emit(new CallCoroutineOperation(emptyTarget));
-            _current.Store();
+            _current.Store(_generator);
         }
 
         public void GenerateMoveNext(ProgramLabel loopStartTarget)
         {
             var done = _generator.NewLabel();
 
-            _itemSourceHandle.Load();
+            _itemSourceHandle.Load(_generator);
             _generator.Emit(new CallCoroutineOperation(done));
-            _current.Store();
+            _current.Store(_generator);
 
             _generator.Emit(new JumpOperation(loopStartTarget));
             _generator.MarkLabel(done);
@@ -72,8 +72,8 @@ namespace SimpleDatabase.Planning.Iterators
                 var column = _columns[index];
 
                 columns.Add(new IteratorOutput.Named(
-                    new IteratorOutputName.Constant(column), 
-                    new ColumnItem(_generator, _current, index)
+                    new IteratorOutputName.Constant(column),
+                    new ColumnItem(_current, index)
                 ));
             }
 
@@ -89,7 +89,7 @@ namespace SimpleDatabase.Planning.Iterators
             {
                 foreach (var value in row)
                 {
-                    CompileExpr(generator, value).Load();
+                    CompileExpr(value).Load(generator);
                 }
 
                 generator.Emit(new MakeRowOperation(row.Count));
@@ -100,15 +100,15 @@ namespace SimpleDatabase.Planning.Iterators
         }
 
         // TODO same as Compile in Projection iterator?
-        private Item CompileExpr(IOperationGenerator generator, Expression expr)
+        private Item CompileExpr(Expression expr)
         {
             switch (expr)
             {
                 case NumberLiteralExpression num:
-                    return new ConstItem(generator, num.Value);
+                    return new ConstItem(num.Value);
 
                 case StringLiteralExpression str:
-                    return new ConstItem(generator, str.Value);
+                    return new ConstItem(str.Value);
 
                 default: throw new ArgumentOutOfRangeException(nameof(expr), $"Unhandled type: {expr.GetType().FullName}");
             }
