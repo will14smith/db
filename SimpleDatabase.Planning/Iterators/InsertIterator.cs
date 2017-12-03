@@ -1,9 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using SimpleDatabase.Execution;
-using SimpleDatabase.Execution.Operations;
-using SimpleDatabase.Execution.Operations.Cursors;
-using SimpleDatabase.Execution.Operations.Slots;
+﻿using SimpleDatabase.Execution;
 using SimpleDatabase.Storage;
 
 namespace SimpleDatabase.Planning.Iterators
@@ -21,59 +16,69 @@ namespace SimpleDatabase.Planning.Iterators
             _table = table;
         }
 
-        public IReadOnlyDictionary<SlotLabel, SlotDefinition> Slots
-        {
-            get
-            {
-                var d = _input.Slots.ToDictionary(x => x.Key, x => x.Value);
-                d.Add(_cursor, new SlotDefinition());
+        //public IReadOnlyDictionary<SlotLabel, SlotDefinition> Slots
+        //{
+        //    get
+        //    {
+        //        var d = _input.Slots.ToDictionary(x => x.Key, x => x.Value);
+        //        d.Add(_cursor, new SlotDefinition());
 
-                return d;
-            }
+        //        return d;
+        //    }
+        //}
+
+        //public IReadOnlyDictionary<FunctionLabel, Function> Functions => _input.Functions;
+        //public IReadOnlyList<IteratorOutput> Outputs => new IteratorOutput[0];
+
+        //public IEnumerable<IOperation> Init(ProgramLabel emptyTarget)
+        //{
+        //    foreach (var op in _input.Init(emptyTarget))
+        //    {
+        //        yield return op;
+        //    }
+
+        //    yield return new OpenWriteOperation(_table);
+        //    yield return new StoreOperation(_cursor);
+        //}
+
+        //public IEnumerable<IOperation> MoveNext(ProgramLabel loopStartTarget)
+        //{
+        //    return _input.MoveNext(loopStartTarget);
+        //}
+
+        //public IEnumerable<IOperation> Yield()
+        //{
+        //    var hasYielded = false;
+
+        //    foreach (var op in _input.Yield())
+        //    {
+        //        if (op is YieldOperation)
+        //        {
+        //            yield return new LoadOperation(_cursor);
+        //            yield return new InsertOperation();
+        //            hasYielded = true;
+        //        }
+        //        else
+        //        {
+        //            yield return op;
+        //        }
+        //    }
+
+        //    if (!hasYielded)
+        //    {
+        //        yield return new LoadOperation(_cursor);
+        //        yield return new InsertOperation();
+        //    }
+        //}
+        public IteratorOutput Output { get; }
+        public void GenerateInit(ProgramLabel emptyTarget)
+        {
+            throw new System.NotImplementedException();
         }
 
-        public IReadOnlyDictionary<FunctionLabel, Function> Functions => _input.Functions;
-        public IReadOnlyList<IteratorOutput> Outputs => new IteratorOutput[0];
-
-        public IEnumerable<IOperation> Init(ProgramLabel emptyTarget)
+        public void GenerateMoveNext(ProgramLabel loopStartTarget)
         {
-            foreach (var op in _input.Init(emptyTarget))
-            {
-                yield return op;
-            }
-
-            yield return new OpenWriteOperation(_table);
-            yield return new StoreOperation(_cursor);
-        }
-
-        public IEnumerable<IOperation> MoveNext(ProgramLabel loopStartTarget)
-        {
-            return _input.MoveNext(loopStartTarget);
-        }
-
-        public IEnumerable<IOperation> Yield()
-        {
-            var hasYielded = false;
-
-            foreach (var op in _input.Yield())
-            {
-                if (op is YieldOperation)
-                {
-                    yield return new LoadOperation(_cursor);
-                    yield return new InsertOperation();
-                    hasYielded = true;
-                }
-                else
-                {
-                    yield return op;
-                }
-            }
-
-            if (!hasYielded)
-            {
-                yield return new LoadOperation(_cursor);
-                yield return new InsertOperation();
-            }
+            throw new System.NotImplementedException();
         }
     }
 }

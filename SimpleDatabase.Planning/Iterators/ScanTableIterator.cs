@@ -1,78 +1,70 @@
 using System.Collections.Generic;
-using System.Linq;
 using SimpleDatabase.Execution;
-using SimpleDatabase.Execution.Operations;
-using SimpleDatabase.Execution.Operations.Columns;
 using SimpleDatabase.Execution.Operations.Cursors;
 using SimpleDatabase.Execution.Operations.Jumps;
-using SimpleDatabase.Execution.Operations.Slots;
+using SimpleDatabase.Planning.Items;
 using SimpleDatabase.Storage;
 
 namespace SimpleDatabase.Planning.Iterators
 {
     public class ScanTableIterator : IIterator
     {
+        private readonly IOperationGenerator _generator;
         private readonly StoredTable _table;
 
-        private readonly SlotLabel _cursor = SlotLabel.Create();
+        private readonly SlotItem _cursor;
 
-        public ScanTableIterator(StoredTable table)
+        public ScanTableIterator(IOperationGenerator generator, StoredTable table)
         {
+            _generator = generator;
             _table = table;
 
-            Outputs = ComputeOutputs();
+            var cursorLabel = _generator.NewSlot(new SlotDefinition());
+            _cursor = new SlotItem(generator, cursorLabel);
+
+            Output = ComputeOutput();
         }
 
-        public IReadOnlyDictionary<SlotLabel, SlotDefinition> Slots => new Dictionary<SlotLabel, SlotDefinition>
-        {
-            { _cursor, new SlotDefinition() }
-        };
-        public IReadOnlyDictionary<FunctionLabel, Function> Functions => new Dictionary<FunctionLabel, Function>();
-        public IReadOnlyList<IteratorOutput> Outputs { get; }
+        public IteratorOutput Output { get; }
 
-        public IEnumerable<IOperation> Init(ProgramLabel emptyTarget)
+        public void GenerateInit(ProgramLabel emptyTarget)
         {
-            yield return new OpenReadOperation(_table);
-            yield return new FirstOperation(emptyTarget);
-            yield return new StoreOperation(_cursor);
+            _generator.Emit(new OpenReadOperation(_table));
+            _generator.Emit(new FirstOperation(emptyTarget));
+            _cursor.Store();
         }
 
-        public IEnumerable<IOperation> MoveNext(ProgramLabel loopStartTarget)
+        public void GenerateMoveNext(ProgramLabel loopStartTarget)
         {
-            var s = ProgramLabel.Create();
-            var e = ProgramLabel.Create();
+            var s = _generator.NewLabel();
+            var e = _generator.NewLabel();
 
-            yield return new LoadOperation(_cursor);
-            yield return new NextOperation(s);
-            yield return new JumpOperation(e);
-            yield return s;
-            yield return new StoreOperation(_cursor);
-            yield return new JumpOperation(loopStartTarget);
-            yield return e;
-
+            _cursor.Load();
+            _generator.Emit(new NextOperation(s));
+            _generator.Emit(new JumpOperation(e));
+            _generator.MarkLabel(s);
+            _cursor.Store();
+            _generator.Emit(new JumpOperation(loopStartTarget));
+            _generator.MarkLabel(e);
         }
 
-        public IEnumerable<IOperation> Yield()
+        private IteratorOutput ComputeOutput()
         {
-            // TODO this is the same as ProjectionIterator
-            foreach (var output in Outputs)
+            var columns = new List<IteratorOutput.Named>();
+
+            for (var index = 0; index < _table.Table.Columns.Count; index++)
             {
-                foreach (var op in output.LoadOperations)
-                {
-                    yield return op;
-                }
+                var column = _table.Table.Columns[index];
+                var name = new IteratorOutputName.TableColumn(_table.Table.Name, column.Name);
+                var value = new ColumnItem(_generator, _cursor, index);
+
+                columns.Add(new IteratorOutput.Named(name, value));
             }
 
-            yield return new MakeRowOperation(Outputs.Count);
-            yield return new YieldOperation();
-        }
-
-        private IReadOnlyList<IteratorOutput> ComputeOutputs()
-        {
-            return _table.Table.Columns.Select((x, i) => new IteratorOutput(
-                new IteratorOutputName.TableColumn(_table.Table.Name, x.Name),
-                x.Type,
-                new IOperation[] { new LoadOperation(_cursor), new ColumnOperation(i) })).ToList();
+            return new IteratorOutput.Row(
+                _cursor,
+                columns
+            );
         }
     }
 }
