@@ -61,7 +61,7 @@ namespace SimpleDatabase.Planning
                 case ConstantNode constant: return new ConstantIterator(constant.Columns, constant.Values);
                 case ScanTableNode scan: return new ScanTableIterator(generator, _database.GetTable(scan.TableName));
                 case ProjectionNode projection: return new ProjectionIterator(Compile(projection.Input, generator), projection.Columns);
-                case FilterNode filter: return new FilterIterator(Compile(filter.Input, generator), filter.Predicate);
+                case FilterNode filter: return new FilterIterator(generator, Compile(filter.Input, generator), filter.Predicate);
                 case InsertNode insert: return new InsertIterator(Compile(insert.Input, generator), _database.GetTable(insert.TableName));
                 case DeleteNode delete: return new DeleteIterator(Compile(delete.Input, generator));
 

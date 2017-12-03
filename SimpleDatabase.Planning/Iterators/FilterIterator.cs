@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Linq;
 using SimpleDatabase.Execution;
+using SimpleDatabase.Execution.Operations.Jumps;
 using SimpleDatabase.Parsing.Expressions;
+using SimpleDatabase.Planning.Items;
 
 namespace SimpleDatabase.Planning.Iterators
 {
     public class FilterIterator : IIterator
     {
+        private readonly IOperationGenerator _generator;
         private readonly IIterator _input;
         private readonly Expression _predicate;
 
@@ -13,112 +17,82 @@ namespace SimpleDatabase.Planning.Iterators
         private readonly ProgramLabel _checkPredicate;
         private readonly ProgramLabel _moveNextExit;
 
-        public FilterIterator(IIterator input, Expression predicate)
+        public FilterIterator(IOperationGenerator generator, IIterator input, Expression predicate)
         {
+            _generator = generator;
             _input = input;
             _predicate = predicate;
 
-            _moveNext = ProgramLabel.Create();
-            _checkPredicate = ProgramLabel.Create();
-            _moveNextExit = ProgramLabel.Create();
+            _moveNext = generator.NewLabel();
+            _checkPredicate = generator.NewLabel();
+            _moveNextExit = generator.NewLabel();
+
+            Output = input.Output;
         }
 
-        //public IReadOnlyDictionary<SlotLabel, SlotDefinition> Slots => _input.Slots;
-        //public IReadOnlyDictionary<FunctionLabel, Function> Functions => _input.Functions;
-        //public IReadOnlyList<IteratorOutput> Outputs => _input.Outputs;
-
-        //public IEnumerable<IOperation> Init(ProgramLabel emptyTarget)
-        //{
-        //    var inputInit = _input.Init(emptyTarget);
-
-        //    return inputInit.Concat(new IOperation[]
-        //    {
-        //        new JumpOperation(_checkPredicate),
-        //    });
-        //}
-
-        //public IEnumerable<IOperation> MoveNext(ProgramLabel loopStartTarget)
-        //{
-        //    var inputMoveNext = _input.MoveNext(_checkPredicate);
-
-        //    // S: input.MoveNext(P)                 # try move to the next row, if we have one then go to P
-        //    //    JMP E                             # there wasn't a next row so go to E
-        //    // P: JMP loopStartTarget if pred==true # check the predicate, if it matches go to loopStartTarget
-        //    //    JMP S                             # the predicate didn't match so go to S
-        //    // E: ...                               # exit the move next 
-
-        //    return new IOperation[] { _moveNext }
-        //        .Concat(inputMoveNext)
-        //        .Concat(new IOperation[]
-        //        {
-        //            new JumpOperation(_moveNextExit),
-        //            _checkPredicate,
-        //        })
-        //        .Concat(Compile(loopStartTarget))
-        //        .Concat(new IOperation[]
-        //        {
-        //            new JumpOperation(_moveNext),
-        //            _moveNextExit
-        //        });
-        //}
-
-        //public IEnumerable<IOperation> Yield()
-        //{
-        //    return _input.Yield();
-        //}
-
-        //private IEnumerable<IOperation> Compile(ProgramLabel trueTarget)
-        //{
-        //    var output = new List<IOperation>();
-
-        //    switch (_predicate)
-        //    {
-        //        case BinaryExpression binary:
-        //            var (left, _) = CompileExpr(binary.Left);
-        //            var (right, _) = CompileExpr(binary.Right);
-
-        //            output.AddRange(left);
-        //            output.AddRange(right);
-                    
-        //            switch (binary.Operator)
-        //            {
-        //                case BinaryOperator.Equal: output.Add(new ConditionalJumpOperation(Comparison.Equal, trueTarget)); break;
-        //                case BinaryOperator.NotEqual: output.Add(new ConditionalJumpOperation(Comparison.NotEqual, trueTarget)); break;
-        //                default: throw new ArgumentOutOfRangeException(nameof(binary.Operator), $"Unhandled type: {binary.Operator}");
-        //            }
-
-        //            return output;
-
-        //        default: throw new ArgumentOutOfRangeException(nameof(_predicate), $"Unhandled type: {_predicate.GetType().FullName}");
-        //    }
-        //}
-
-        //// TODO same as Compile in Projection iterator?
-        //private (IReadOnlyCollection<IOperation>, ColumnType) CompileExpr(Expression expr)
-        //{
-        //    switch (expr)
-        //    {
-        //        case ColumnNameExpression column:
-        //            var result = _input.Outputs.Single(x => x.Name.Matches(column.Name));
-
-        //            return (result.LoadOperations, result.Type);
-
-        //        case StringLiteralExpression str:
-        //            return (new [] { new ConstStringOperation(str.Value) }, new ColumnType.String(str.Value.Length));
-
-
-        //        default: throw new ArgumentOutOfRangeException(nameof(expr), $"Unhandled type: {expr.GetType().FullName}");
-        //    }
-        //}
         public IteratorOutput Output { get; }
+
         public void GenerateInit(ProgramLabel emptyTarget)
         {
-            throw new NotImplementedException();
+            _input.GenerateInit(emptyTarget);
+            _generator.Emit(new JumpOperation(_checkPredicate));
         }
 
         public void GenerateMoveNext(ProgramLabel loopStartTarget)
         {
-            throw new NotImplementedException();
+            // S: input.MoveNext(P)                 # try move to the next row, if we have one then go to P
+            //    JMP E                             # there wasn't a next row so go to E
+            // P: JMP loopStartTarget if pred==true # check the predicate, if it matches go to loopStartTarget
+            //    JMP S                             # the predicate didn't match so go to S
+            // E: ...                               # exit the move next 
+
+            _generator.MarkLabel(_moveNext);
+            _input.GenerateMoveNext(_checkPredicate);
+            _generator.Emit(new JumpOperation(_moveNextExit));
+
+            _generator.MarkLabel(_checkPredicate);
+            CompilePredicate(loopStartTarget);
+            _generator.Emit(new JumpOperation(_moveNext));
+            _generator.MarkLabel(_moveNextExit);
+        }
+
+        private void CompilePredicate(ProgramLabel trueTarget)
+        {
+            var innerOutput = (IteratorOutput.Row)_input.Output;
+
+            switch (_predicate)
+            {
+                case BinaryExpression binary:
+                    CompileExpr(innerOutput, binary.Left).Load();
+                    CompileExpr(innerOutput, binary.Right).Load();
+
+                    switch (binary.Operator)
+                    {
+                        case BinaryOperator.Equal: _generator.Emit(new ConditionalJumpOperation(Comparison.Equal, trueTarget)); break;
+                        case BinaryOperator.NotEqual: _generator.Emit(new ConditionalJumpOperation(Comparison.NotEqual, trueTarget)); break;
+                        default: throw new ArgumentOutOfRangeException(nameof(binary.Operator), $"Unhandled type: {binary.Operator}");
+                    }
+
+                    break;
+
+                default: throw new ArgumentOutOfRangeException(nameof(_predicate), $"Unhandled type: {_predicate.GetType().FullName}");
+            }
+        }
+
+        private Item CompileExpr(IteratorOutput.Row input, Expression expr)
+        {
+            switch (expr)
+            {
+                case ColumnNameExpression column:
+                    var result = input.Columns.Single(x => x.Name.Matches(column.Name));
+
+                    return result.Value;
+
+                case StringLiteralExpression str:
+                    return new ConstItem(_generator, str.Value);
+
+                default: throw new ArgumentOutOfRangeException(nameof(expr), $"Unhandled type: {expr.GetType().FullName}");
+            }
         }
     }
 }
