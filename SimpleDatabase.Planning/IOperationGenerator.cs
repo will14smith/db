@@ -10,7 +10,7 @@ namespace SimpleDatabase.Planning
         IOperationGenerator NewFunction();
         SlotLabel NewSlot(SlotDefinition definition);
 
-        ProgramLabel NewLabel();
+        ProgramLabel NewLabel(string name);
         void MarkLabel(ProgramLabel label);
         
         void Emit(IOperation operation);

@@ -26,16 +26,16 @@ namespace SimpleDatabase.Planning
 
         public SlotLabel NewSlot(SlotDefinition definition)
         {
-            var slot = SlotLabel.Create();
+            var slot = SlotLabel.Create(definition.Name);
             _slots.Add(slot, definition);
 
             return slot;
         }
 
-        public ProgramLabel NewLabel()
+        public ProgramLabel NewLabel(string name)
         {
             // TODO track it
-            return ProgramLabel.Create();
+            return ProgramLabel.Create(name);
         }
 
         public void MarkLabel(ProgramLabel label)

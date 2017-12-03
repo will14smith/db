@@ -24,8 +24,8 @@ namespace SimpleDatabase.Planning
 
             var iter = Compile(plan.RootNode, generator, false);
 
-            var start = generator.NewLabel();
-            var done = generator.NewLabel();
+            var start = generator.NewLabel("loop start");
+            var done = generator.NewLabel("loop done");
 
             iter.GenerateInit(done);
             generator.MarkLabel(start);

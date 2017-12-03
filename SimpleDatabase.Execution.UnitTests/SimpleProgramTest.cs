@@ -76,7 +76,7 @@ namespace SimpleDatabase.Execution.UnitTests
             },
             new Dictionary<SlotLabel, SlotDefinition>
             {
-                { Cursor, new SlotDefinition() }
+                { Cursor, new SlotDefinition("cursor") }
             });
 
         private static readonly Program Program = new Program(MainLabel, new Dictionary<FunctionLabel, Function> { { MainLabel, Main } });

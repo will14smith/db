@@ -22,7 +22,7 @@ namespace SimpleDatabase.Planning.Iterators
             _table = table;
             _writable = writable;
 
-            _cursor = new SlotItem(_generator.NewSlot(new SlotDefinition()));
+            _cursor = new SlotItem(_generator.NewSlot(new SlotDefinition("cursor")));
 
             Output = ComputeOutput();
         }
@@ -38,8 +38,8 @@ namespace SimpleDatabase.Planning.Iterators
 
         public void GenerateMoveNext(ProgramLabel loopStartTarget)
         {
-            var s = _generator.NewLabel();
-            var e = _generator.NewLabel();
+            var s = _generator.NewLabel("store cursor");
+            var e = _generator.NewLabel("done");
 
             _cursor.Load(_generator);
             _generator.Emit(new NextOperation(s));

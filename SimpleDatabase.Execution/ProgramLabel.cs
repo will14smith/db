@@ -9,20 +9,27 @@ namespace SimpleDatabase.Execution
         private static int _counter;
 
         private readonly int _id;
+        private readonly string _name;
 
-        public ProgramLabel(int id) : this()
+        public ProgramLabel(int id, string name) : this()
         {
             _id = id;
+            _name = name?.Replace(" ", "_") ?? "";
         }
 
-        public static ProgramLabel Create()
+        public static ProgramLabel Create(string name = null)
         {
-            return new ProgramLabel(Interlocked.Increment(ref _counter));
+            return new ProgramLabel(Interlocked.Increment(ref _counter), name);
         }
 
         public override string ToString()
         {
-            return $"L{_id}";
+            if (_name == "")
+            {
+                return $"L{_id}";
+            }
+
+            return $"L{_id}_{_name}";
         }
 
         public override bool Equals(object obj)

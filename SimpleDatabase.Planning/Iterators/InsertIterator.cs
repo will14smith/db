@@ -19,7 +19,7 @@ namespace SimpleDatabase.Planning.Iterators
             _input = input;
             _table = table;
 
-            _cursor = new SlotItem(_generator.NewSlot(new SlotDefinition()));
+            _cursor = new SlotItem(_generator.NewSlot(new SlotDefinition("insert cursor")));
 
             Output = new IteratorOutput.Void(GenerateInsert);
         }

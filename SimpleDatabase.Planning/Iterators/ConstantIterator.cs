@@ -27,8 +27,8 @@ namespace SimpleDatabase.Planning.Iterators
             _values = values;
 
             _itemSource = GenerateFunction();
-            _itemSourceHandle = new SlotItem(_generator.NewSlot(new SlotDefinition()));
-            _current = new SlotItem(_generator.NewSlot(new SlotDefinition()));
+            _itemSourceHandle = new SlotItem(_generator.NewSlot(new SlotDefinition("item source handle")));
+            _current = new SlotItem(_generator.NewSlot(new SlotDefinition("item source current")));
 
             Output = GenerateOutput();
         }
@@ -53,7 +53,7 @@ namespace SimpleDatabase.Planning.Iterators
 
         public void GenerateMoveNext(ProgramLabel loopStartTarget)
         {
-            var done = _generator.NewLabel();
+            var done = _generator.NewLabel("done");
 
             _itemSourceHandle.Load(_generator);
             _generator.Emit(new CallCoroutineOperation(done));

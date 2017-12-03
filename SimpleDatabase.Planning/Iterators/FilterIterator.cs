@@ -23,9 +23,9 @@ namespace SimpleDatabase.Planning.Iterators
             _input = input;
             _predicate = predicate;
 
-            _moveNext = generator.NewLabel();
-            _checkPredicate = generator.NewLabel();
-            _moveNextExit = generator.NewLabel();
+            _moveNext = generator.NewLabel("move next");
+            _checkPredicate = generator.NewLabel("predicate");
+            _moveNextExit = generator.NewLabel("done");
 
             Output = input.Output;
         }

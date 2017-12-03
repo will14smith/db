@@ -8,20 +8,27 @@ namespace SimpleDatabase.Execution
         private static int _counter;
 
         private readonly int _id;
+        private readonly string _name;
 
-        public SlotLabel(int id) : this()
+        public SlotLabel(int id, string name) : this()
         {
             _id = id;
+            _name = name?.Replace(" ", "_") ?? "";
         }
 
-        public static SlotLabel Create()
+        public static SlotLabel Create(string name = null)
         {
-            return new SlotLabel(Interlocked.Increment(ref _counter));
+            return new SlotLabel(Interlocked.Increment(ref _counter), name);
         }
 
         public override string ToString()
         {
-            return $"S{_id}";
+            if (_name == "")
+            {
+                return $"S{_id}";
+            }
+
+            return $"S{_id}_{_name}";
         }
 
         public override bool Equals(object obj)
