@@ -69,5 +69,28 @@ namespace SimpleDatabase.Planning.UnitTests
             var scan = Assert.IsType<ScanTableNode>(filter.Input);
             Assert.Equal("table", scan.TableName);
         }
+
+
+        [Fact]
+        public void Test_Insert()
+        {
+            var statement = new InsertStatement(
+                "table",
+                new[] { "a", "b" },
+                new[]
+                {
+                    new []{ new NumberLiteralExpression(1), new NumberLiteralExpression(2) },
+                    new []{ new NumberLiteralExpression(2), new NumberLiteralExpression(3) },
+                });
+            var planner = new Planner();
+
+            var plan = planner.Plan(statement);
+
+            var insert = Assert.IsType<InsertNode>(plan.RootNode);
+            Assert.Equal(statement.Table, insert.TableName);
+            var constant = Assert.IsType<ConstantNode>(insert.Input);
+            Assert.Equal(statement.Columns, constant.Columns);
+            Assert.Equal(statement.Values, constant.Values);
+        }
     }
 }
