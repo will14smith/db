@@ -113,17 +113,10 @@ namespace SimpleDatabase.Execution
             {
                 case TreeDeleteResult.Success _:
                     {
-                        if (nextKey.HasValue)
-                        {
-                            var newCursor = FindKey(table, nextKey.Value);
-                            var newCursorValue = cursorValue.SetNextCursor(newCursor);
-                            state = state.PushValue(newCursorValue);
-                        }
-                        else
-                        {
-                            throw new NotImplementedException("TODO handle EOT");
-                        }
-
+                        var newCursor = nextKey.Map(x => FindKey(table, x), () => new Cursor(-1, -1, true));
+                        var newCursorValue = cursorValue.SetNextCursor(newCursor);
+                        state = state.PushValue(newCursorValue);
+                        
                         return (state, new Result.Next());
                     }
 
