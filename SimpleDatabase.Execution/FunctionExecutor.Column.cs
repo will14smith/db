@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
 using SimpleDatabase.Execution.Operations.Columns;
 using SimpleDatabase.Execution.Values;
 using SimpleDatabase.Storage.Nodes;
+using SimpleDatabase.Utils;
 
 namespace SimpleDatabase.Execution
 {
@@ -13,16 +13,9 @@ namespace SimpleDatabase.Execution
             CursorValue cursorValue;
             (state, cursorValue) = state.PopValue<CursorValue>();
 
-            var cursor = cursorValue.Cursor;
-            if (cursor == null)
-            {
-                throw new InvalidOperationException("Cursor is null, has a position been set of this cursor?");
-            }
+            var cursor = cursorValue.Cursor.OrElse(() => throw new InvalidOperationException("Cursor is null, has a position been set of this cursor?"));
 
-            var page = _pager.Get(cursor.PageNumber);
-            var leaf = LeafNode.Read(CreateRowSerializer(cursorValue.Table), page);
-
-            var key = leaf.GetCellKey(cursor.CellNumber);
+            var key = GetKey(cursorValue.Table, cursor);
             state.PushValue(new ObjectValue(key));
 
             return (state, new Result.Next());
@@ -44,11 +37,7 @@ namespace SimpleDatabase.Execution
 
         private (FunctionState, Result) Execute(FunctionState state, ColumnOperation columnOperation, CursorValue cursorValue)
         {
-            var cursor = cursorValue.Cursor;
-            if (cursor == null)
-            {
-                throw new InvalidOperationException("Cursor is null, has a position been set of this cursor?");
-            }
+            var cursor = cursorValue.Cursor.OrElse(() => throw new InvalidOperationException("Cursor is null, has a position been set of this cursor?"));
 
             var page = _pager.Get(cursor.PageNumber);
             var leaf = LeafNode.Read(CreateRowSerializer(cursorValue.Table), page);

@@ -112,6 +112,8 @@ namespace SimpleDatabase.Execution
                     return Execute(state, next);
                 case InsertOperation insert:
                     return Execute(state, insert);
+                case DeleteOperation delete:
+                    return Execute(state, delete);
 
                 // Columns
                 case KeyOperation key:
