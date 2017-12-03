@@ -4,20 +4,20 @@
     /// ..., T1 : ReadOnlyCursor -> ..., T2
     /// 
     /// Creates a cursor T2 pointing to the next entry after T1
-    /// If there is a next entry it jumps to successAddress, otherwise it moves to the next instruction
+    /// If T1 referred to the last entry it jumps to DoneAddress, otherwise it moves to the next instruction
     /// </summary>
     public class NextOperation : IOperation
     {
-        public ProgramLabel SuccessAddress { get; }
+        public ProgramLabel DoneAddress { get; }
 
-        public NextOperation(ProgramLabel successAddress)
+        public NextOperation(ProgramLabel doneAddress, bool upgrade)
         {
-            SuccessAddress = successAddress;
+            DoneAddress = doneAddress;
         }
 
         public override string ToString()
         {
-            return $"CUR.NEXT {SuccessAddress}";
+            return $"CUR.NEXT {DoneAddress}";
         }
     }
 }

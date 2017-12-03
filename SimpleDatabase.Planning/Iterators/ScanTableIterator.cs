@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using SimpleDatabase.Execution;
 using SimpleDatabase.Execution.Operations;
 using SimpleDatabase.Execution.Operations.Cursors;
-using SimpleDatabase.Execution.Operations.Jumps;
 using SimpleDatabase.Planning.Items;
 using SimpleDatabase.Storage;
 
@@ -29,25 +28,18 @@ namespace SimpleDatabase.Planning.Iterators
 
         public IteratorOutput Output { get; }
 
-        public void GenerateInit(ProgramLabel emptyTarget)
+        public void GenerateInit()
         {
-            _generator.Emit(_writable ? (IOperation) new OpenWriteOperation(_table) : new OpenReadOperation(_table));
-            _generator.Emit(new FirstOperation(emptyTarget));
+            _generator.Emit(_writable ? (IOperation)new OpenWriteOperation(_table) : new OpenReadOperation(_table));
+            _generator.Emit(new FirstOperation());
             _cursor.Store(_generator);
         }
 
-        public void GenerateMoveNext(ProgramLabel loopStartTarget)
+        public void GenerateMoveNext(ProgramLabel loopStart, ProgramLabel loopEnd)
         {
-            var s = _generator.NewLabel("store cursor");
-            var e = _generator.NewLabel("done");
-
             _cursor.Load(_generator);
-            _generator.Emit(new NextOperation(s));
-            _generator.Emit(new JumpOperation(e));
-            _generator.MarkLabel(s);
+            _generator.Emit(new NextOperation(loopEnd, true));
             _cursor.Store(_generator);
-            _generator.Emit(new JumpOperation(loopStartTarget));
-            _generator.MarkLabel(e);
         }
 
         private IteratorOutput ComputeOutput()

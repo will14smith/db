@@ -35,32 +35,17 @@ namespace SimpleDatabase.Planning.Iterators
 
         public IteratorOutput Output { get; }
 
-        public void GenerateInit(ProgramLabel emptyTarget)
+        public void GenerateInit()
         {
-            if (!_values.Any())
-            {
-                _generator.Emit(new JumpOperation(emptyTarget));
-                return;
-            }
-
             _generator.Emit(new SetupCoroutineOperation(_itemSource, 0));
             _itemSourceHandle.Store(_generator);
-
-            _itemSourceHandle.Load(_generator);
-            _generator.Emit(new CallCoroutineOperation(emptyTarget));
-            _current.Store(_generator);
         }
 
-        public void GenerateMoveNext(ProgramLabel loopStartTarget)
+        public void GenerateMoveNext(ProgramLabel loopStart, ProgramLabel loopEnd)
         {
-            var done = _generator.NewLabel("done");
-
             _itemSourceHandle.Load(_generator);
-            _generator.Emit(new CallCoroutineOperation(done));
+            _generator.Emit(new CallCoroutineOperation(loopEnd));
             _current.Store(_generator);
-
-            _generator.Emit(new JumpOperation(loopStartTarget));
-            _generator.MarkLabel(done);
         }
 
         private IteratorOutput GenerateOutput()

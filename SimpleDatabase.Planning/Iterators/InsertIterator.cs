@@ -21,28 +21,26 @@ namespace SimpleDatabase.Planning.Iterators
 
             _cursor = new SlotItem(_generator.NewSlot(new SlotDefinition("insert cursor")));
 
-            Output = new IteratorOutput.Void(GenerateInsert);
+            Output = new IteratorOutput.Void();
         }
-        
+
         public IteratorOutput Output { get; }
-        public void GenerateInit(ProgramLabel emptyTarget)
+
+        public void GenerateInit()
         {
-            _input.GenerateInit(emptyTarget);
+            _input.GenerateInit();
 
             _generator.Emit(new OpenWriteOperation(_table));
             _cursor.Store(_generator);
         }
 
-        public void GenerateMoveNext(ProgramLabel loopStartTarget)
+        public void GenerateMoveNext(ProgramLabel loopStart, ProgramLabel loopEnd)
         {
-            _input.GenerateMoveNext(loopStartTarget);
-        }
+            _input.GenerateMoveNext(loopStart, loopEnd);
 
-        public void GenerateInsert(IOperationGenerator generator)
-        {
-            _input.Output.Load(generator);
-            _cursor.Load(generator);
-            generator.Emit(new InsertOperation());
+            _input.Output.Load(_generator);
+            _cursor.Load(_generator);
+            _generator.Emit(new InsertOperation());
         }
     }
 }

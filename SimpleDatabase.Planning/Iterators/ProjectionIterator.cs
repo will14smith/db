@@ -23,19 +23,19 @@ namespace SimpleDatabase.Planning.Iterators
 
         public IteratorOutput Output { get; }
 
-        public void GenerateInit(ProgramLabel emptyTarget)
+        public void GenerateInit()
         {
-            _input.GenerateInit(emptyTarget);
+            _input.GenerateInit();
         }
 
-        public void GenerateMoveNext(ProgramLabel loopStartTarget)
+        public void GenerateMoveNext(ProgramLabel loopStart, ProgramLabel loopEnd)
         {
-            _input.GenerateMoveNext(loopStartTarget);
+            _input.GenerateMoveNext(loopStart, loopEnd);
         }
 
         private IteratorOutput CalculateOutput()
         {
-            var innerOutput = (IteratorOutput.Row) _input.Output;
+            var innerOutput = (IteratorOutput.Row)_input.Output;
 
             var columns = new List<IteratorOutput.Named>();
             foreach (var column in _columns)
@@ -51,7 +51,7 @@ namespace SimpleDatabase.Planning.Iterators
                     case ResultColumn.Expression expr:
                         var name = expr.Alias.Map<IteratorOutputName>(x => new IteratorOutputName.Constant(x), () => new IteratorOutputName.Expression(expr.Value));
                         var item = Compile(innerOutput, expr.Value);
-                        
+
                         columns.Add(new IteratorOutput.Named(name, item));
                         break;
 

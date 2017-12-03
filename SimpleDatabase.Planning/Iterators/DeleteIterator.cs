@@ -5,33 +5,33 @@ namespace SimpleDatabase.Planning.Iterators
 {
     public class DeleteIterator : IIterator
     {
+        private readonly IOperationGenerator _generator;
         private readonly IIterator _input;
-        
-        public DeleteIterator(IIterator input)
+
+        public DeleteIterator(IOperationGenerator generator, IIterator input)
         {
+            _generator = generator;
             _input = input;
 
-            Output = new IteratorOutput.Void(GenerateInsert);
+            Output = new IteratorOutput.Void();
         }
 
         public IteratorOutput Output { get; }
-        public void GenerateInit(ProgramLabel emptyTarget)
+
+        public void GenerateInit()
         {
-            _input.GenerateInit(emptyTarget);
+            _input.GenerateInit();
         }
 
-        public void GenerateMoveNext(ProgramLabel loopStartTarget)
+        public void GenerateMoveNext(ProgramLabel loopStart, ProgramLabel loopEnd)
         {
-            _input.GenerateMoveNext(loopStartTarget);
-        }
+            _input.GenerateMoveNext(loopStart, loopEnd);
 
-        public void GenerateInsert(IOperationGenerator generator)
-        {
-            var inner = (IteratorOutput.Row) _input.Output;
-
-            inner.Cursor.Load(generator);
-            generator.Emit(new DeleteOperation());
-            inner.Cursor.Store(generator);
+            var inner = (IteratorOutput.Row)_input.Output;
+            
+            inner.Cursor.Load(_generator);
+            _generator.Emit(new DeleteOperation());
+            inner.Cursor.Store(_generator);
         }
     }
 }

@@ -52,17 +52,13 @@ namespace SimpleDatabase.Planning.Iterators
 
         public class Void : IteratorOutput
         {
-            private readonly Action<IOperationGenerator> _load;
-
-            public Void(Action<IOperationGenerator> load)
+            public Void()
             {
-                _load = load;
             }
 
             public override Item Load(IOperationGenerator generator)
             {
-                _load(generator);
-                return new VoidItem();
+                throw new NotSupportedException();
             }
         }
     }

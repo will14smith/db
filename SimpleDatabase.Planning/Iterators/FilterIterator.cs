@@ -13,9 +13,6 @@ namespace SimpleDatabase.Planning.Iterators
         private readonly IIterator _input;
         private readonly Expression _predicate;
 
-        private readonly ProgramLabel _moveNext;
-        private readonly ProgramLabel _checkPredicate;
-        private readonly ProgramLabel _moveNextExit;
 
         public FilterIterator(IOperationGenerator generator, IIterator input, Expression predicate)
         {
@@ -23,40 +20,24 @@ namespace SimpleDatabase.Planning.Iterators
             _input = input;
             _predicate = predicate;
 
-            _moveNext = generator.NewLabel("move next");
-            _checkPredicate = generator.NewLabel("predicate");
-            _moveNextExit = generator.NewLabel("done");
-
             Output = input.Output;
         }
 
         public IteratorOutput Output { get; }
 
-        public void GenerateInit(ProgramLabel emptyTarget)
+        public void GenerateInit()
         {
-            _input.GenerateInit(emptyTarget);
-            _generator.Emit(new JumpOperation(_checkPredicate));
+            _input.GenerateInit();
         }
 
-        public void GenerateMoveNext(ProgramLabel loopStartTarget)
+        public void GenerateMoveNext(ProgramLabel loopStart, ProgramLabel loopEnd)
         {
-            // S: input.MoveNext(P)                 # try move to the next row, if we have one then go to P
-            //    JMP E                             # there wasn't a next row so go to E
-            // P: JMP loopStartTarget if pred==true # check the predicate, if it matches go to loopStartTarget
-            //    JMP S                             # the predicate didn't match so go to S
-            // E: ...                               # exit the move next 
+            _input.GenerateMoveNext(loopStart, loopEnd);
 
-            _generator.MarkLabel(_moveNext);
-            _input.GenerateMoveNext(_checkPredicate);
-            _generator.Emit(new JumpOperation(_moveNextExit));
-
-            _generator.MarkLabel(_checkPredicate);
-            CompilePredicate(loopStartTarget);
-            _generator.Emit(new JumpOperation(_moveNext));
-            _generator.MarkLabel(_moveNextExit);
+            CompilePredicate(loopStart);
         }
 
-        private void CompilePredicate(ProgramLabel trueTarget)
+        private void CompilePredicate(ProgramLabel falseTarget)
         {
             var innerOutput = (IteratorOutput.Row)_input.Output;
 
@@ -68,8 +49,8 @@ namespace SimpleDatabase.Planning.Iterators
 
                     switch (binary.Operator)
                     {
-                        case BinaryOperator.Equal: _generator.Emit(new ConditionalJumpOperation(Comparison.Equal, trueTarget)); break;
-                        case BinaryOperator.NotEqual: _generator.Emit(new ConditionalJumpOperation(Comparison.NotEqual, trueTarget)); break;
+                        case BinaryOperator.Equal: _generator.Emit(new ConditionalJumpOperation(Comparison.NotEqual, falseTarget)); break;
+                        case BinaryOperator.NotEqual: _generator.Emit(new ConditionalJumpOperation(Comparison.Equal, falseTarget)); break;
                         default: throw new ArgumentOutOfRangeException(nameof(binary.Operator), $"Unhandled type: {binary.Operator}");
                     }
 
@@ -90,7 +71,7 @@ namespace SimpleDatabase.Planning.Iterators
 
                 case NumberLiteralExpression num:
                     return new ConstItem(num.Value);
-                    
+
                 case StringLiteralExpression str:
                     return new ConstItem(str.Value);
 

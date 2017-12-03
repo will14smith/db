@@ -4,10 +4,11 @@ namespace SimpleDatabase.Planning.Iterators
 {
     /// <summary>
     /// Used by
-    ///     Init(f)
-    /// s:  Output.Load()
+    ///     Init()
+    /// s:  MoveNext(s, f)
+    ///     Output.Load()
     ///     Yield (depends on output)
-    ///     MoveNext(s)
+    ///     J s
     /// f:  Finished
     /// </summary>
     public interface IIterator
@@ -21,11 +22,11 @@ namespace SimpleDatabase.Planning.Iterators
         /// Sets up the iterator
         /// When the iterator is empty it should jump to the label
         /// </summary>
-        void GenerateInit(ProgramLabel emptyTarget);
+        void GenerateInit();
         /// <summary>
         /// Moves to the next item in the iterator
         /// If there are more items it should jump to the label
         /// </summary>
-        void GenerateMoveNext(ProgramLabel loopStartTarget);
+        void GenerateMoveNext(ProgramLabel loopStart, ProgramLabel loopEnd);
     }
 }

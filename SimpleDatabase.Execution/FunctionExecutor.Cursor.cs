@@ -28,7 +28,7 @@ namespace SimpleDatabase.Execution
             return (state, new Result.Next());
         }
 
-        private (FunctionState, Result) Execute(FunctionState state, FirstOperation firstOperation)
+        private (FunctionState, Result) Execute(FunctionState state, FirstOperation _)
         {
             CursorValue cursorValue;
             (state, cursorValue) = state.PopValue<CursorValue>();
@@ -36,6 +36,24 @@ namespace SimpleDatabase.Execution
             var searcher = new TreeTraverser(_pager, CreateRowSerializer(cursorValue.Table), cursorValue.Table);
             var newCursor = searcher.StartCursor();
 
+            var newCursorValue = cursorValue.SetNextCursor(newCursor);
+            state = state.PushValue(newCursorValue);
+
+            return (state, new Result.Next());
+        }
+
+        private (FunctionState, Result) Execute(FunctionState state, NextOperation nextOperation)
+        {
+            CursorValue cursorValue;
+            (state, cursorValue) = state.PopValue<CursorValue>();
+
+
+            var newCursor = cursorValue.NextCursor.OrElse(() =>
+            {
+                var cursor = cursorValue.Cursor.OrElse(() => throw new InvalidOperationException("Cursor is null, has a position been set of this cursor?"));
+
+                return Next(cursorValue.Table, cursor);
+            });
             var newCursorValue = cursorValue.SetCursor(newCursor);
             state = state.PushValue(newCursorValue);
 
@@ -44,26 +62,7 @@ namespace SimpleDatabase.Execution
                 return (state, new Result.Next());
             }
 
-            return (state, new Result.Jump(firstOperation.EmptyAddress));
-        }
-
-        private (FunctionState, Result) Execute(FunctionState state, NextOperation nextOperation)
-        {
-            CursorValue cursorValue;
-            (state, cursorValue) = state.PopValue<CursorValue>();
-
-            var cursor = cursorValue.Cursor.OrElse(() => throw new InvalidOperationException("Cursor is null, has a position been set of this cursor?"));
-
-            var newCursor = cursorValue.NextCursor.OrElse(() => Next(cursorValue.Table, cursor));
-            var newCursorValue = cursorValue.SetCursor(newCursor);
-            state = state.PushValue(newCursorValue);
-
-            if (newCursor.EndOfTable)
-            {
-                return (state, new Result.Next());
-            }
-
-            return (state, new Result.Jump(nextOperation.SuccessAddress));
+            return (state, new Result.Jump(nextOperation.DoneAddress));
         }
 
         private (FunctionState, Result) Execute(FunctionState state, InsertOperation insert)
@@ -100,7 +99,7 @@ namespace SimpleDatabase.Execution
             var rowSerializer = CreateRowSerializer(table);
 
             var cursor = cursorValue.Cursor.OrElse(() => throw new InvalidOperationException("Cursor is null, has a position been set of this cursor?"));
-            
+
             // TODO could this be optimised to not retraverse the tree in TreeDeleter?
             var key = GetKey(table, cursor);
 

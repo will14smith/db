@@ -8,6 +8,7 @@ using SimpleDatabase.Execution.Operations.Cursors;
 using SimpleDatabase.Execution.Operations.Jumps;
 using SimpleDatabase.Execution.Operations.Slots;
 using SimpleDatabase.Execution.Trees;
+using SimpleDatabase.Execution.Values;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Schemas.Types;
 using SimpleDatabase.Storage;
@@ -31,7 +32,6 @@ namespace SimpleDatabase.Execution.UnitTests
 
         private static readonly FunctionLabel MainLabel = FunctionLabel.Create();
         private static readonly ProgramLabel Loop = ProgramLabel.Create();
-        private static readonly ProgramLabel Next = ProgramLabel.Create();
         private static readonly ProgramLabel Finish = ProgramLabel.Create();
         private static readonly SlotLabel Cursor = SlotLabel.Create();
 
@@ -39,15 +39,20 @@ namespace SimpleDatabase.Execution.UnitTests
             {
                 // cursor = first(open(RootPageNumber))
                 new OpenReadOperation(Table),
-                new FirstOperation(Finish),
-                Loop,
+                new FirstOperation(),
                 new StoreOperation(Cursor),
 
-                // if cursor.Key == 2 -> jump to next
+                // cursor = next(cursor)
+                Loop,
+                new LoadOperation(Cursor),
+                new NextOperation(Finish, true),
+                new StoreOperation(Cursor),
+
+                // if cursor.Key == 2 -> loop
                 new LoadOperation(Cursor),
                 new KeyOperation(),
                 new ConstIntOperation(2),
-                new ConditionalJumpOperation(Comparison.Equal, Next),
+                new ConditionalJumpOperation(Comparison.Equal, Loop),
 
                 // id = cursor.Key
                 new LoadOperation(Cursor),
@@ -65,10 +70,8 @@ namespace SimpleDatabase.Execution.UnitTests
                 new MakeRowOperation(3),
                 new YieldOperation(),
 
-                // cursor = next(cursor) -> loop
-                Next,
-                new LoadOperation(Cursor),
-                new NextOperation(Loop),
+                // loop
+                new JumpOperation(Loop),
 
                 // finish
                 Finish,
@@ -105,6 +108,7 @@ namespace SimpleDatabase.Execution.UnitTests
                     var result = new ProgramExecutor(Program, pager).Execute().ToList();
 
                     Assert.Equal(1, result.Count);
+                    Assert.Equal("a", ((ObjectValue) result[0].Skip(1).First()).Value);
                 }
             }
             finally
