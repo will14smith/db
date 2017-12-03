@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using SimpleDatabase.Execution.Operations.Columns;
 using SimpleDatabase.Execution.Values;
 using SimpleDatabase.Storage.Nodes;
@@ -29,9 +30,20 @@ namespace SimpleDatabase.Execution
 
         private (FunctionState, Result) Execute(FunctionState state, ColumnOperation columnOperation)
         {
-            CursorValue cursorValue;
-            (state, cursorValue) = state.PopValue<CursorValue>();
+            Value value;
+            (state, value) = state.PopValue();
 
+            switch (value)
+            {
+                case CursorValue cursor: return Execute(state, columnOperation, cursor);
+                case RowValue row: return Execute(state, columnOperation, row);
+
+                default: throw new ArgumentOutOfRangeException(nameof(value), $"Unhandled type: {value.GetType().FullName}");
+            }
+        }
+
+        private (FunctionState, Result) Execute(FunctionState state, ColumnOperation columnOperation, CursorValue cursorValue)
+        {
             var cursor = cursorValue.Cursor;
             if (cursor == null)
             {
@@ -42,6 +54,14 @@ namespace SimpleDatabase.Execution
             var leaf = LeafNode.Read(CreateRowSerializer(cursorValue.Table), page);
 
             var value = leaf.GetCellColumn(cursor.CellNumber, columnOperation.ColumnIndex);
+            state.PushValue(new ObjectValue(value));
+
+            return (state, new Result.Next());
+        }
+
+        private (FunctionState, Result) Execute(FunctionState state, ColumnOperation columnOperation, RowValue rowValue)
+        {
+            var value = rowValue.Values[columnOperation.ColumnIndex];
             state.PushValue(new ObjectValue(value));
 
             return (state, new Result.Next());

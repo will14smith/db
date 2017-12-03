@@ -1,11 +1,20 @@
 ﻿using System;
+using System.Linq;
 using SimpleDatabase.Parsing.Statements;
 using SimpleDatabase.Planning.Nodes;
+using SimpleDatabase.Storage;
 
 namespace SimpleDatabase.Planning
 {
     public class Planner
     {
+        private readonly Database _database;
+
+        public Planner(Database database)
+        {
+            _database = database;
+        }
+
         public Plan Plan(Statement statment)
         {
             switch (statment)
@@ -24,7 +33,14 @@ namespace SimpleDatabase.Planning
 
                 case InsertStatement insert:
                     {
-                        var input = new ConstantNode(insert.Columns, insert.Values);
+                        var columns = insert.Columns;
+                        if (!columns.Any())
+                        {
+                            var table = _database.GetTable(insert.Table);
+                            columns = table.Table.Columns.Select(x => x.Name).ToList();
+                        }
+
+                        var input = new ConstantNode(columns, insert.Values);
 
                         var root = new InsertNode(insert.Table, input);
 

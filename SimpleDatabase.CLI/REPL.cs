@@ -129,13 +129,15 @@ namespace SimpleDatabase.CLI
 
         private ExecuteStatementResponse ExecuteStatement(string input)
         {
+            var database = new Database(new[] { _table });
+
             var parser = new Parser();
             var statements = parser.Parse(input);
             
-            var planner = new Planner();
+            var planner = new Planner(database);
             var plans = statements.Select(planner.Plan);
 
-            var planCompiler = new PlanCompiler(new Database(new[] { _table }));
+            var planCompiler = new PlanCompiler(database);
             var programs = plans.Select(planCompiler.Compile);
 
             foreach (var program in programs)

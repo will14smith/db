@@ -88,6 +88,9 @@ namespace SimpleDatabase.Planning.Iterators
 
                     return result.Value;
 
+                case NumberLiteralExpression num:
+                    return new ConstItem(num.Value);
+                    
                 case StringLiteralExpression str:
                     return new ConstItem(str.Value);
 

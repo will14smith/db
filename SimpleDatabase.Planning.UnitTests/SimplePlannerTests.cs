@@ -2,6 +2,7 @@
 using SimpleDatabase.Parsing.Expressions;
 using SimpleDatabase.Parsing.Statements;
 using SimpleDatabase.Planning.Nodes;
+using SimpleDatabase.Storage;
 using SimpleDatabase.Utils;
 using Xunit;
 
@@ -9,6 +10,8 @@ namespace SimpleDatabase.Planning.UnitTests
 {
     public class SimplePlannerTests
     {
+        private readonly Database _database = new Database(new StoredTable[0]);
+
         [Fact]
         public void Test_Star_NoFilter()
         {
@@ -17,7 +20,7 @@ namespace SimpleDatabase.Planning.UnitTests
                 new Table.TableName("table"),
                 Option.None<Expression>()
             );
-            var planner = new Planner();
+            var planner = new Planner(_database);
 
             var plan = planner.Plan(statement);
 
@@ -39,7 +42,7 @@ namespace SimpleDatabase.Planning.UnitTests
                 new Table.TableName("table"),
                 Option.None<Expression>()
             );
-            var planner = new Planner();
+            var planner = new Planner(_database);
 
             var plan = planner.Plan(statement);
 
@@ -58,7 +61,7 @@ namespace SimpleDatabase.Planning.UnitTests
                 new Table.TableName("table"),
                 Option.Some<Expression>(new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a")))
             );
-            var planner = new Planner();
+            var planner = new Planner(_database);
 
             var plan = planner.Plan(statement);
 
@@ -82,7 +85,7 @@ namespace SimpleDatabase.Planning.UnitTests
                     new []{ new NumberLiteralExpression(1), new NumberLiteralExpression(2) },
                     new []{ new NumberLiteralExpression(2), new NumberLiteralExpression(3) },
                 });
-            var planner = new Planner();
+            var planner = new Planner(_database);
 
             var plan = planner.Plan(statement);
 
@@ -100,7 +103,7 @@ namespace SimpleDatabase.Planning.UnitTests
                 "table",
                 Option.Some<Expression>(new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("a"), new StringLiteralExpression("a")))
                 );
-            var planner = new Planner();
+            var planner = new Planner(_database);
 
             var plan = planner.Plan(statement);
 

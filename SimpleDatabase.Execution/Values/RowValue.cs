@@ -4,9 +4,9 @@ namespace SimpleDatabase.Execution.Values
 {
     public class RowValue : Value
     {
-        public IReadOnlyCollection<Value> Values { get; }
+        public IReadOnlyList<Value> Values { get; }
 
-        public RowValue(IReadOnlyCollection<Value> values)
+        public RowValue(IReadOnlyList<Value> values)
         {
             Values = values;
         }

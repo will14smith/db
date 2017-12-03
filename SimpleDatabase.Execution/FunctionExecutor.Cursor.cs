@@ -68,7 +68,7 @@ namespace SimpleDatabase.Execution
 
             return (state, new Result.Jump(nextOperation.SuccessAddress));
         }
-		
+
         private (FunctionState, Result) Execute(FunctionState state, InsertOperation insert)
         {
             RowValue row;
@@ -80,7 +80,7 @@ namespace SimpleDatabase.Execution
             var insertableRow = new Row(row.Values.Cast<ObjectValue>().Select(x => new ColumnValue(x.Value)).ToList());
 
             var inserter = new TreeInserter(_pager, CreateRowSerializer(cursorValue.Table), cursorValue.Table);
-            var insertResult = inserter.Insert((int)insertableRow.Values[0].Value, insertableRow);
+            var insertResult = inserter.Insert(GetKey(insertableRow), insertableRow);
             switch (insertResult)
             {
                 case TreeInsertResult.Success _:
@@ -92,6 +92,15 @@ namespace SimpleDatabase.Execution
                 default:
                     throw new NotImplementedException($"Unsupported type: {insertResult.GetType().Name}");
             }
+        }
+
+        private int GetKey(Row row)
+        {
+            var value0 = row.Values[0].Value;
+
+            if (value0 is int i) return i;
+
+            throw new NotImplementedException();
         }
     }
 }
