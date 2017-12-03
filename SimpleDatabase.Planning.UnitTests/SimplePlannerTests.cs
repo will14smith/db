@@ -18,7 +18,8 @@ namespace SimpleDatabase.Planning.UnitTests
             var statement = new SelectStatement(
                 new List<ResultColumn> { new ResultColumn.Star(Option.None<string>()) },
                 new Table.TableName("table"),
-                Option.None<Expression>()
+                Option.None<Expression>(),
+                new OrderExpression[0]
             );
             var planner = new Planner(_database);
 
@@ -40,7 +41,8 @@ namespace SimpleDatabase.Planning.UnitTests
                     new ResultColumn.Expression(new ColumnNameExpression("email"), Option.None<string>()),
                 },
                 new Table.TableName("table"),
-                Option.None<Expression>()
+                Option.None<Expression>(),
+                new OrderExpression[0]
             );
             var planner = new Planner(_database);
 
@@ -59,7 +61,8 @@ namespace SimpleDatabase.Planning.UnitTests
             var statement = new SelectStatement(
                 new List<ResultColumn> { new ResultColumn.Star(Option.None<string>()) },
                 new Table.TableName("table"),
-                Option.Some<Expression>(new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a")))
+                Option.Some<Expression>(new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a"))),
+                new OrderExpression[0]
             );
             var planner = new Planner(_database);
 

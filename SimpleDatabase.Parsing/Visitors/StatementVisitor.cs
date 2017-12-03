@@ -27,8 +27,17 @@ namespace SimpleDatabase.Parsing.Visitors
             var columns = context._Columns.Select(HandleResultColumn).ToList();
             var table = HandleTable(context.Table);
             var where = context.Where.ToOption().Select(HandleExpression);
+            var ordering = context._Ordering.Select(HandleOrdering).ToList();
 
-            return new SelectStatement(columns, table, where);
+            return new SelectStatement(columns, table, where, ordering);
+
+            OrderExpression HandleOrdering(SQLParser.Ordering_termContext arg)
+            {
+                var expr = HandleExpression(arg.expression());
+                var order = arg.K_DESC() == null ? Order.Ascending : Order.Descending;
+
+                return new OrderExpression(expr, order);
+            }
         }
 
         public override Statement VisitStatement_insert(SQLParser.Statement_insertContext context)
