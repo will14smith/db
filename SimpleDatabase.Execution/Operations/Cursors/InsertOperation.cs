@@ -8,5 +8,9 @@
     /// </summary>
     public class InsertOperation : IOperation
     {
+        public override string ToString()
+        {
+            return "INSERT";
+        }
     }
 }

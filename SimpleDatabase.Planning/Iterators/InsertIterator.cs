@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using SimpleDatabase.Execution;
 using SimpleDatabase.Execution.Operations;
 using SimpleDatabase.Execution.Operations.Cursors;
@@ -21,7 +21,17 @@ namespace SimpleDatabase.Planning.Iterators
             _table = table;
         }
 
-        public IReadOnlyDictionary<SlotLabel, SlotDefinition> Slots => _input.Slots;
+        public IReadOnlyDictionary<SlotLabel, SlotDefinition> Slots
+        {
+            get
+            {
+                var d = _input.Slots.ToDictionary(x => x.Key, x => x.Value);
+                d.Add(_cursor, new SlotDefinition());
+
+                return d;
+            }
+        }
+
         public IReadOnlyDictionary<FunctionLabel, Function> Functions => _input.Functions;
         public IReadOnlyList<IteratorOutput> Outputs => new IteratorOutput[0];
 

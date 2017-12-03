@@ -67,7 +67,7 @@ namespace SimpleDatabase.Planning.UnitTests
                     new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("b"), new StringLiteralExpression("a"))
                 ))
             },
-
+            new object[] {"Insert", new Plan(new InsertNode("table", new ScanTableNode("table"))) },
         };
 
         [Theory]
