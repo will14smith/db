@@ -422,5 +422,30 @@ namespace SimpleDatabase.CLI.UnitTests
             RunningCommands_HasCorrectSnapshot(commands, outputs, 17, ExitCode.Success);
         }
 
+        [Fact]
+        public void Sorting()
+        {
+            var commands = new List<string>
+            {
+                "INSERT INTO table VALUES (1, 'c', 'c@c.c')",
+                "INSERT INTO table VALUES (2, 'a', 'a@a.a')",
+                "INSERT INTO table VALUES (3, 'b', 'b@b.b')",
+
+                "SELECT * FROM table ORDER BY name",
+
+                ".exit"
+            };
+
+            var outputs = new List<string>
+            {
+                "db > (2, 'a', 'a@a.a')",
+                "(3, 'b', 'b@b.b')",
+                "(1, 'c', 'c@c.c')",
+                "Executed.",
+                "db >"
+            };
+            
+            RunningCommands_HasCorrectSnapshot(commands, outputs, 3, ExitCode.Success);
+        }
     }
 }

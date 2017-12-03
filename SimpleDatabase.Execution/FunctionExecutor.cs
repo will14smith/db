@@ -8,6 +8,7 @@ using SimpleDatabase.Execution.Operations.Cursors;
 using SimpleDatabase.Execution.Operations.Functions;
 using SimpleDatabase.Execution.Operations.Jumps;
 using SimpleDatabase.Execution.Operations.Slots;
+using SimpleDatabase.Execution.Operations.Sorting;
 using SimpleDatabase.Execution.Values;
 using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Paging;
@@ -147,6 +148,14 @@ namespace SimpleDatabase.Execution
                 case CallCoroutineOperation call:
                     return Execute(state, call);
 
+                // Sorting
+                case SorterNew op:
+                    return Execute(state, op);
+                case SorterSort op:
+                    return Execute(state, op);
+                case SorterCursor op:
+                    return Execute(state, op);
+
                 // Other
                 case ProgramLabel _:
                     return (state, new Result.Next());
@@ -161,7 +170,7 @@ namespace SimpleDatabase.Execution
                     throw new NotImplementedException($"Unsupported operation type: {operation.GetType().Name}");
             }
         }
-        
+
         private IRowSerializer CreateRowSerializer(StoredTable table)
         {
             return new RowSerializer(
