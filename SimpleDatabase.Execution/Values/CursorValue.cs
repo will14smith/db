@@ -1,42 +1,38 @@
-﻿using SimpleDatabase.Execution.Trees;
-using SimpleDatabase.Storage;
-using SimpleDatabase.Utils;
+﻿using SimpleDatabase.Utils;
 
 namespace SimpleDatabase.Execution.Values
 {
     public class CursorValue : Value
     {
-        public StoredTable Table { get; }
         public bool Writable { get; }
 
-        public Option<Cursor> Cursor { get; }
-        public Option<Cursor> NextCursor { get; }
+        public Option<ICursor> Cursor { get; }
+        public Option<ICursor> NextCursor { get; }
 
-        public CursorValue(StoredTable table, bool writable)
+        public CursorValue(bool writable)
         {
-            Table = table;
             Writable = writable;
-            Cursor = Option.None<Cursor>();
+            Cursor = Option.None<ICursor>();
         }
 
-        private CursorValue(CursorValue val, Cursor cursor)
-            : this(val.Table, val.Writable)
+        private CursorValue(CursorValue val, ICursor cursor)
+            : this(val.Writable)
         {
             Cursor = Option.Some(cursor);
         }
-        private CursorValue(CursorValue val, Option<Cursor> cursor, Cursor nextCursor)
-            : this(val.Table, val.Writable)
+        private CursorValue(CursorValue val, Option<ICursor> cursor, ICursor nextCursor)
+            : this(val.Writable)
         {
             Cursor = cursor;
             NextCursor = Option.Some(nextCursor);
         }
 
-        public CursorValue SetCursor(Cursor newCursor)
+        public CursorValue SetCursor(ICursor newCursor)
         {
             return new CursorValue(this, newCursor);
         }
 
-        public CursorValue SetNextCursor(Cursor newCursor)
+        public CursorValue SetNextCursor(ICursor newCursor)
         {
             return new CursorValue(this, Cursor, newCursor);
         }

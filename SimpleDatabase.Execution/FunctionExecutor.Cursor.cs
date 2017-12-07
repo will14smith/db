@@ -1,29 +1,36 @@
 ﻿using System;
 using System.Linq;
 using SimpleDatabase.Execution.Operations.Cursors;
-using SimpleDatabase.Execution.Trees;
 using SimpleDatabase.Execution.Values;
 using SimpleDatabase.Schemas;
-using SimpleDatabase.Storage;
-using SimpleDatabase.Storage.Nodes;
 using SimpleDatabase.Utils;
 
 namespace SimpleDatabase.Execution
 {
     public partial class FunctionExecutor
     {
-        private static (FunctionState, Result) Execute(FunctionState state, OpenReadOperation openReadOperation)
+        private (FunctionState, Result) Execute(FunctionState state, OpenReadOperation openReadOperation)
         {
             // TODO aquire read lock
-            var cursor = new CursorValue(openReadOperation.Table, false);
+            var table = openReadOperation.Table;
+            var tableCursor = new TableCursor(_pager, CreateRowSerializer(table), table, false);
+
+            var cursor = new CursorValue(false);
+            cursor = cursor.SetNextCursor(tableCursor);
+
             state = state.PushValue(cursor);
             return (state, new Result.Next());
         }
 
-        private static (FunctionState, Result) Execute(FunctionState state, OpenWriteOperation openWriteOperation)
+        private (FunctionState, Result) Execute(FunctionState state, OpenWriteOperation openWriteOperation)
         {
-            // TODO aquire write lock
-            var cursor = new CursorValue(openWriteOperation.Table, false);
+            // TODO aquire read lock
+            var table = openWriteOperation.Table;
+            var tableCursor = new TableCursor(_pager, CreateRowSerializer(table), table, true);
+
+            var cursor = new CursorValue(true);
+            cursor = cursor.SetNextCursor(tableCursor);
+
             state = state.PushValue(cursor);
             return (state, new Result.Next());
         }
@@ -33,9 +40,12 @@ namespace SimpleDatabase.Execution
             CursorValue cursorValue;
             (state, cursorValue) = state.PopValue<CursorValue>();
 
-            var searcher = new TreeTraverser(_pager, CreateRowSerializer(cursorValue.Table), cursorValue.Table);
-            var newCursor = searcher.StartCursor();
+            var cursor = cursorValue.Cursor.OrElse(() =>
+            {
+                return cursorValue.NextCursor.OrElse(() => throw new InvalidOperationException("Something is right dodgy with this cursor..."));
+            });
 
+            var newCursor = cursor.First();
             var newCursorValue = cursorValue.SetNextCursor(newCursor);
             state = state.PushValue(newCursorValue);
 
@@ -47,13 +57,13 @@ namespace SimpleDatabase.Execution
             CursorValue cursorValue;
             (state, cursorValue) = state.PopValue<CursorValue>();
 
-
             var newCursor = cursorValue.NextCursor.OrElse(() =>
             {
                 var cursor = cursorValue.Cursor.OrElse(() => throw new InvalidOperationException("Cursor is null, has a position been set of this cursor?"));
 
-                return Next(cursorValue.Table, cursor);
+                return cursor.Next();
             });
+
             var newCursorValue = cursorValue.SetCursor(newCursor);
             state = state.PushValue(newCursorValue);
 
@@ -68,22 +78,39 @@ namespace SimpleDatabase.Execution
         private (FunctionState, Result) Execute(FunctionState state, InsertOperation insert)
         {
             RowValue row;
-            CursorValue cursorValue;
+            Value targetValue;
 
-            (state, cursorValue) = state.PopValue<CursorValue>();
+            (state, targetValue) = state.PopValue();
             (state, row) = state.PopValue<RowValue>();
+
+            IInsertTarget insertTarget;
+            switch (targetValue)
+            {
+                case CursorValue cursorValue:
+                    {
+                        var cursor = cursorValue.Cursor.OrElse(() =>
+                        {
+                            return cursorValue.NextCursor.OrElse(() => throw new InvalidOperationException("Something is right dodgy with this cursor..."));
+                        });
+
+                        insertTarget = (IInsertTarget)cursor;
+                    }
+                    break;
+                case IInsertTarget target:
+                    insertTarget = target;
+                    break;
+
+                default:
+                    throw new NotImplementedException($"Unsupported type: {targetValue.GetType()}");
+            }
 
             var insertableRow = new Row(row.Values.Cast<ObjectValue>().Select(x => new ColumnValue(x.Value)).ToList());
 
-            var inserter = new TreeInserter(_pager, CreateRowSerializer(cursorValue.Table), cursorValue.Table);
-            var insertResult = inserter.Insert(GetKey(insertableRow), insertableRow);
+            var insertResult = insertTarget.Insert(insertableRow);
             switch (insertResult)
             {
-                case TreeInsertResult.Success _:
+                case InsertResult.Success _:
                     return (state, new Result.Next());
-
-                case TreeInsertResult.DuplicateKey _:
-                    throw new NotImplementedException("TODO error handling!");
 
                 default:
                     throw new NotImplementedException($"Unsupported type: {insertResult.GetType().Name}");
@@ -95,72 +122,18 @@ namespace SimpleDatabase.Execution
             CursorValue cursorValue;
             (state, cursorValue) = state.PopValue<CursorValue>();
 
-            var table = cursorValue.Table;
-            var rowSerializer = CreateRowSerializer(table);
+            var deleteTarget = cursorValue.Cursor.As<ICursor, IDeleteTarget>().OrElse(() => throw new InvalidOperationException("Cursor is null or not an IInsertTarget"));
 
-            var cursor = cursorValue.Cursor.OrElse(() => throw new InvalidOperationException("Cursor is null, has a position been set of this cursor?"));
-
-            // TODO could this be optimised to not retraverse the tree in TreeDeleter?
-            var key = GetKey(table, cursor);
-
-            var nextCursor = Next(table, cursor);
-            var nextKey = nextCursor.EndOfTable ? Option.None<int>() : Option.Some(GetKey(table, nextCursor));
-
-            var deleter = new TreeDeleter(_pager, rowSerializer, table);
-            var deleteResult = deleter.Delete(key);
-
+            var deleteResult = deleteTarget.Delete();
             switch (deleteResult)
             {
-                case TreeDeleteResult.Success _:
-                    {
-                        var newCursor = nextKey.Map(x => FindKey(table, x), () => new Cursor(-1, -1, true));
-                        var newCursorValue = cursorValue.SetNextCursor(newCursor);
-                        state = state.PushValue(newCursorValue);
-                        
-                        return (state, new Result.Next());
-                    }
-
-                case TreeDeleteResult.KeyNotFound _:
-                    throw new NotImplementedException("TODO error handling!");
+                case DeleteResult.Success success:
+                    state = state.PushValue(cursorValue.SetNextCursor(success.NextCursor));
+                    return (state, new Result.Next());
 
                 default:
                     throw new NotImplementedException($"Unsupported type: {deleteResult.GetType().Name}");
             }
-        }
-
-        private Cursor FindKey(StoredTable table, int key)
-        {
-            var rowSerializer = CreateRowSerializer(table);
-
-            var searcher = new TreeSearcher(_pager, new TreeKeySearcher(key), rowSerializer);
-
-            return searcher.FindCursor(table.RootPageNumber);
-        }
-
-        private int GetKey(Row row)
-        {
-            var value0 = row.Values[0].Value;
-
-            if (value0 is int i) return i;
-
-            throw new NotImplementedException();
-        }
-
-        private int GetKey(StoredTable table, Cursor cursor)
-        {
-            var rowSerializer = CreateRowSerializer(table);
-
-            var page = _pager.Get(cursor.PageNumber);
-            var leaf = LeafNode.Read(rowSerializer, page);
-
-            return leaf.GetCellKey(cursor.CellNumber);
-        }
-        private Cursor Next(StoredTable table, Cursor cursor)
-        {
-            var rowSerializer = CreateRowSerializer(table);
-
-            var searcher = new TreeTraverser(_pager, rowSerializer, table);
-            return searcher.AdvanceCursor(cursor);
         }
     }
 }

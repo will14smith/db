@@ -1,15 +1,20 @@
-﻿using SimpleDatabase.Execution.Values;
+﻿using System;
 
 namespace SimpleDatabase.Execution
 {
     public static class FunctionStateExtensions
     {
         public static (FunctionState, T) PopValue<T>(this FunctionState state)
-            where T : Value
+            where T : class
         {
             var (newState, value) = state.PopValue();
 
-            return (newState, (T)value);
+            if (!(value is T t))
+            {
+                throw new InvalidCastException($"Cannot cast {value?.GetType()} to {typeof(T)}");
+            }
+
+            return (newState, t);
         }
     }
 }

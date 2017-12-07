@@ -1,7 +1,6 @@
 ﻿using System;
 using SimpleDatabase.Execution.Operations.Columns;
 using SimpleDatabase.Execution.Values;
-using SimpleDatabase.Storage.Nodes;
 using SimpleDatabase.Utils;
 
 namespace SimpleDatabase.Execution
@@ -15,7 +14,7 @@ namespace SimpleDatabase.Execution
 
             var cursor = cursorValue.Cursor.OrElse(() => throw new InvalidOperationException("Cursor is null, has a position been set of this cursor?"));
 
-            var key = GetKey(cursorValue.Table, cursor);
+            var key = cursor.Key();
             state.PushValue(new ObjectValue(key));
 
             return (state, new Result.Next());
@@ -39,10 +38,7 @@ namespace SimpleDatabase.Execution
         {
             var cursor = cursorValue.Cursor.OrElse(() => throw new InvalidOperationException("Cursor is null, has a position been set of this cursor?"));
 
-            var page = _pager.Get(cursor.PageNumber);
-            var leaf = LeafNode.Read(CreateRowSerializer(cursorValue.Table), page);
-
-            var value = leaf.GetCellColumn(cursor.CellNumber, columnOperation.ColumnIndex);
+            var value = cursor.Column(columnOperation.ColumnIndex);
             state.PushValue(new ObjectValue(value));
 
             return (state, new Result.Next());
