@@ -57,22 +57,29 @@ namespace SimpleDatabase.Execution.Values
 
         private class Cursor : ICursor
         {
+            private readonly int _index;
             private readonly SorterValue _sorter;
 
             public Cursor(SorterValue sorter)
             {
                 _sorter = sorter;
             }
+            private Cursor(Cursor cursor, int index)
+                : this(cursor._sorter)
+            {
+                _index = index;
+            }
 
-            public bool EndOfTable { get; }
+            public bool EndOfTable => _index >= _sorter._rows.Count;
+
             public ICursor First()
             {
-                throw new NotImplementedException();
+                return new Cursor(this, 0);
             }
 
             public ICursor Next()
             {
-                throw new NotImplementedException();
+                return new Cursor(this, _index + 1);
             }
 
             public int Key()
@@ -82,7 +89,10 @@ namespace SimpleDatabase.Execution.Values
 
             public ColumnValue Column(int index)
             {
-                throw new NotImplementedException();
+                var row = _sorter._rows[_index];
+                var offset = index;
+
+                return row.Values[offset];
             }
         }
     }
@@ -106,7 +116,7 @@ namespace SimpleDatabase.Execution.Values
                 var comparison = Comparer<object>.Default.Compare(xKeys[i], yKeys[i]);
                 if (comparison != 0)
                 {
-                    return comparison;
+                    return _key.Ordering[i] == KeyOrdering.Ascending ? comparison : -comparison;
                 }
             }
 

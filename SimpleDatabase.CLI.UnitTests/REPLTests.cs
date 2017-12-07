@@ -430,22 +430,24 @@ namespace SimpleDatabase.CLI.UnitTests
                 "INSERT INTO table VALUES (1, 'c', 'c@c.c')",
                 "INSERT INTO table VALUES (2, 'a', 'a@a.a')",
                 "INSERT INTO table VALUES (3, 'b', 'b@b.b')",
+                "INSERT INTO table VALUES (4, 'a', 'b@b.b')",
 
-                "SELECT * FROM table ORDER BY name",
+                "SELECT * FROM table ORDER BY name, email DESC",
 
                 ".exit"
             };
 
             var outputs = new List<string>
             {
-                "db > (2, 'a', 'a@a.a')",
-                "(3, 'b', 'b@b.b')",
-                "(1, 'c', 'c@c.c')",
+                "db > (4, a, b@b.b)",
+                "(2, a, a@a.a)",
+                "(3, b, b@b.b)",
+                "(1, c, c@c.c)",
                 "Executed.",
                 "db >"
             };
             
-            RunningCommands_HasCorrectSnapshot(commands, outputs, 3, ExitCode.Success);
+            RunningCommands_HasCorrectSnapshot(commands, outputs, 4, ExitCode.Success);
         }
     }
 }
