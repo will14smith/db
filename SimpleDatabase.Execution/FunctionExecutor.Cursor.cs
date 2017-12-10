@@ -24,7 +24,7 @@ namespace SimpleDatabase.Execution
 
         private (FunctionState, Result) Execute(FunctionState state, OpenWriteOperation openWriteOperation)
         {
-            // TODO aquire read lock
+            // TODO aquire write lock
             var table = openWriteOperation.Table;
             var tableCursor = new TableCursor(_pager, CreateRowSerializer(table), table, true);
 
