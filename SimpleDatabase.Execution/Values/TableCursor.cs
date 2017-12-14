@@ -115,7 +115,7 @@ namespace SimpleDatabase.Execution.Values
         {
             var searcher = new TreeSearcher(_pager, new TreeKeySearcher(key), _rowSerializer);
 
-            return searcher.FindCursor(Table.RootPageNumber);
+            return searcher.FindCursor(Table.RootPageId);
         }
 
         private int GetKey(Cursor cursor)

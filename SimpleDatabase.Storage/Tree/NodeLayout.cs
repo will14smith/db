@@ -35,7 +35,7 @@ namespace SimpleDatabase.Storage.Tree
         public int LeafNodeKeyOffset = 0;
         public int LeafNodeValueOffset => LeafNodeKeyOffset + LeafNodeKeySize;
 
-        public int LeafNodeSpaceForCells => Pager.PageSize - LeafNodeHeaderSize;
+        public int LeafNodeSpaceForCells => PageSize - LeafNodeHeaderSize;
         public int LeafNodeMaxCells => LeafNodeSpaceForCells / LeafNodeCellSize;
         public int LeafNodeMinCells => (LeafNodeMaxCells + 1) / 2 - 1; // ceil(MaxCells / 2) - 1
         public int LeafNodeRightSplitCount => LeafNodeMinCells;
@@ -56,7 +56,7 @@ namespace SimpleDatabase.Storage.Tree
 
         public int InternalNodeCellSize => InternalNodeChildSize + InternalNodeKeySize;
 
-        public int InternalNodeSpaceForCells => Pager.PageSize - InternalNodeHeaderSize;
+        public int InternalNodeSpaceForCells => PageSize - InternalNodeHeaderSize;
         public int InternalNodeMaxCells => InternalNodeSpaceForCells / InternalNodeCellSize;
         public int InternalNodeMinCells => InternalNodeMaxCells / 2 - 1;
         public int InternalNodeRightSplitCount => InternalNodeMinCells + 1;

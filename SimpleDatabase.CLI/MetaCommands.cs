@@ -13,7 +13,7 @@ namespace SimpleDatabase.CLI
         {
             output.WriteLine("Tree:");
 
-            PrintNode(output, pager, table.Table, table.RootPageNumber, 0);
+            PrintNode(output, pager, table.Table, table.RootPageId, 0);
         }
 
         private static void PrintNode(IREPLOutput output, Pager pager, Table table, int pageNumber, int level)

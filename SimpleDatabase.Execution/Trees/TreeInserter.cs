@@ -22,7 +22,7 @@ namespace SimpleDatabase.Execution.Trees
 
         public TreeInsertResult Insert(int key, Row row)
         {
-            var page = _pager.Get(_table.RootPageNumber);
+            var page = _pager.Get(_table.RootPageId);
             var node = Node.Read(_rowSerializer, page);
 
             Result result;
@@ -56,7 +56,7 @@ namespace SimpleDatabase.Execution.Trees
 
         private void SplitRoot(Result.WasSplit split)
         {
-            if (_table.RootPageNumber != split.Left)
+            if (_table.RootPageId != split.Left)
             {
                 throw new InvalidOperationException("Uhm...?");
             }
@@ -112,8 +112,8 @@ namespace SimpleDatabase.Execution.Trees
 
             return new Result.WasSplit(
                 node.GetMaxKey(),
-                node.PageNumber,
-                newNode.PageNumber
+                node.PageId,
+                newNode.PageId
             );
         }
 
@@ -180,7 +180,7 @@ namespace SimpleDatabase.Execution.Trees
 
             InnerInsertNonFull(key < splitKey ? node : newNode, key, row);
 
-            return new Result.WasSplit(splitKey, node.PageNumber, newNode.PageNumber);
+            return new Result.WasSplit(splitKey, node.PageId, newNode.PageId);
         }
 
         private Result InnerInsertNonFull(InternalNode node, int key, Row row)

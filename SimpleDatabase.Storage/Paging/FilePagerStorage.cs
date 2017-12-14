@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 namespace SimpleDatabase.Storage.Paging
@@ -11,23 +12,33 @@ namespace SimpleDatabase.Storage.Paging
             _file = File.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite);
         }
 
-        public int ByteLength => (int) _file.Length;
+        public int ByteLength => (int)_file.Length;
 
-        public Page Read(int index)
+        public Page Read(PageId id)
         {
-            var page = new byte[Pager.PageSize];
+            if (id.StorageType != PageStorageType.Tree)
+            {
+                throw new NotImplementedException();
+            }
 
-            _file.Seek(index * Pager.PageSize, SeekOrigin.Begin);
+            var page = new byte[PageLayout.PageSize];
+
+            _file.Seek(id.Index * PageLayout.PageSize, SeekOrigin.Begin);
             // TODO check bytes read
-            _file.Read(page, 0, Pager.PageSize);
+            _file.Read(page, 0, PageLayout.PageSize);
 
-            return new Page(index, page);
+            return new Page(id, page);
         }
 
-        public void Write(Page page, int index)
+        public void Write(Page page)
         {
-            _file.Seek(index * Pager.PageSize, SeekOrigin.Begin);
-            _file.Write(page.Data, 0, Pager.PageSize);
+            if (page.Id.StorageType != PageStorageType.Tree)
+            {
+                throw new NotImplementedException();
+            }
+
+            _file.Seek(page.Id.Index * PageLayout.PageSize, SeekOrigin.Begin);
+            _file.Write(page.Data, 0, PageLayout.PageSize);
         }
 
         public void Dispose()

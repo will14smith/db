@@ -4,13 +4,13 @@ namespace SimpleDatabase.Storage.Paging
 {
     public class Page
     {
-        public Page(int number, byte[] data)
+        public Page(PageId id, byte[] data)
         {
-            Number = number;
+            Id = id;
             Data = data;
         }
 
-        public int Number { get; }
+        public PageId Id { get; }
         public byte[] Data { get; }
         
         public PageType Type

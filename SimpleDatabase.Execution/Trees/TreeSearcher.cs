@@ -20,7 +20,7 @@ namespace SimpleDatabase.Execution.Trees
 
         public Cursor FindCursor(int pageNumber)
         {
-            var page = _pager.Get(pageNumber);
+            var page = _pager.Get(new PageId(PageStorageType.Tree, pageNumber));
             var node = Node.Read(_rowSerializer, page);
 
             switch (node)

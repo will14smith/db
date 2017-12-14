@@ -9,11 +9,13 @@ namespace SimpleDatabase.Storage.Paging
         private readonly IPagerStorage _storage;
         private readonly Page[] _pages = new Page[MaxPages];
 
+        private int _pageCount;
+
         public Pager(IPagerStorage storage)
         {
             _storage = storage;
 
-            PageCount = _storage.ByteLength / PageLayout.PageSize;
+            _pageCount = _storage.ByteLength / PageLayout.PageSize;
             if (_storage.ByteLength % PageLayout.PageSize != 0)
             {
                 throw new InvalidOperationException("storage does not have a whole number of pages");
@@ -22,10 +24,14 @@ namespace SimpleDatabase.Storage.Paging
 
         }
 
-        public int PageCount { get; private set; }
-
-        public Page Get(int index)
+        public Page Get(PageId id)
         {
+            if (id.StorageType != PageStorageType.Tree)
+            {
+                throw new NotImplementedException();
+            }
+
+            var index = id.Index;
             if (index > MaxPages)
             {
                 throw new ArgumentOutOfRangeException(nameof(index), $"Index was larger than the number of allowed pages ({MaxPages})");
@@ -34,44 +40,60 @@ namespace SimpleDatabase.Storage.Paging
             if (_pages[index] == null)
             {
                 // TODO check page is allocated
-                _pages[index] = _storage.Read(index);
+                _pages[index] = _storage.Read(id);
 
-                if (index >= PageCount)
+                if (index >= _pageCount)
                 {
-                    PageCount = index + 1;
+                    _pageCount = index + 1;
                 }
             }
 
             return _pages[index];
         }
 
-        public void Flush(int index)
+        public void Flush(PageId id)
         {
+            if (id.StorageType != PageStorageType.Tree)
+            {
+                throw new NotImplementedException();
+            }
+
+            var index = id.Index;
             if (_pages[index] == null)
             {
                 return;
             }
 
-            _storage.Write(_pages[index], index);
+            _storage.Write(_pages[index]);
         }
 
-        public Page Allocate()
+        public Page Allocate(PageStorageType type)
         {
+            if (type != PageStorageType.Tree)
+            {
+                throw new NotImplementedException();
+            }
+
             // TODO check free list
-            var unusedIndex = PageCount;
-            return Get(unusedIndex);
+            var unusedIndex = _pageCount;
+            return Get(new PageId(type, unusedIndex));
         }
 
-        public void Free(int index)
+        public void Free(PageId id)
         {
+            if (id.StorageType != PageStorageType.Tree)
+            {
+                throw new NotImplementedException();
+            }
+
             // TODO implement a free list
         }
 
         public void Dispose()
         {
-            for (var i = 0; i < PageCount; i++)
+            for (var i = 0; i < _pageCount; i++)
             {
-                Flush(i);
+                Flush(new PageId(PageStorageType.Tree, i));
                 _pages[i] = null;
             }
 

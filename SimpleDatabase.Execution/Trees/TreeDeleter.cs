@@ -21,7 +21,7 @@ namespace SimpleDatabase.Execution.Trees
 
         public TreeDeleteResult Delete(int key)
         {
-            var page = _pager.Get(_table.RootPageNumber);
+            var page = _pager.Get(_table.RootPageId);
             var node = Node.Read(_rowSerializer, page);
 
             Result result;
@@ -187,13 +187,13 @@ namespace SimpleDatabase.Execution.Trees
             {
                 Merge(prevNode, childNode);
                 InternalDeleteNoUnderflow(internalNode, childIndex);
-                _pager.Free(childNode.PageNumber);
+                _pager.Free(childNode.PageId);
             }
             else
             {
                 Merge(childNode, nextNode);
                 InternalDeleteNoUnderflow(internalNode, childIndex + 1);
-                _pager.Free(nextNode.PageNumber);
+                _pager.Free(nextNode.PageId);
             }
 
             var isValidInternalNode = (internalNode.IsRoot && internalNode.KeyCount > 0) || internalNode.KeyCount >= internalNode.Layout.InternalNodeMinCells;

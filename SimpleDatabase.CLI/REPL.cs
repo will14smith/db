@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using SimpleDatabase.Execution;
-using SimpleDatabase.Execution.Trees;
 using SimpleDatabase.Parsing;
 using SimpleDatabase.Planning;
 using SimpleDatabase.Schemas;
@@ -42,13 +41,13 @@ namespace SimpleDatabase.CLI
         {
             var table = new Table(name, columns);
 
-            var rootPage = _pager.Allocate();
+            var rootPage = _pager.Allocate(PageStorageType.Tree);
             var rowSerializer = CreateRowSerializer(table);
             var node = LeafNode.New(rowSerializer, rootPage);
             node.IsRoot = true;
-            _pager.Flush(rootPage.Number);
+            _pager.Flush(rootPage.Id);
 
-            return new StoredTable(table, rootPage.Number);
+            return new StoredTable(table, rootPage.Id);
         }
         private static RowSerializer CreateRowSerializer(Table table)
         {

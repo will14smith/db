@@ -24,7 +24,7 @@ namespace SimpleDatabase.Execution.Trees
             var strategy = new TreeStartSearcher();
             var seacher = new TreeSearcher(_pager, strategy, _rowSerializer);
 
-            return seacher.FindCursor(_table.RootPageNumber);
+            return seacher.FindCursor(_table.RootPageId);
         }
 
         public Cursor AdvanceCursor(Cursor cursor)

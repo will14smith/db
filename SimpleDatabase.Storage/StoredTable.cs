@@ -1,16 +1,22 @@
 ﻿using SimpleDatabase.Schemas;
+using SimpleDatabase.Storage.Paging;
 
 namespace SimpleDatabase.Storage
 {
     public class StoredTable
     {
         public Table Table { get; }
-        public int RootPageNumber { get; }
+        public PageId RootPageId { get; }
 
-        public StoredTable(Table table, int rootPageNumber)
+        public StoredTable(Table table, int rootPageIndex)
         {
             Table = table;
-            RootPageNumber = rootPageNumber;
+            RootPageId = new PageId(PageStorageType.Tree, rootPageIndex);
+        }
+        public StoredTable(Table table, PageId rootPageId)
+        {
+            Table = table;
+            RootPageId = rootPageId;
         }
     }
 }

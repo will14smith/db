@@ -37,7 +37,7 @@ namespace SimpleDatabase.Execution.UnitTests
 
         private static readonly Function Main = new Function(new List<IOperation>
             {
-                // cursor = first(open(RootPageNumber))
+                // cursor = first(open(RootPageId))
                 new OpenReadOperation(Table),
                 new FirstOperation(),
                 new StoreOperation(Cursor),
@@ -95,11 +95,11 @@ namespace SimpleDatabase.Execution.UnitTests
                     // TODO clean this up 
 
                     // Create root page
-                    var rootPage = pager.Get(Table.RootPageNumber);
+                    var rootPage = pager.Get(Table.RootPageId);
                     var rowSerializer = new RowSerializer(Table.Table, new ColumnTypeSerializerFactory());
                     var node = LeafNode.New(rowSerializer, rootPage);
                     node.IsRoot = true;
-                    pager.Flush(Table.RootPageNumber);
+                    pager.Flush(Table.RootPageId);
 
                     // Insert some data
                     new TreeInserter(pager, rowSerializer, Table).Insert(1, new Row(new[] { new ColumnValue(1), new ColumnValue("a"), new ColumnValue("a@a.a") }));

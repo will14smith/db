@@ -6,7 +6,7 @@ namespace SimpleDatabase.Storage.Paging
     {
         int ByteLength { get; }
 
-        Page Read(int index);
-        void Write(Page page, int index);
+        Page Read(PageId id);
+        void Write(Page page);
     }
 }

@@ -19,7 +19,7 @@ namespace SimpleDatabase.Storage.Tree
             Layout = new NodeLayout(rowSerializer);
         }
 
-        public int PageNumber => Page.Number;
+        public PageId PageId => Page.Id;
 
         public PageType Type
         {

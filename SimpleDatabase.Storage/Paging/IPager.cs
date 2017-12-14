@@ -4,12 +4,10 @@ namespace SimpleDatabase.Storage.Paging
 {
     public interface IPager : IDisposable
     {
-        int PageCount { get; }
+        Page Get(PageId id);
+        void Flush(PageId id);
 
-        Page Get(int index);
-        void Flush(int index);
-
-        Page Allocate();
-        void Free(int index);
+        Page Allocate(PageStorageType type);
+        void Free(PageId id);
     }
 }
