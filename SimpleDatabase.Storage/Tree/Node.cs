@@ -2,7 +2,7 @@
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 
-namespace SimpleDatabase.Storage.Nodes
+namespace SimpleDatabase.Storage.Tree
 {
     public abstract class Node
     {
@@ -21,30 +21,25 @@ namespace SimpleDatabase.Storage.Nodes
 
         public int PageNumber => Page.Number;
 
-        public NodeType Type
+        public PageType Type
         {
-            get => GetType(Page);
-            protected set => Page.Data[NodeLayout.NodeTypeOffset] = (byte)value;
+            get => Page.Type;
+            protected set => Page.Type = value;
         }
 
         public bool IsRoot
         {
-            get => Page.Data[NodeLayout.IsRootOffset] == 1;
-            set => Page.Data[NodeLayout.IsRootOffset] = (byte)(value ? 1 : 0);
+            get => Page.Data[Layout.IsRootOffset] == 1;
+            set => Page.Data[Layout.IsRootOffset] = (byte)(value ? 1 : 0);
         }
-
-        public static NodeType GetType(Page page)
-        {
-            return (NodeType)page.Data[NodeLayout.NodeTypeOffset];
-        }
-
+        
         public static Node Read(IRowSerializer rowSerializer, Page page)
         {
-            switch (GetType(page))
+            switch (page.Type)
             {
-                case NodeType.Internal:
+                case PageType.Internal:
                     return InternalNode.Read(rowSerializer, page);
-                case NodeType.Leaf:
+                case PageType.Leaf:
                     return LeafNode.Read(rowSerializer, page);
                 default:
                     throw new ArgumentOutOfRangeException();

@@ -4,7 +4,6 @@ namespace SimpleDatabase.Storage.Paging
 {
     public class Pager : IPager
     {
-        public const int PageSize = 4096;
         public const int MaxPages = 2000;
 
         private readonly IPagerStorage _storage;
@@ -14,8 +13,8 @@ namespace SimpleDatabase.Storage.Paging
         {
             _storage = storage;
 
-            PageCount = _storage.ByteLength / PageSize;
-            if (_storage.ByteLength % PageSize != 0)
+            PageCount = _storage.ByteLength / PageLayout.PageSize;
+            if (_storage.ByteLength % PageLayout.PageSize != 0)
             {
                 throw new InvalidOperationException("storage does not have a whole number of pages");
 

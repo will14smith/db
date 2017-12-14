@@ -12,6 +12,12 @@ namespace SimpleDatabase.Storage.Paging
 
         public int Number { get; }
         public byte[] Data { get; }
+        
+        public PageType Type
+        {
+            get => (PageType) Data[PageLayout.PageTypeOffset];
+            set => Data[PageLayout.PageTypeOffset] = (byte) value;
+        }
 
         public Span<byte> this[int index] => new Span<byte>(Data, index);
     }

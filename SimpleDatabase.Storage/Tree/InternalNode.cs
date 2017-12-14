@@ -4,7 +4,7 @@ using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 using SimpleDatabase.Utils;
 
-namespace SimpleDatabase.Storage.Nodes
+namespace SimpleDatabase.Storage.Tree
 {
     public class InternalNode : Node
     {
@@ -16,7 +16,7 @@ namespace SimpleDatabase.Storage.Nodes
         {
             return new InternalNode(rowSerializer, page)
             {
-                Type = NodeType.Internal,
+                Type = PageType.Internal,
                 IsRoot = false,
                 KeyCount = 0
             };
@@ -24,10 +24,9 @@ namespace SimpleDatabase.Storage.Nodes
 
         public new static InternalNode Read(IRowSerializer rowSerializer, Page page)
         {
-            var type = GetType(page);
-            if (type != NodeType.Internal)
+            if (page.Type != PageType.Internal)
             {
-                throw new InvalidOperationException($"Tried to read a {NodeType.Internal} node but found a {type} node instead");
+                throw new InvalidOperationException($"Tried to read a {PageType.Internal} node but found a {page.Type} node instead");
             }
 
             return new InternalNode(rowSerializer, page);

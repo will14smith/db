@@ -7,9 +7,9 @@ using SimpleDatabase.Planning;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Schemas.Types;
 using SimpleDatabase.Storage;
-using SimpleDatabase.Storage.Nodes;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
+using SimpleDatabase.Storage.Tree;
 using Table = SimpleDatabase.Schemas.Table;
 
 namespace SimpleDatabase.CLI

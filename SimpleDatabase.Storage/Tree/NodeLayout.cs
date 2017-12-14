@@ -1,9 +1,9 @@
 ﻿using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 
-namespace SimpleDatabase.Storage.Nodes
+namespace SimpleDatabase.Storage.Tree
 {
-    public class NodeLayout
+    public class NodeLayout : PageLayout
     {
         private readonly IRowSerializer _rowSerializer;
 
@@ -13,13 +13,10 @@ namespace SimpleDatabase.Storage.Nodes
         }
 
         // Common Node Header
-        public const int NodeTypeSize = sizeof(NodeType);
-        public const int IsRootSize = sizeof(bool);
+        public readonly int IsRootSize = sizeof(bool);
+        public readonly int IsRootOffset = PageTypeOffset + PageTypeSize;
 
-        public const int NodeTypeOffset = 0;
-        public const int IsRootOffset = NodeTypeOffset + NodeTypeSize;
-
-        public const int CommonNodeHeaderSize = NodeTypeSize + IsRootSize;
+        public int CommonNodeHeaderSize => PageTypeSize + IsRootSize;
 
         // Leaf Node Header
         public int LeafNodeCellCountSize => sizeof(int);

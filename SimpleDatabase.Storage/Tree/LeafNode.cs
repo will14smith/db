@@ -4,7 +4,7 @@ using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 using SimpleDatabase.Utils;
 
-namespace SimpleDatabase.Storage.Nodes
+namespace SimpleDatabase.Storage.Tree
 {
     public class LeafNode : Node
     {
@@ -16,7 +16,7 @@ namespace SimpleDatabase.Storage.Nodes
         {
             return new LeafNode(rowSerializer, page)
             {
-                Type = NodeType.Leaf,
+                Type = PageType.Leaf,
                 IsRoot = false,
                 CellCount = 0,
                 NextLeaf = 0,
@@ -25,10 +25,9 @@ namespace SimpleDatabase.Storage.Nodes
 
         public new static LeafNode Read(IRowSerializer rowSerializer, Page page)
         {
-            var type = GetType(page);
-            if (type != NodeType.Leaf)
+            if (page.Type != PageType.Leaf)
             {
-                throw new InvalidOperationException($"Tried to read a {NodeType.Leaf} node but found a {type} node instead");
+                throw new InvalidOperationException($"Tried to read a {PageType.Leaf} node but found a {page.Type} node instead");
             }
 
             return new LeafNode(rowSerializer, page);
