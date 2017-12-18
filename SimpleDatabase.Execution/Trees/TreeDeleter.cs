@@ -1,5 +1,5 @@
 ﻿using System;
-using SimpleDatabase.Storage;
+using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 using SimpleDatabase.Storage.Tree;
@@ -10,9 +10,9 @@ namespace SimpleDatabase.Execution.Trees
     {
         private readonly IPager _pager;
         private readonly IRowSerializer _rowSerializer;
-        private readonly StoredTable _table;
+        private readonly Table _table;
 
-        public TreeDeleter(IPager pager, IRowSerializer rowSerializer, StoredTable table)
+        public TreeDeleter(IPager pager, IRowSerializer rowSerializer, Table table)
         {
             _pager = pager;
             _rowSerializer = rowSerializer;

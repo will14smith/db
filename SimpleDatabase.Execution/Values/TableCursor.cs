@@ -1,7 +1,6 @@
 ﻿using System;
 using SimpleDatabase.Execution.Trees;
 using SimpleDatabase.Schemas;
-using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 using SimpleDatabase.Storage.Tree;
@@ -15,10 +14,10 @@ namespace SimpleDatabase.Execution.Values
         private readonly IPager _pager;
         private readonly IRowSerializer _rowSerializer;
 
-        public StoredTable Table { get; }
+        public Table Table { get; }
         public bool Writable { get; }
 
-        public TableCursor(IPager pager, IRowSerializer rowSerializer, StoredTable table, bool writable)
+        public TableCursor(IPager pager, IRowSerializer rowSerializer, Table table, bool writable)
         {
             _pager = pager;
             _rowSerializer = rowSerializer;

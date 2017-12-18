@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using SimpleDatabase.Storage;
+﻿using SimpleDatabase.Schemas;
 
 namespace SimpleDatabase.Execution.Operations.Cursors
 {
@@ -13,16 +10,16 @@ namespace SimpleDatabase.Execution.Operations.Cursors
     /// </summary>
     public class OpenWriteOperation : IOperation
     {
-        public StoredTable Table { get; }
+        public Table Table { get; }
 
-        public OpenWriteOperation(StoredTable table)
+        public OpenWriteOperation(Table table)
         {
             Table = table;
         }
 
         public override string ToString()
         {
-            return $"CUR.OPEN.W {Table.Table.Name}";
+            return $"CUR.OPEN.W {Table.Name}";
         }
     }
 }

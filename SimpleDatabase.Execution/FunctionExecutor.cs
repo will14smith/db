@@ -10,7 +10,7 @@ using SimpleDatabase.Execution.Operations.Jumps;
 using SimpleDatabase.Execution.Operations.Slots;
 using SimpleDatabase.Execution.Operations.Sorting;
 using SimpleDatabase.Execution.Values;
-using SimpleDatabase.Storage;
+using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 
@@ -171,10 +171,10 @@ namespace SimpleDatabase.Execution
             }
         }
 
-        private IRowSerializer CreateRowSerializer(StoredTable table)
+        private IRowSerializer CreateRowSerializer(Table table)
         {
             return new RowSerializer(
-                table.Table,
+                table,
                 new ColumnTypeSerializerFactory()
             );
         }
