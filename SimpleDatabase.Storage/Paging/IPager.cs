@@ -7,7 +7,7 @@ namespace SimpleDatabase.Storage.Paging
         Page Get(PageId id);
         void Flush(PageId id);
 
-        Page Allocate(PageStorageType type);
+        Page Allocate(PageSource source);
         void Free(PageId id);
     }
 }

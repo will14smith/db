@@ -26,7 +26,7 @@ namespace SimpleDatabase.CLI
             _input = input;
             _output = output;
 
-            var storage = new FilePagerStorage(file);
+            var storage = new FilePageStorage(file);
             _pager = new Pager(storage);
 
             _table = CreateTable("table", new[]

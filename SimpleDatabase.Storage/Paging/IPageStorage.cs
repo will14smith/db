@@ -2,9 +2,10 @@ using System;
 
 namespace SimpleDatabase.Storage.Paging
 {
-    public interface IPagerStorage : IDisposable
+    public interface IPageStorage : IDisposable
     {
-        int ByteLength { get; }
+        PageSource Source { get; }
+        int PageCount { get; }
 
         Page Read(PageId id);
         void Write(Page page);

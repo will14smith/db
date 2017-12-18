@@ -7,89 +7,126 @@ namespace SimpleDatabase.Storage.UnitTests.Paging
 {
     public class FilePagerStorageTests : IDisposable
     {
+        private readonly PageSource _source;
         private readonly string _file;
 
         public FilePagerStorageTests()
         {
+            _source = new PageSource.Heap("test");
             _file = Path.GetTempFileName();
         }
 
         [Fact]
+
+        public void Source_ShouldEqualConstructor()
+        {
+            using (var storage = new FilePageStorage(_source, _file))
+            {
+                Assert.Equal(storage.Source, _source);
+            }
+        }
+
+        [Fact]
+
+        public void Read_FromDifferentSource_ShouldThrow()
+        {
+            using (var storage = new FilePageStorage(_source, _file))
+            {
+                Assert.ThrowsAny<Exception>(() => storage.Read(new PageId(new PageSource.Heap("xyz"), 0)));
+            }
+        }
+        [Fact]
+
+        public void Write_ToDifferentSource_ShouldThrow()
+        {
+            using (var storage = new FilePageStorage(_source, _file))
+            {
+                var id = new PageId(new PageSource.Heap("xyz"), 0);
+                var page = new Page(id, new byte[PageLayout.PageSize]);
+
+                Assert.ThrowsAny<Exception>(() => storage.Write(page));
+            }
+        }
+        [Fact]
+
+        public void Write_WithWrongSize_ShouldThrow()
+        {
+            using (var storage = new FilePageStorage(_source, _file))
+            {
+                var id = new PageId(_source, 0);
+                var page = new Page(id, new byte[1]);
+
+                Assert.ThrowsAny<Exception>(() => storage.Write(page));
+            }
+        }
+
+
+        [Fact]
         public void WriteThenRead_ShouldReturnOriginalData()
         {
-            var page = 1;
-            var data = GetData(page);
+            var page = CreatePage(0);
 
-            using (var storage = new FilePagerStorage(_file))
+            using (var storage = new FilePageStorage(_source, _file))
             {
-                storage.Write(data, page);
-                var result = storage.Read(page);
+                storage.Write(page);
+                var result = storage.Read(page.Id);
 
-                Assert.Equal(data.Data, result.Data);
+                Assert.Equal(page.Data, result.Data);
             }
         }
 
         [Fact]
         public void SameFileSecondInstance_ShouldReadOriginalData()
         {
-            var page = 1;
-            var data = GetData(page);
+            var page = CreatePage(0);
 
-            using (var storage = new FilePagerStorage(_file))
+            using (var storage = new FilePageStorage(_source, _file))
             {
-                storage.Write(data, page);
+                storage.Write(page);
             }
-            using (var storage = new FilePagerStorage(_file))
+            using (var storage = new FilePageStorage(_source, _file))
             {
-                var result = storage.Read(page);
+                var result = storage.Read(page.Id);
 
-                Assert.Equal(data.Data, result.Data);
+                Assert.Equal(page.Data, result.Data);
             }
         }
 
         [Fact]
-        public void ByteLength_ShouldBeFileLength()
+        public void PageCount_WithSinglePage_ShouldBeCorrect()
         {
-            var page = 1;
-            var data = GetData(page);
+            var page = CreatePage(0);
 
-            var expectedSize = (page + 1) * Pager.PageSize;
-
-            using (var storage = new FilePagerStorage(_file))
+            using (var storage = new FilePageStorage(_source, _file))
             {
-                storage.Write(data, page);
+                storage.Write(page);
 
-                Assert.Equal(expectedSize, storage.ByteLength);
+                Assert.Equal(1, storage.PageCount);
             }
         }
         [Fact]
-        public void ByteLengthOnSecondInstance_ShouldBeFileLength()
+        public void PageCount_WithMultiplePages_ShouldBeCorrect()
         {
-            var page = 1;
-            var data = GetData(page);
-
-            var expectedSize = (page + 1) * Pager.PageSize;
-
-            using (var storage = new FilePagerStorage(_file))
+            using (var storage = new FilePageStorage(_source, _file))
             {
-                storage.Write(data, page);
-            }
-            using (var storage = new FilePagerStorage(_file))
-            {
-                Assert.Equal(expectedSize, storage.ByteLength);
+                storage.Write(CreatePage(0));
+                storage.Write(CreatePage(1));
+                storage.Write(CreatePage(2));
+
+                Assert.Equal(3, storage.PageCount);
             }
         }
 
-        private static Page GetData(int pageNumber)
+        private Page CreatePage(int index)
         {
-            var page = new byte[Pager.PageSize];
+            var data = new byte[PageLayout.PageSize];
 
-            for (var i = 0; i < Pager.PageSize; i++)
+            for (var i = 0; i < data.Length; i++)
             {
-                page[i] = (byte)i;
+                data[i] = (byte)i;
             }
 
-            return new Page(pageNumber, page);
+            return new Page(new PageId(_source, index), data);
         }
 
         public void Dispose()

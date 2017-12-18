@@ -90,7 +90,7 @@ namespace SimpleDatabase.Execution.UnitTests
             var file = Path.GetTempFileName();
             try
             {
-                using (var pager = new Pager(new FilePagerStorage(file)))
+                using (var pager = new Pager(new FilePageStorage(file)))
                 {
                     // TODO clean this up 
 

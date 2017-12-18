@@ -1,103 +1,89 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace SimpleDatabase.Storage.Paging
 {
     public class Pager : IPager
     {
-        public const int MaxPages = 2000;
+        private readonly IPageStorageFactory _storageFactory;
 
-        private readonly IPagerStorage _storage;
-        private readonly Page[] _pages = new Page[MaxPages];
+        private readonly Dictionary<PageSource, IPageStorage> _storage = new Dictionary<PageSource, IPageStorage>();
+        private readonly Dictionary<PageId, Page> _pages = new Dictionary<PageId, Page>();
 
-        private int _pageCount;
-
-        public Pager(IPagerStorage storage)
+        public Pager(IPageStorageFactory storageFactory)
         {
-            _storage = storage;
-
-            _pageCount = _storage.ByteLength / PageLayout.PageSize;
-            if (_storage.ByteLength % PageLayout.PageSize != 0)
-            {
-                throw new InvalidOperationException("storage does not have a whole number of pages");
-
-            }
-
+            _storageFactory = storageFactory;
         }
 
         public Page Get(PageId id)
         {
-            if (id.StorageType != PageStorageType.Tree)
+            var storage = GetStorage(id.Source);
+
+            if (_pages.TryGetValue(id, out var page))
+            {
+                return page;
+            }
+
+            if (id.Index >= storage.PageCount)
             {
                 throw new NotImplementedException();
             }
 
-            var index = id.Index;
-            if (index > MaxPages)
-            {
-                throw new ArgumentOutOfRangeException(nameof(index), $"Index was larger than the number of allowed pages ({MaxPages})");
-            }
+            page = storage.Read(id);
+            _pages.Add(id, page);
 
-            if (_pages[index] == null)
-            {
-                // TODO check page is allocated
-                _pages[index] = _storage.Read(id);
-
-                if (index >= _pageCount)
-                {
-                    _pageCount = index + 1;
-                }
-            }
-
-            return _pages[index];
+            return page;
         }
 
         public void Flush(PageId id)
         {
-            if (id.StorageType != PageStorageType.Tree)
+            var storage = GetStorage(id.Source);
+
+            if (!_pages.TryGetValue(id, out var page))
             {
-                throw new NotImplementedException();
+                throw new InvalidOperationException("Cannot flush page that hasn't been loaded...");
             }
 
-            var index = id.Index;
-            if (_pages[index] == null)
-            {
-                return;
-            }
-
-            _storage.Write(_pages[index]);
+            storage.Write(page);
         }
 
-        public Page Allocate(PageStorageType type)
+        public Page Allocate(PageSource source)
         {
-            if (type != PageStorageType.Tree)
-            {
-                throw new NotImplementedException();
-            }
+            var storage = GetStorage(source);
 
             // TODO check free list
-            var unusedIndex = _pageCount;
-            return Get(new PageId(type, unusedIndex));
+            var unusedIndex = storage.PageCount;
+            return Get(new PageId(source, unusedIndex));
         }
 
         public void Free(PageId id)
         {
-            if (id.StorageType != PageStorageType.Tree)
-            {
-                throw new NotImplementedException();
-            }
+            var storage = GetStorage(id.Source);
 
             // TODO implement a free list
         }
 
-        public void Dispose()
+        private IPageStorage GetStorage(PageSource source)
         {
-            for (var i = 0; i < _pageCount; i++)
+            if (_storage.TryGetValue(source, out var storage))
             {
-                Flush(new PageId(PageStorageType.Tree, i));
-                _pages[i] = null;
+                return storage;
             }
 
-            _storage?.Dispose();
+            storage = _storageFactory.Create(source);
+            _storage.Add(source, storage);
+
+            return storage;
+        }
+
+        public void Dispose()
+        {
+            // TODO Flush all?
+
+            foreach (var s in _storage)
+            {
+                s.Value.Dispose();
+            }
         }
     }
 }

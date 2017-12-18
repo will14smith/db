@@ -1,14 +1,14 @@
 namespace SimpleDatabase.Storage.Paging
 {
-    public struct PageId
+    public class PageId
     {
-        public PageId(PageStorageType storageType, int index)
+        public PageId(PageSource source, int index)
         {
-            StorageType = storageType;
+            Source = source;
             Index = index;
         }
 
-        public PageStorageType StorageType { get; }
+        public PageSource Source { get; }
         public int Index { get; }
     }
 }
