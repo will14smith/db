@@ -1,31 +1,16 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 
 namespace SimpleDatabase.Schemas
 {
     public class KeyStructure
     {
-        public int KeyColumns { get; }
-        public int DataColumns { get; }
+        public IReadOnlyList<(Column, KeyOrdering)> Keys { get; }
+        public IReadOnlyList<Column> Data { get; }
 
-        public IReadOnlyList<KeyOrdering> Ordering { get; }
-
-        public KeyStructure(int keyColumns, int dataColumns, IReadOnlyList<KeyOrdering> ordering)
+        public KeyStructure(IReadOnlyList<(Column, KeyOrdering)> keys, IReadOnlyList<Column> data)
         {
-            KeyColumns = keyColumns;
-            DataColumns = dataColumns;
-            Ordering = ordering;
+            Keys = keys;
+            Data = data;
         }
-
-        public override string ToString()
-        {
-            return $"{{{KeyColumns}+{DataColumns},{string.Join("", Ordering.Select(x => x == KeyOrdering.Ascending ? "+" : "-"))}}}";
-        }
-    }
-
-    public enum KeyOrdering
-    {
-        Ascending,
-        Descending
     }
 }

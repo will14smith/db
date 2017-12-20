@@ -8,15 +8,16 @@ namespace SimpleDatabase.Execution.Trees
 {
     public class TreeTraverser
     {
-        private readonly IPager _pager;
+        private readonly ISourcePager _pager;
         private readonly IRowSerializer _rowSerializer;
-        private readonly Table _table;
 
-        public TreeTraverser(IPager pager, IRowSerializer rowSerializer, Table table)
+        private readonly Index _index;
+
+        public TreeTraverser(ISourcePager pager, IRowSerializer rowSerializer, Index index)
         {
             _pager = pager;
             _rowSerializer = rowSerializer;
-            _table = table;
+            _index = index;
         }
 
         public Cursor StartCursor()
@@ -24,7 +25,7 @@ namespace SimpleDatabase.Execution.Trees
             var strategy = new TreeStartSearcher();
             var seacher = new TreeSearcher(_pager, strategy, _rowSerializer);
 
-            return seacher.FindCursor(_table.RootPageId);
+            return seacher.FindCursor(_index.RootPage);
         }
 
         public Cursor AdvanceCursor(Cursor cursor)
@@ -34,17 +35,20 @@ namespace SimpleDatabase.Execution.Trees
                 throw new InvalidOperationException("End of table - cannot advance");
             }
 
-            var page = _pager.Get(cursor.PageNumber);
+            var page = _pager.Get(cursor.Page.Index);
             var node = LeafNode.Read(_rowSerializer, page);
 
             var cellNumber = cursor.CellNumber + 1;
 
             if (cellNumber < node.CellCount)
             {
-                return CreateCursor(
-                    cursor.PageNumber,
+                var lastCell = cellNumber >= node.CellCount;
+                var noNextLeaf = node.NextLeaf == 0;
+
+                return new Cursor(
+                    cursor.Page,
                     cellNumber,
-                    node
+                    lastCell && noNextLeaf
                 );
             }
 
@@ -52,31 +56,16 @@ namespace SimpleDatabase.Execution.Trees
             if (nextPageNumber == 0)
             {
                 return new Cursor(
-                    cursor.PageNumber,
+                    cursor.Page,
                     cellNumber,
                     true
                 );
             }
 
-            var nextPage = _pager.Get(nextPageNumber);
-            var nextNode = LeafNode.Read(_rowSerializer, nextPage);
-
-            return CreateCursor(
-                nextPageNumber,
-                0,
-                nextNode
-            );
-        }
-
-        public static Cursor CreateCursor(int pageNumber, int cellNumber, LeafNode node)
-        {
-            var lastCell = cellNumber >= node.CellCount;
-            var noNextLeaf = node.NextLeaf == 0;
-
             return new Cursor(
-                pageNumber,
-                cellNumber,
-                lastCell && noNextLeaf
+                new PageId(_pager.Source, nextPageNumber), 
+                0,
+                false
             );
         }
     }

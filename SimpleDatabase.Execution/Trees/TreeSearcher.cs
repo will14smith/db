@@ -7,26 +7,26 @@ namespace SimpleDatabase.Execution.Trees
 {
     public class TreeSearcher
     {
-        private readonly IPager _pager;
+        private readonly ISourcePager _pager;
         private readonly ITreeSearchStrategy _treeSearchStrategy;
         private readonly IRowSerializer _rowSerializer;
 
-        public TreeSearcher(IPager pager, ITreeSearchStrategy treeSearchStrategy, IRowSerializer rowSerializer)
+        public TreeSearcher(ISourcePager pager, ITreeSearchStrategy treeSearchStrategy, IRowSerializer rowSerializer)
         {
             _pager = pager;
             _treeSearchStrategy = treeSearchStrategy;
             _rowSerializer = rowSerializer;
         }
 
-        public Cursor FindCursor(int pageNumber)
+        public Cursor FindCursor(int pageIndex)
         {
-            var page = _pager.Get(new PageId(PageStorageType.Tree, pageNumber));
+            var page = _pager.Get(pageIndex);
             var node = Node.Read(_rowSerializer, page);
 
             switch (node)
             {
                 case LeafNode leafNode:
-                    return LeafNodeFind(leafNode, pageNumber);
+                    return LeafNodeFind(leafNode, pageIndex);
                 case InternalNode internalNode:
                     return InternalNodeFind(internalNode);
                 default:
@@ -34,11 +34,18 @@ namespace SimpleDatabase.Execution.Trees
             }
         }
 
-        private Cursor LeafNodeFind(LeafNode node, int pageNumber)
+        private Cursor LeafNodeFind(LeafNode node, int pageIndex)
         {
             var cellNumber = _treeSearchStrategy.FindCell(node);
 
-            return TreeTraverser.CreateCursor(pageNumber, cellNumber, node);
+            var lastCell = cellNumber >= node.CellCount;
+            var noNextLeaf = node.NextLeaf == 0;
+
+            return new Cursor(
+                new PageId(_pager.Source, pageIndex),
+                cellNumber,
+                lastCell && noNextLeaf
+            );
         }
 
         private Cursor InternalNodeFind(InternalNode node)

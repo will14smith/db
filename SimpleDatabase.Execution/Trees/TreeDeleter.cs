@@ -8,20 +8,20 @@ namespace SimpleDatabase.Execution.Trees
 {
     public class TreeDeleter
     {
-        private readonly IPager _pager;
+        private readonly ISourcePager _pager;
         private readonly IRowSerializer _rowSerializer;
-        private readonly Table _table;
+        private readonly Index _index;
 
-        public TreeDeleter(IPager pager, IRowSerializer rowSerializer, Table table)
+        public TreeDeleter(ISourcePager pager, IRowSerializer rowSerializer, Index index)
         {
             _pager = pager;
             _rowSerializer = rowSerializer;
-            _table = table;
+            _index = index;
         }
 
         public TreeDeleteResult Delete(int key)
         {
-            var page = _pager.Get(_table.RootPageId);
+            var page = _pager.Get(_index.RootPage);
             var node = Node.Read(_rowSerializer, page);
 
             Result result;
@@ -68,7 +68,7 @@ namespace SimpleDatabase.Execution.Trees
             var childPageNumber = underflowNode.GetChild(0);
             var childPage = _pager.Get(childPageNumber);
 
-            Array.Copy(childPage.Data, page.Data, Pager.PageSize);
+            Array.Copy(childPage.Data, page.Data, PageLayout.PageSize);
             _pager.Free(childPageNumber);
         }
 
@@ -187,13 +187,13 @@ namespace SimpleDatabase.Execution.Trees
             {
                 Merge(prevNode, childNode);
                 InternalDeleteNoUnderflow(internalNode, childIndex);
-                _pager.Free(childNode.PageId);
+                _pager.Free(childNode.PageId.Index);
             }
             else
             {
                 Merge(childNode, nextNode);
                 InternalDeleteNoUnderflow(internalNode, childIndex + 1);
-                _pager.Free(nextNode.PageId);
+                _pager.Free(nextNode.PageId.Index);
             }
 
             var isValidInternalNode = (internalNode.IsRoot && internalNode.KeyCount > 0) || internalNode.KeyCount >= internalNode.Layout.InternalNodeMinCells;

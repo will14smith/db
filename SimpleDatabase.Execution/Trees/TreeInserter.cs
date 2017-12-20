@@ -8,20 +8,22 @@ namespace SimpleDatabase.Execution.Trees
 {
     public class TreeInserter
     {
-        private readonly IPager _pager;
+        private readonly ISourcePager _pager;
         private readonly IRowSerializer _rowSerializer;
-        private readonly Table _table;
 
-        public TreeInserter(IPager pager, IRowSerializer rowSerializer, Table table)
+        private readonly Index _index;
+
+        public TreeInserter(ISourcePager pager, IRowSerializer rowSerializer, Index index)
         {
             _pager = pager;
             _rowSerializer = rowSerializer;
-            _table = table;
+
+            _index = index;
         }
 
         public TreeInsertResult Insert(int key, Row row)
         {
-            var page = _pager.Get(_table.RootPageId);
+            var page = _pager.Get(_index.RootPage);
             var node = Node.Read(_rowSerializer, page);
 
             Result result;
@@ -55,7 +57,7 @@ namespace SimpleDatabase.Execution.Trees
 
         private void SplitRoot(Result.WasSplit split)
         {
-            if (_table.RootPageId != split.Left)
+            if (_index.RootPage != split.Left)
             {
                 throw new InvalidOperationException("Uhm...?");
             }
@@ -64,7 +66,7 @@ namespace SimpleDatabase.Execution.Trees
             var rightPage = _pager.Get(split.Right);
             var rootPage = _pager.Get(split.Left);
 
-            Array.Copy(rootPage.Data, leftPage.Data, Pager.PageSize);
+            Array.Copy(rootPage.Data, leftPage.Data, PageLayout.PageSize);
             var leftNode = Node.Read(_rowSerializer, leftPage);
             leftNode.IsRoot = false;
 
@@ -72,8 +74,8 @@ namespace SimpleDatabase.Execution.Trees
             rootNode.IsRoot = true;
 
             rootNode.KeyCount = 1;
-            rootNode.SetCell(0, leftPage.Number, split.Key);
-            rootNode.SetChild(1, rightPage.Number);
+            rootNode.SetCell(0, leftPage.Id.Index, split.Key);
+            rootNode.SetChild(1, rightPage.Id.Index);
         }
 
         private Result LeafInsert(LeafNode node, int key, Row row)
@@ -89,7 +91,7 @@ namespace SimpleDatabase.Execution.Trees
             var newNode = LeafNode.New(_rowSerializer, newPage);
 
             newNode.NextLeaf = node.NextLeaf;
-            node.NextLeaf = newPage.Number;
+            node.NextLeaf = newPage.Id.Index;
 
             var threshold = newNode.Layout.LeafNodeLeftSplitCount;
             for (var j = 0; j < newNode.Layout.LeafNodeRightSplitCount; ++j)
@@ -111,8 +113,8 @@ namespace SimpleDatabase.Execution.Trees
 
             return new Result.WasSplit(
                 node.GetMaxKey(),
-                node.PageId,
-                newNode.PageId
+                node.PageId.Index,
+                newNode.PageId.Index
             );
         }
 
@@ -179,7 +181,7 @@ namespace SimpleDatabase.Execution.Trees
 
             InnerInsertNonFull(key < splitKey ? node : newNode, key, row);
 
-            return new Result.WasSplit(splitKey, node.PageId, newNode.PageId);
+            return new Result.WasSplit(splitKey, node.PageId.Index, newNode.PageId.Index);
         }
 
         private Result InnerInsertNonFull(InternalNode node, int key, Row row)

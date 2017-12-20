@@ -1,15 +1,17 @@
-﻿namespace SimpleDatabase.Execution.Trees
+﻿using SimpleDatabase.Storage.Paging;
+
+namespace SimpleDatabase.Execution.Trees
 {
     public class Cursor
     {
-        public int PageNumber { get; }
+        public PageId Page { get; }
         public int CellNumber { get; }
 
         public bool EndOfTable { get; }
 
-        public Cursor(int pageNumber, int cellNumber, bool endOfTable)
+        public Cursor(PageId page, int cellNumber, bool endOfTable)
         {
-            PageNumber = pageNumber;
+            Page = page;
             CellNumber = cellNumber;
 
             EndOfTable = endOfTable;

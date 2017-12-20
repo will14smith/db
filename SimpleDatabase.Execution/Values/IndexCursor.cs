@@ -8,25 +8,30 @@ using SimpleDatabase.Utils;
 
 namespace SimpleDatabase.Execution.Values
 {
-    public class TableCursor : ICursor, IInsertTarget, IDeleteTarget
+    public class IndexCursor : ICursor, IInsertTarget, IDeleteTarget
     {
         private readonly Option<Cursor> _cursor;
         private readonly IPager _pager;
         private readonly IRowSerializer _rowSerializer;
 
         public Table Table { get; }
+        public Index Index { get; }
         public bool Writable { get; }
 
-        public TableCursor(IPager pager, IRowSerializer rowSerializer, Table table, bool writable)
+        private PageSource Source => new PageSource.Index(Table.Name, Index.Name);
+        private ISourcePager SourcePager => new SourcePager(_pager, Source);
+
+        public IndexCursor(IPager pager, IRowSerializer rowSerializer, Table table, Index index, bool writable)
         {
             _pager = pager;
             _rowSerializer = rowSerializer;
 
             Table = table;
+            Index = index;
             Writable = writable;
         }
-        public TableCursor(Cursor cursor, TableCursor tableCursor)
-            : this(tableCursor._pager, tableCursor._rowSerializer, tableCursor.Table, tableCursor.Writable)
+        public IndexCursor(Cursor cursor, IndexCursor indexCursor)
+            : this(indexCursor._pager, indexCursor._rowSerializer, indexCursor.Table, indexCursor.Index, indexCursor.Writable)
         {
             _cursor = Option.Some(cursor);
         }
@@ -35,18 +40,18 @@ namespace SimpleDatabase.Execution.Values
 
         public ICursor First()
         {
-            var searcher = new TreeTraverser(_pager, _rowSerializer, Table);
+            var searcher = new TreeTraverser(SourcePager, _rowSerializer, Index);
             var cursor = searcher.StartCursor();
 
-            return new TableCursor(cursor, this);
+            return new IndexCursor(cursor, this);
         }
 
         public ICursor Next()
         {
-            var searcher = new TreeTraverser(_pager, _rowSerializer, Table);
+            var searcher = new TreeTraverser(SourcePager, _rowSerializer, Index);
             var cursor = searcher.AdvanceCursor(_cursor.Value);
 
-            return new TableCursor(cursor, this);
+            return new IndexCursor(cursor, this);
         }
 
         public int Key()
@@ -56,7 +61,7 @@ namespace SimpleDatabase.Execution.Values
 
         public ColumnValue Column(int index)
         {
-            var page = _pager.Get(_cursor.Value.PageNumber);
+            var page = _pager.Get(_cursor.Value.Page);
             var leaf = LeafNode.Read(_rowSerializer, page);
 
             return leaf.GetCellColumn(_cursor.Value.CellNumber, index);
@@ -64,7 +69,7 @@ namespace SimpleDatabase.Execution.Values
 
         public InsertResult Insert(Row row)
         {
-            var inserter = new TreeInserter(_pager, _rowSerializer, Table);
+            var inserter = new TreeInserter(SourcePager, _rowSerializer, Index);
             var insertResult = inserter.Insert(row.GetKey(), row);
             switch (insertResult)
             {
@@ -87,19 +92,19 @@ namespace SimpleDatabase.Execution.Values
             // TODO could this be optimised to not retraverse the tree in TreeDeleter?
             var key = GetKey(_cursor.Value);
 
-            var nextCursor = (TableCursor)Next();
+            var nextCursor = (IndexCursor)Next();
             var nextKey = nextCursor.EndOfTable ? Option.None<int>() : Option.Some(GetKey(nextCursor._cursor.Value));
 
-            var deleter = new TreeDeleter(_pager, rowSerializer, table);
+            var deleter = new TreeDeleter(SourcePager, _rowSerializer, Index);
             var deleteResult = deleter.Delete(key);
 
             switch (deleteResult)
             {
                 case TreeDeleteResult.Success _:
                     {
-                        var newCursor = nextKey.Map(FindKey, () => new Cursor(-1, -1, true));
+                        var newCursor = nextKey.Map(FindKey, () => new Cursor(new PageId(Source, -1), -1, true));
                         
-                        return new DeleteResult.Success(new TableCursor(newCursor, this));
+                        return new DeleteResult.Success(new IndexCursor(newCursor, this));
                     }
 
                 case TreeDeleteResult.KeyNotFound _:
@@ -112,14 +117,14 @@ namespace SimpleDatabase.Execution.Values
 
         private Cursor FindKey(int key)
         {
-            var searcher = new TreeSearcher(_pager, new TreeKeySearcher(key), _rowSerializer);
+            var searcher = new TreeSearcher(SourcePager, new TreeKeySearcher(key), _rowSerializer);
 
-            return searcher.FindCursor(Table.RootPageId);
+            return searcher.FindCursor(Index.RootPage);
         }
 
         private int GetKey(Cursor cursor)
         {
-            var page = _pager.Get(cursor.PageNumber);
+            var page = _pager.Get(cursor.Page);
             var leaf = LeafNode.Read(_rowSerializer, page);
 
             return leaf.GetCellKey(cursor.CellNumber);

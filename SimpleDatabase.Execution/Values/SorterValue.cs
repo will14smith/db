@@ -99,11 +99,11 @@ namespace SimpleDatabase.Execution.Values
 
     public class KeyComparer : IComparer<Row>
     {
-        private readonly KeyStructure _key;
+        private readonly KeyStructure _structure;
 
-        public KeyComparer(KeyStructure key)
+        public KeyComparer(KeyStructure structure)
         {
-            _key = key;
+            _structure = structure;
         }
 
         public int Compare(Row x, Row y)
@@ -111,12 +111,14 @@ namespace SimpleDatabase.Execution.Values
             var xKeys = GetKey(x);
             var yKeys = GetKey(y);
 
-            for (var i = 0; i < _key.KeyColumns; i++)
+            for (var i = 0; i < _structure.Keys.Count; i++)
             {
                 var comparison = Comparer<object>.Default.Compare(xKeys[i], yKeys[i]);
                 if (comparison != 0)
                 {
-                    return _key.Ordering[i] == KeyOrdering.Ascending ? comparison : -comparison;
+                    var (_, ordering) = _structure.Keys[i];
+
+                    return ordering == KeyOrdering.Ascending ? comparison : -comparison;
                 }
             }
 
@@ -125,7 +127,9 @@ namespace SimpleDatabase.Execution.Values
 
         private IReadOnlyList<object> GetKey(Row row)
         {
-            return row.Values.Take(_key.KeyColumns).Select(x => x.Value).ToList();
+            var keyColumnCount = _structure.Keys.Count;
+
+            return row.Values.Take(keyColumnCount).Select(x => x.Value).ToList();
         }
     }
 }

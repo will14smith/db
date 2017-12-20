@@ -13,7 +13,7 @@ namespace SimpleDatabase.Execution
         {
             // TODO aquire read lock
             var table = openReadOperation.Table;
-            var tableCursor = new TableCursor(_pager, CreateRowSerializer(table), table, false);
+            var tableCursor = new IndexCursor(_pager, CreateRowSerializer(table), table, false);
 
             var cursor = new CursorValue(false);
             cursor = cursor.SetNextCursor(tableCursor);
@@ -26,7 +26,7 @@ namespace SimpleDatabase.Execution
         {
             // TODO aquire write lock
             var table = openWriteOperation.Table;
-            var tableCursor = new TableCursor(_pager, CreateRowSerializer(table), table, true);
+            var tableCursor = new IndexCursor(_pager, CreateRowSerializer(table), table, true);
 
             var cursor = new CursorValue(true);
             cursor = cursor.SetNextCursor(tableCursor);
