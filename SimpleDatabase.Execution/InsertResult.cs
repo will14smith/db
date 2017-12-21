@@ -1,8 +1,8 @@
-﻿namespace SimpleDatabase.Execution.Trees
+﻿namespace SimpleDatabase.Execution
 {
-    public abstract class TreeInsertResult
+    public abstract class InsertResult
     {
-        public class Success : TreeInsertResult
+        public class Success : InsertResult
         {
             public int Key { get; }
 
@@ -12,7 +12,7 @@
             }
         }
 
-        public class DuplicateKey : TreeInsertResult
+        public class DuplicateKey : InsertResult
         {
             public int Key { get; }
 

@@ -1,5 +1,5 @@
 ﻿using System;
-using SimpleDatabase.Execution.Trees;
+using SimpleDatabase.Execution.Tables;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
@@ -61,10 +61,7 @@ namespace SimpleDatabase.Execution.Values
 
         public ColumnValue Column(int index)
         {
-            var page = _pager.Get(_cursor.Value.Page);
-            var leaf = LeafNode.Read(_rowSerializer, page);
-
-            return leaf.GetCellColumn(_cursor.Value.CellNumber, index);
+            throw new NotImplementedException();
         }
 
         public InsertResult Insert(Row row)

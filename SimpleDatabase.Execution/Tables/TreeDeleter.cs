@@ -1,10 +1,11 @@
 ﻿using System;
+using SimpleDatabase.Execution.Trees;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 using SimpleDatabase.Storage.Tree;
 
-namespace SimpleDatabase.Execution.Trees
+namespace SimpleDatabase.Execution.Tables
 {
     public class TreeDeleter
     {
@@ -19,7 +20,7 @@ namespace SimpleDatabase.Execution.Trees
             _index = index;
         }
 
-        public TreeDeleteResult Delete(int key)
+        public DeleteResult Delete(int key)
         {
             var page = _pager.Get(_index.RootPage);
             var node = Node.Read(_rowSerializer, page);
@@ -40,14 +41,14 @@ namespace SimpleDatabase.Execution.Trees
             switch (result)
             {
                 case Result.Success _:
-                    return new TreeDeleteResult.Success(key);
+                    return new DeleteResult.Success(key);
 
                 case Result.KeyNotFound keyNotFound:
-                    return new TreeDeleteResult.KeyNotFound(keyNotFound.Key);
+                    return new DeleteResult.KeyNotFound(keyNotFound.Key);
 
                 case Result.NodeUnderflow underflow:
                     PromoteSingleChildToRoot(page, (InternalNode)underflow.Node);
-                    return new TreeDeleteResult.Success(key);
+                    return new DeleteResult.Success(key);
 
                 default:
                     throw new ArgumentOutOfRangeException($"Unhandled result: {result}");

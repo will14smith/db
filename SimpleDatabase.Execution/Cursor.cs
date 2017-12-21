@@ -1,6 +1,6 @@
 ﻿using SimpleDatabase.Storage.Paging;
 
-namespace SimpleDatabase.Execution.Trees
+namespace SimpleDatabase.Execution
 {
     public class Cursor
     {

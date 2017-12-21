@@ -1,10 +1,11 @@
 ﻿using System;
+using SimpleDatabase.Execution.Trees;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 using SimpleDatabase.Storage.Tree;
 
-namespace SimpleDatabase.Execution.Trees
+namespace SimpleDatabase.Execution.Tables
 {
     public class TreeInserter
     {
@@ -21,7 +22,7 @@ namespace SimpleDatabase.Execution.Trees
             _index = index;
         }
 
-        public TreeInsertResult Insert(int key, Row row)
+        public InsertResult Insert(int key, Row row)
         {
             var page = _pager.Get(_index.RootPage);
             var node = Node.Read(_rowSerializer, page);
@@ -42,13 +43,13 @@ namespace SimpleDatabase.Execution.Trees
             switch (result)
             {
                 case Result.Success _:
-                    return new TreeInsertResult.Success(key);
+                    return new InsertResult.Success(key);
                 case Result.DuplicateKey r:
-                    return new TreeInsertResult.DuplicateKey(r.Key);
+                    return new InsertResult.DuplicateKey(r.Key);
 
                 case Result.WasSplit split:
                     SplitRoot(split);
-                    return new TreeInsertResult.Success(key);
+                    return new InsertResult.Success(key);
 
                 default:
                     throw new ArgumentOutOfRangeException();

@@ -1,8 +1,8 @@
-﻿namespace SimpleDatabase.Execution.Trees
+﻿namespace SimpleDatabase.Execution
 {
-    public abstract class TreeDeleteResult
+    public abstract class DeleteResult
     {
-        public class Success : TreeDeleteResult
+        public class Success : DeleteResult
         {
             public int Key { get; }
 
@@ -12,7 +12,7 @@
             }
         }
 
-        public class KeyNotFound : TreeDeleteResult
+        public class KeyNotFound : DeleteResult
         {
             public int Key { get; }
 

@@ -1,10 +1,11 @@
 ﻿using System;
+using SimpleDatabase.Execution.Trees;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 using SimpleDatabase.Storage.Tree;
 
-namespace SimpleDatabase.Execution.Trees
+namespace SimpleDatabase.Execution.Tables
 {
     public class TreeTraverser
     {
