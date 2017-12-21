@@ -64,7 +64,7 @@ namespace SimpleDatabase.Planning.Iterators
             {
                 col.Load(_generator);
             }
-            _generator.Emit(new MakeRowOperation(_key.KeyColumns + _key.DataColumns));
+            _generator.Emit(new MakeRowOperation(_key.Keys.Count + _key.Data.Count));
             _sorter.Load(_generator);
             _generator.Emit(new InsertOperation());
 
@@ -93,11 +93,15 @@ namespace SimpleDatabase.Planning.Iterators
         {
             var innerOutputRow = (IteratorOutput.Row)_inner.Output;
 
-            return new KeyStructure(
-                _orderings.Count,
-                innerOutputRow.Columns.Count,
-                _orderings.Select(x => x.Order == Order.Ascending ? KeyOrdering.Ascending : KeyOrdering.Descending).ToList()
-            );
+            var keys = new List<(Column, KeyOrdering)>();
+            var data = new List<Column>();
+
+            // TODO these are "fake" columns, just to match the counts
+            // TODO the types are null...
+            for(var i = 0; i < _orderings.Count; i++) { keys.Add((new Column($"key{i}", null), _orderings[i].Order == Order.Ascending ? KeyOrdering.Ascending : KeyOrdering.Descending)); }
+            for(var i = 0; i < innerOutputRow.Columns.Count; i++) { data.Add(new Column($"data{i}", null)); }
+
+            return new KeyStructure(keys, data);
         }
 
         private IteratorOutput GenerateOutput()

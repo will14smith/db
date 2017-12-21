@@ -42,7 +42,7 @@ namespace SimpleDatabase.Planning
                         if (!columns.Any())
                         {
                             var table = _database.GetTable(insert.Table);
-                            columns = table.Table.Columns.Select(x => x.Name).ToList();
+                            columns = table.Columns.Select(x => x.Name).ToList();
                         }
 
                         var input = new ConstantNode(columns, insert.Values);

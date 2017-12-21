@@ -6,20 +6,20 @@ namespace SimpleDatabase.Execution.Operations.Cursors
     /// ... -> ..., ReadOnlyCursor
     ///    
     /// Aquires a read lock on the database
-    /// Opens a read-only cursor on the b-tree with a root at the specified page number
+    /// Opens a read-only cursor on the specified table
     /// </summary>
-    public class OpenReadOperation : IOperation
+    public class OpenReadTableOperation : IOperation
     {
         public Table Table { get; }
 
-        public OpenReadOperation(Table table)
+        public OpenReadTableOperation(Table table)
         {
             Table = table;
         }
 
         public override string ToString()
         {
-            return $"CUR.OPEN.R {Table.Name}";
+            return $"CUR.OPEN.RT {Table.Name}";
         }
     }
 }

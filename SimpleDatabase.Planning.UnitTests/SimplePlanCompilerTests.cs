@@ -79,7 +79,7 @@ namespace SimpleDatabase.Planning.UnitTests
         {
             var database = new Database(new[]
             {
-                new StoredTable(new Table("table", new []{ new Column("id", new ColumnType.Integer()), new Column("name", new ColumnType.String(127)), new Column("email", new ColumnType.String(255)) }), 0)
+                new Table("table", new []{ new Column("id", new ColumnType.Integer()), new Column("name", new ColumnType.String(127)), new Column("email", new ColumnType.String(255)) }, new Index[0])
             });
             var compiler = new PlanCompiler(database);
 

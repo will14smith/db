@@ -103,7 +103,9 @@ namespace SimpleDatabase.Execution
             switch (operation)
             {
                 // Cursor
-                case OpenReadOperation openRead:
+                case OpenReadTableOperation openRead:
+                    return Execute(state, openRead);
+                case OpenReadIndexOperation openRead:
                     return Execute(state, openRead);
                 case OpenWriteOperation openWrite:
                     return Execute(state, openWrite);

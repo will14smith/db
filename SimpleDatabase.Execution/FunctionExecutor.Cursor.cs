@@ -9,11 +9,25 @@ namespace SimpleDatabase.Execution
 {
     public partial class FunctionExecutor
     {
-        private (FunctionState, Result) Execute(FunctionState state, OpenReadOperation openReadOperation)
+        private (FunctionState, Result) Execute(FunctionState state, OpenReadTableOperation openReadOperation)
         {
             // TODO aquire read lock
             var table = openReadOperation.Table;
-            var tableCursor = new IndexCursor(_pager, CreateRowSerializer(table), table, false);
+            var tableCursor = new HeapCursor(_pager, CreateRowSerializer(table), table, false);
+
+            var cursor = new CursorValue(false);
+            cursor = cursor.SetNextCursor(tableCursor);
+
+            state = state.PushValue(cursor);
+            return (state, new Result.Next());
+        }
+
+        private (FunctionState, Result) Execute(FunctionState state, OpenReadIndexOperation openReadOperation)
+        {
+            // TODO aquire read lock
+            var table = openReadOperation.Table;
+            var index = openReadOperation.Index;
+            var tableCursor = new IndexCursor(_pager, CreateRowSerializer(table), table, index, false);
 
             var cursor = new CursorValue(false);
             cursor = cursor.SetNextCursor(tableCursor);
@@ -26,10 +40,10 @@ namespace SimpleDatabase.Execution
         {
             // TODO aquire write lock
             var table = openWriteOperation.Table;
-            var tableCursor = new IndexCursor(_pager, CreateRowSerializer(table), table, true);
+            var heapCursor = new HeapCursor(_pager, CreateRowSerializer(table), table, true);
 
             var cursor = new CursorValue(true);
-            cursor = cursor.SetNextCursor(tableCursor);
+            cursor = cursor.SetNextCursor(heapCursor);
 
             state = state.PushValue(cursor);
             return (state, new Result.Next());

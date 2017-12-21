@@ -6,7 +6,7 @@ namespace SimpleDatabase.Execution.Operations.Cursors
     /// ... -> ..., WritableCursor
     ///    
     /// Aquires a write lock on the database
-    /// Opens a read/write cursor on the b-tree with a root at the specified page number
+    /// Opens a read/write cursor on the specified table
     /// </summary>
     public class OpenWriteOperation : IOperation
     {

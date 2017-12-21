@@ -3,19 +3,19 @@ using SimpleDatabase.Execution;
 using SimpleDatabase.Execution.Operations;
 using SimpleDatabase.Execution.Operations.Cursors;
 using SimpleDatabase.Planning.Items;
-using SimpleDatabase.Storage;
+using SimpleDatabase.Schemas;
 
 namespace SimpleDatabase.Planning.Iterators
 {
     public class ScanTableIterator : IIterator
     {
         private readonly IOperationGenerator _generator;
-        private readonly StoredTable _table;
+        private readonly Table _table;
         private readonly bool _writable;
 
         private readonly SlotItem _cursor;
 
-        public ScanTableIterator(IOperationGenerator generator, StoredTable table, bool writable)
+        public ScanTableIterator(IOperationGenerator generator, Table table, bool writable)
         {
             _generator = generator;
             _table = table;
@@ -30,7 +30,8 @@ namespace SimpleDatabase.Planning.Iterators
 
         public void GenerateInit()
         {
-            _generator.Emit(_writable ? (IOperation)new OpenWriteOperation(_table) : new OpenReadOperation(_table));
+            // TODO handle index scan here?
+            _generator.Emit(_writable ? (IOperation)new OpenWriteOperation(_table) : new OpenReadTableOperation(_table));
             _generator.Emit(new FirstOperation());
             _cursor.Store(_generator);
         }
@@ -46,10 +47,10 @@ namespace SimpleDatabase.Planning.Iterators
         {
             var columns = new List<IteratorOutput.Named>();
 
-            for (var index = 0; index < _table.Table.Columns.Count; index++)
+            for (var index = 0; index < _table.Columns.Count; index++)
             {
-                var column = _table.Table.Columns[index];
-                var name = new IteratorOutputName.TableColumn(_table.Table.Name, column.Name);
+                var column = _table.Columns[index];
+                var name = new IteratorOutputName.TableColumn(_table.Name, column.Name);
                 var value = new ColumnItem(_cursor, index);
 
                 columns.Add(new IteratorOutput.Named(name, value));

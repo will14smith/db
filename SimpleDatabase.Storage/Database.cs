@@ -7,7 +7,7 @@ namespace SimpleDatabase.Storage
     public class Database
     {
         private readonly IReadOnlyDictionary<string, Table> _tables;
-
+            
         public Database(IEnumerable<Table> tables)
         {
             _tables = tables.ToDictionary(x => x.Name);

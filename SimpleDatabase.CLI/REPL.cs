@@ -8,8 +8,6 @@ using SimpleDatabase.Schemas.Types;
 using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
-using SimpleDatabase.Storage.Tree;
-using Table = SimpleDatabase.Schemas.Table;
 
 namespace SimpleDatabase.CLI
 {
@@ -19,14 +17,14 @@ namespace SimpleDatabase.CLI
         private readonly IREPLOutput _output;
 
         private readonly Pager _pager;
-        private readonly StoredTable _table;
+        private readonly Table _table;
 
-        public REPL(IREPLInput input, IREPLOutput output, string file)
+        public REPL(IREPLInput input, IREPLOutput output, string folder)
         {
             _input = input;
             _output = output;
 
-            var storage = new FilePageStorage(file);
+            var storage = new FolderPageSourceFactory(folder);
             _pager = new Pager(storage);
 
             _table = CreateTable("table", new[]
@@ -37,21 +35,13 @@ namespace SimpleDatabase.CLI
             });
         }
 
-        private StoredTable CreateTable(string name, Column[] columns)
+        private Table CreateTable(string name, Column[] columns)
         {
-            var table = new Table(name, columns);
+            var table = new Table(name, columns, new Index[0]);
 
-            var rootPage = _pager.Allocate(PageStorageType.Tree);
-            var rowSerializer = CreateRowSerializer(table);
-            var node = LeafNode.New(rowSerializer, rootPage);
-            node.IsRoot = true;
-            _pager.Flush(rootPage.Id);
+            // TODO allocate heap?
 
-            return new StoredTable(table, rootPage.Id);
-        }
-        private static RowSerializer CreateRowSerializer(Table table)
-        {
-            return new RowSerializer(table, new ColumnTypeSerializerFactory());
+            return table;
         }
 
         public ExitCode Run()
@@ -119,7 +109,12 @@ namespace SimpleDatabase.CLI
             }
             if (input == ".btree")
             {
-                MetaCommands.PrintBTree(_output, _pager, _table);
+                var index = _table.Indices.FirstOrDefault();
+                if (index != null)
+                {
+                    MetaCommands.PrintBTree(_output, _pager, _table, index);
+                }
+
                 return new MetaCommandResponse.Success();
             }
 

@@ -1,7 +1,7 @@
 ﻿using SimpleDatabase.Execution;
 using SimpleDatabase.Execution.Operations.Cursors;
 using SimpleDatabase.Planning.Items;
-using SimpleDatabase.Storage;
+using SimpleDatabase.Schemas;
 
 namespace SimpleDatabase.Planning.Iterators
 {
@@ -9,11 +9,11 @@ namespace SimpleDatabase.Planning.Iterators
     {
         private readonly IOperationGenerator _generator;
         private readonly IIterator _input;
-        private readonly StoredTable _table;
+        private readonly Table _table;
 
         private readonly SlotItem _cursor;
 
-        public InsertIterator(IOperationGenerator generator, IIterator input, StoredTable table)
+        public InsertIterator(IOperationGenerator generator, IIterator input, Table table)
         {
             _generator = generator;
             _input = input;

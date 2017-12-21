@@ -1,6 +1,5 @@
 ﻿using System;
 using SimpleDatabase.Schemas;
-using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 using SimpleDatabase.Storage.Tree;
@@ -9,14 +8,16 @@ namespace SimpleDatabase.CLI
 {
     public class MetaCommands
     {
-        public static void PrintBTree(IREPLOutput output, Pager pager, StoredTable table)
+        public static void PrintBTree(IREPLOutput output, Pager pager, Table table, Index index)
         {
             output.WriteLine("Tree:");
 
-            PrintNode(output, pager, table.Table, table.RootPageId, 0);
+            var sourcePager = new SourcePager(pager, new PageSource.Index(table.Name, index.Name));
+
+            PrintNode(output, sourcePager, table, index.RootPage, 0);
         }
 
-        private static void PrintNode(IREPLOutput output, Pager pager, Table table, int pageNumber, int level)
+        private static void PrintNode(IREPLOutput output, ISourcePager pager, Table table, int pageNumber, int level)
         {
             var page = pager.Get(pageNumber);
             var node = Node.Read(new RowSerializer(table, new ColumnTypeSerializerFactory()), page);

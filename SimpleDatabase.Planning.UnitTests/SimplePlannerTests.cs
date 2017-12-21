@@ -5,19 +5,20 @@ using SimpleDatabase.Planning.Nodes;
 using SimpleDatabase.Storage;
 using SimpleDatabase.Utils;
 using Xunit;
+using Table = SimpleDatabase.Schemas.Table;
 
 namespace SimpleDatabase.Planning.UnitTests
 {
     public class SimplePlannerTests
     {
-        private readonly Database _database = new Database(new StoredTable[0]);
+        private readonly Database _database = new Database(new Table[0]);
 
         [Fact]
         public void Test_Star_NoFilter()
         {
             var statement = new SelectStatement(
                 new List<ResultColumn> { new ResultColumn.Star(Option.None<string>()) },
-                new Table.TableName("table"),
+                new Parsing.Statements.Table.TableName("table"),
                 Option.None<Expression>(),
                 new OrderExpression[0]
             );
@@ -40,7 +41,7 @@ namespace SimpleDatabase.Planning.UnitTests
                     new ResultColumn.Expression(new ColumnNameExpression("name"), Option.None<string>()),
                     new ResultColumn.Expression(new ColumnNameExpression("email"), Option.None<string>()),
                 },
-                new Table.TableName("table"),
+                new Parsing.Statements.Table.TableName("table"),
                 Option.None<Expression>(),
                 new OrderExpression[0]
             );
@@ -60,7 +61,7 @@ namespace SimpleDatabase.Planning.UnitTests
         {
             var statement = new SelectStatement(
                 new List<ResultColumn> { new ResultColumn.Star(Option.None<string>()) },
-                new Table.TableName("table"),
+                new Parsing.Statements.Table.TableName("table"),
                 Option.Some<Expression>(new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a"))),
                 new OrderExpression[0]
             );
@@ -81,7 +82,7 @@ namespace SimpleDatabase.Planning.UnitTests
         {
             var statement = new SelectStatement(
                 new List<ResultColumn> { new ResultColumn.Star(Option.None<string>()) },
-                new Table.TableName("table"),
+                new Parsing.Statements.Table.TableName("table"),
                 Option.None<Expression>(),
                 new[] { new OrderExpression(new ColumnNameExpression("name"), Order.Ascending) }
             );
