@@ -2,12 +2,12 @@
 {
     public interface IDeleteTarget
     {
-        DeleteResult Delete();
+        DeleteTargetResult Delete();
     }
 
-    public abstract class DeleteResult
+    public abstract class DeleteTargetResult
     {
-        public class Success : DeleteResult
+        public class Success : DeleteTargetResult
         {
             public ICursor NextCursor { get; }
 

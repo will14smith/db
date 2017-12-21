@@ -1,8 +1,8 @@
-﻿namespace SimpleDatabase.Execution
+﻿namespace SimpleDatabase.Execution.Tables
 {
-    public abstract class DeleteResult
+    public abstract class InsertResult
     {
-        public class Success : DeleteResult
+        public class Success : InsertResult
         {
             public int Key { get; }
 
@@ -12,11 +12,11 @@
             }
         }
 
-        public class KeyNotFound : DeleteResult
+        public class DuplicateKey : InsertResult
         {
             public int Key { get; }
 
-            public KeyNotFound(int key)
+            public DuplicateKey(int key)
             {
                 Key = key;
             }

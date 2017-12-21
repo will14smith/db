@@ -4,11 +4,11 @@ namespace SimpleDatabase.Execution.Values
 {
     public interface IInsertTarget
     {
-        InsertResult Insert(Row row);
+        InsertTargetResult Insert(Row row);
     }
 
-    public abstract class InsertResult
+    public abstract class InsertTargetResult
     {
-        public class Success : InsertResult { }
+        public class Success : InsertTargetResult { }
     }
 }

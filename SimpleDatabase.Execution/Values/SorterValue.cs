@@ -17,7 +17,7 @@ namespace SimpleDatabase.Execution.Values
             _key = key;
         }
 
-        public InsertResult Insert(Row row)
+        public InsertTargetResult Insert(Row row)
         {
             if (_frozen)
             {
@@ -27,7 +27,7 @@ namespace SimpleDatabase.Execution.Values
             // TODO check row matches key structure
             // TODO allow duplicates?
             _rows.Add(row);
-            return new InsertResult.Success();
+            return new InsertTargetResult.Success();
         }
 
         public void Sort()

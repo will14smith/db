@@ -64,14 +64,40 @@ namespace SimpleDatabase.Execution.Values
             throw new NotImplementedException();
         }
 
-        public InsertResult Insert(Row row)
+        public InsertTargetResult Insert(Row row)
         {
-            throw new NotImplementedException();
+            var inserter = new TableInserter(_pager, Table);
+            var result = inserter.Insert(row);
+
+            switch (result)
+            {
+                case InsertResult.Success _:
+                    return new InsertTargetResult.Success();
+
+                case InsertResult.DuplicateKey _:
+                    throw new NotImplementedException("TODO error handling!");
+
+                default:
+                    throw new NotImplementedException($"Unsupported type: {result.GetType().Name}");
+            }
         }
 
-        public DeleteResult Delete()
+        public DeleteTargetResult Delete()
         {
-            throw new NotImplementedException();
+            var deleter = new TableDeleter(_pager, Table);
+            var result = deleter.Delete(Key(), _cursor.Value);
+
+            switch (result)
+            {
+                case DeleteResult.Success _:
+                    throw new NotImplementedException("Figure out next key");
+
+                case DeleteResult.KeyNotFound _:
+                    throw new NotImplementedException("TODO error handling!");
+
+                default:
+                    throw new NotImplementedException($"Unsupported type: {result.GetType().Name}");
+            }
         }
     }
 }

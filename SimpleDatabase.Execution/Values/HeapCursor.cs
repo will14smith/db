@@ -1,5 +1,5 @@
 ﻿using System;
-using SimpleDatabase.Execution.Trees;
+using SimpleDatabase.Execution.Tables;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
@@ -16,8 +16,8 @@ namespace SimpleDatabase.Execution.Values
         public Table Table { get; }
         public bool Writable { get; }
 
-        //private PageSource Source => new PageSource.Heap(Table.Name);
-        //private ISourcePager SourcePager => new SourcePager(_pager, Source);
+        private PageSource Source => new PageSource.Heap(Table.Name);
+        private ISourcePager SourcePager => new SourcePager(_pager, Source);
 
         public HeapCursor(IPager pager, IRowSerializer rowSerializer, Table table, bool writable)
         {
@@ -37,12 +37,18 @@ namespace SimpleDatabase.Execution.Values
 
         public ICursor First()
         {
-            throw new NotImplementedException();
+            var traverser = new HeapTraverser(SourcePager, Table);
+            var cursor = traverser.StartCursor();
+
+            return new HeapCursor(cursor, this);
         }
 
         public ICursor Next()
         {
-            throw new NotImplementedException();
+            var traverser = new HeapTraverser(SourcePager, Table);
+            var cursor = traverser.AdvanceCursor(_cursor.Value);
+
+            return new HeapCursor(cursor, this);
         }
 
         public int Key()
@@ -55,14 +61,40 @@ namespace SimpleDatabase.Execution.Values
             throw new NotImplementedException();
         }
 
-        public InsertResult Insert(Row row)
+        public InsertTargetResult Insert(Row row)
         {
-            throw new NotImplementedException();
+            var inserter = new TableInserter(_pager, Table);
+            var result = inserter.Insert(row);
+
+            switch (result)
+            {
+                case InsertResult.Success _:
+                    return new InsertTargetResult.Success();
+
+                case InsertResult.DuplicateKey _:
+                    throw new NotImplementedException("TODO error handling!");
+
+                default:
+                    throw new NotImplementedException($"Unsupported type: {result.GetType().Name}");
+            }
         }
 
-        public DeleteResult Delete()
+        public DeleteTargetResult Delete()
         {
-            throw new NotImplementedException();
+            var deleter = new TableDeleter(_pager, Table);
+            var result = deleter.Delete(Key(), _cursor.Value);
+
+            switch (result)
+            {
+                case DeleteResult.Success _:
+                    throw new NotImplementedException("Figure out next key");
+                    
+                case DeleteResult.KeyNotFound _:
+                    throw new NotImplementedException("TODO error handling!");
+
+                default:
+                    throw new NotImplementedException($"Unsupported type: {result.GetType().Name}");
+            }
         }
     }
 }

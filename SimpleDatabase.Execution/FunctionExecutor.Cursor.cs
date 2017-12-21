@@ -123,7 +123,7 @@ namespace SimpleDatabase.Execution
             var insertResult = insertTarget.Insert(insertableRow);
             switch (insertResult)
             {
-                case InsertResult.Success _:
+                case InsertTargetResult.Success _:
                     return (state, new Result.Next());
 
                 default:
@@ -141,7 +141,7 @@ namespace SimpleDatabase.Execution
             var deleteResult = deleteTarget.Delete();
             switch (deleteResult)
             {
-                case DeleteResult.Success success:
+                case DeleteTargetResult.Success success:
                     state = state.PushValue(cursorValue.SetNextCursor(success.NextCursor));
                     return (state, new Result.Next());
 
