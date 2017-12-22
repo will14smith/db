@@ -17,9 +17,9 @@ namespace SimpleDatabase.Execution
         {
             _pc = 0;
 
-            foreach (var (label, _) in slotDefinitions)
+            foreach (var kvp in slotDefinitions)
             {
-                _slots.Add(label, null);
+                _slots.Add(kvp.Key, null);
             }
         }
 

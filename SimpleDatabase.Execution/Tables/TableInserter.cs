@@ -29,6 +29,7 @@ namespace SimpleDatabase.Execution.Tables
             foreach (var index in _table.Indices)
             {
                 // TODO get key from row
+                // TODO create virtual "table" with heap key & index data columns
                 var key = 0;
 
                 var treeInserter = new TreeInserter(new SourcePager(_pager, new PageSource.Index(_table.Name, index.Name)), _rowSerializer, index);

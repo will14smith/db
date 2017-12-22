@@ -6,12 +6,12 @@ namespace SimpleDatabase.Storage.Heap
     {
         // header
         public int ItemCountSize => sizeof(byte);
-        public int PaddingSize => 2 * sizeof(byte);
+        public int NextPageIndexSize => sizeof(int);
 
         public int ItemCountOffset => PageTypeOffset + PageTypeSize;
-        public int PaddingOffset => ItemCountOffset + ItemCountSize;
+        public int NextPageIndexOffset => ItemCountOffset + ItemCountSize;
 
-        public int HeaderSize => PageTypeSize + ItemCountSize + PaddingSize;
+        public int HeaderSize => PageTypeSize + ItemCountSize + NextPageIndexSize;
 
         // item pointers array
         public int ItemPointerOffsetSize => sizeof(ushort);

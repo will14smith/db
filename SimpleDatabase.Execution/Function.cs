@@ -21,9 +21,9 @@ namespace SimpleDatabase.Execution
 
             sb.AppendLine("[");
 
-            foreach (var (slot, def) in Slots)
+            foreach (var kvp in Slots)
             {
-                sb.AppendLine("\t" + slot + ": " + def);
+                sb.AppendLine("\t" + kvp.Key + ": " + kvp.Value);
             }
 
             sb.AppendLine("] {");

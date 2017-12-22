@@ -24,11 +24,11 @@ namespace SimpleDatabase.Execution
 
             sb.AppendLine(entryFunction.ToString());
 
-            foreach (var (l, f) in otherFunctions)
+            foreach (var kvp in otherFunctions)
             {
                 sb.AppendLine();
-                sb.AppendLine("func " + l + ":");
-                sb.AppendLine(f.ToString());
+                sb.AppendLine("func " + kvp.Key + ":");
+                sb.AppendLine(kvp.Value.ToString());
             }
 
             return sb.ToString();

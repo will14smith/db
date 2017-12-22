@@ -23,11 +23,32 @@ namespace SimpleDatabase.Storage.Heap
 
             return new HeapPage(page);
         }
+        public static HeapPage New(Page page)
+        {
+            return new HeapPage(page)
+            {
+                Type = PageType.Heap,
+                ItemCount = 0,
+                NextPageIndex = 0,
+            };
+        }
+
+        public PageId PageId => _page.Id;
+        public PageType Type
+        {
+            get => _page.Type;
+            protected set => _page.Type = value;
+        }
 
         public byte ItemCount
         {
             get => _page[_layout.ItemCountOffset].Read<byte>();
             set => _page[_layout.ItemCountOffset].Write(value);
+        }
+        public int NextPageIndex
+        {
+            get => _page[_layout.NextPageIndexOffset].Read<int>();
+            set => _page[_layout.NextPageIndexOffset].Write(value);
         }
 
         private Span<byte> GetItemPointerOffset(int index)
@@ -53,10 +74,8 @@ namespace SimpleDatabase.Storage.Heap
             return _page[offset].Slice(0, length);
         }
 
-        public void AddItem(Span<byte> item)
+        public byte AddItem(int length, Action<Span<byte>> writer)
         {
-            var length = item.Length;
-
             // find last item offset
             int lastOffset;
             if (ItemCount == 0)
@@ -74,13 +93,12 @@ namespace SimpleDatabase.Storage.Heap
             pointerOffset.Slice(_layout.ItemPointerOffsetSize).Write((ushort)length);
 
             var itemPointer = _page[offset].Slice(0, length);
+            writer(itemPointer);
 
-            item.CopyTo(itemPointer);
-
-            ItemCount++;
+            return ItemCount++;
         }
 
-        public void RemoveItem(int index)
+        public void RemoveItem(byte index)
         {
             var (_, length) = GetItemPointer(index);
 
@@ -101,6 +119,11 @@ namespace SimpleDatabase.Storage.Heap
             {
                 GetItemPointerOffset(i).CopyTo(GetItemPointerOffset(i - 1));
             }
+        }
+
+        public bool CanInsert(int itemSize)
+        {
+            throw new NotImplementedException();
         }
     }
 }
