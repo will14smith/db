@@ -39,7 +39,7 @@ namespace SimpleDatabase.CLI
         {
             var table = new Table(name, columns, new Index[0]);
 
-            // TODO allocate heap?
+            new TableCreator(_pager).Create(table);
 
             return table;
         }

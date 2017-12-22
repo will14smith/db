@@ -1,21 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using SimpleDatabase.Execution.Operations;
 using SimpleDatabase.Execution.Operations.Columns;
 using SimpleDatabase.Execution.Operations.Constants;
 using SimpleDatabase.Execution.Operations.Cursors;
 using SimpleDatabase.Execution.Operations.Jumps;
 using SimpleDatabase.Execution.Operations.Slots;
+using SimpleDatabase.Execution.Tables;
+using SimpleDatabase.Execution.Values;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Schemas.Types;
+using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Paging;
 using Xunit;
 
 namespace SimpleDatabase.Execution.UnitTests
 {
-    public class SimpleProgramTest
+    public class SimpleProgramTest : IDisposable
     {
+        public SimpleProgramTest()
+        {
+            var folderName = "_test" + DateTime.Now.Ticks;
+            _folder = Path.Combine(Path.GetTempPath(), folderName);
+            Directory.CreateDirectory(_folder);
+        }
+
+        public void Dispose()
+        {
+            Directory.Delete(_folder, true);
+        }
+
+        private readonly string _folder;
+
         private static readonly Table Table =
             new Table("table", new[]
             {
@@ -81,35 +99,19 @@ namespace SimpleDatabase.Execution.UnitTests
         [Fact]
         public void RunProgram()
         {
-            var file = Path.GetTempFileName();
-            try
+            var pageStorageFactory = new FolderPageSourceFactory(_folder);
+            using (var pager = new Pager(pageStorageFactory))
             {
-                IPageStorageFactory pageStorageFactory = null;
-                using (var pager = new Pager(pageStorageFactory))
-                {
-                    throw new NotImplementedException();
-                    //// TODO clean this up 
+                new TableCreator(pager).Create(Table);
 
-                    //// Create root page
-                    //var rootPage = pager.Get(Table.RootPageId);
-                    //var rowSerializer = new RowSerializer(Table, new ColumnTypeSerializerFactory());
-                    //var node = LeafNode.New(rowSerializer, rootPage);
-                    //node.IsRoot = true;
-                    //pager.Flush(Table.RootPageId);
+                // Insert some data
+                new TableInserter(pager, Table).Insert(new Row(new[] { new ColumnValue(1), new ColumnValue("a"), new ColumnValue("a@a.a") }));
+                new TableInserter(pager, Table).Insert(new Row(new[] { new ColumnValue(2), new ColumnValue("b"), new ColumnValue("b@b.b") }));
 
-                    //// Insert some data
-                    //new TreeInserter(pager, rowSerializer, Table).Insert(1, new Row(new[] { new ColumnValue(1), new ColumnValue("a"), new ColumnValue("a@a.a") }));
-                    //new TreeInserter(pager, rowSerializer, Table).Insert(1, new Row(new[] { new ColumnValue(2), new ColumnValue("b"), new ColumnValue("b@b.b") }));
+                var result = new ProgramExecutor(Program, pager).Execute().ToList();
 
-                    //var result = new ProgramExecutor(Program, pager).Execute().ToList();
-
-                    //Assert.Equal(1, result.Count);
-                    //Assert.Equal("a", ((ObjectValue) result[0].Skip(1).First()).Value);
-                }
-            }
-            finally
-            {
-                File.Delete(file);
+                var resultItem = Assert.Single(result);
+                Assert.Equal("a", ((ObjectValue)resultItem.Skip(1).First()).Value);
             }
         }
     }

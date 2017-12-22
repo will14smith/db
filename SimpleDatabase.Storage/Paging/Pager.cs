@@ -53,7 +53,11 @@ namespace SimpleDatabase.Storage.Paging
 
             // TODO check free list
             var unusedIndex = storage.PageCount;
-            return Get(new PageId(source, unusedIndex));
+            var id = new PageId(source, unusedIndex);
+
+            storage.Write(new Page(id, new byte[PageLayout.PageSize]));
+
+            return Get(id);
         }
 
         public void Free(PageId id)
