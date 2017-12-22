@@ -74,7 +74,9 @@ namespace SimpleDatabase.Storage.Heap
             return _page[offset].Slice(0, length);
         }
 
-        public byte AddItem(int length, Action<Span<byte>> writer)
+        public delegate void ItemWriter(in Span<byte> destination);
+
+        public byte AddItem(int length, ItemWriter writer)
         {
             // find last item offset
             int lastOffset;

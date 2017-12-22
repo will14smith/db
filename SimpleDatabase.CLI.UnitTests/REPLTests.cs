@@ -14,15 +14,17 @@ namespace SimpleDatabase.CLI.UnitTests
     {
         public REPLTests()
         {
-            _file = Path.GetTempFileName();
+            var folderName = "_test" + DateTime.Now.Ticks;
+            _folder = Path.Combine(Path.GetTempPath(), folderName);
+            Directory.CreateDirectory(_folder);
         }
 
         public void Dispose()
         {
-            File.Delete(_file);
+            Directory.Delete(_folder, true);
         }
 
-        private readonly string _file;
+        private readonly string _folder;
 
         [Theory]
         [InlineData(new[]
@@ -116,7 +118,7 @@ namespace SimpleDatabase.CLI.UnitTests
             var fakeInput = new FakeREPLInput(commands);
 
             ExitCode code;
-            using (var repl = new REPL(fakeInput, fakeOutput, _file))
+            using (var repl = new REPL(fakeInput, fakeOutput, _folder))
             {
                 code = repl.Run();
             }

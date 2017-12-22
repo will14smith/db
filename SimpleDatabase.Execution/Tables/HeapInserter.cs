@@ -35,7 +35,9 @@ namespace SimpleDatabase.Execution.Tables
             }
             
             // insert into page
-            var itemIndex = page.AddItem(rowSize, dst => _rowSerializer.WriteRow(dst, row));
+            void Writer(in Span<byte> dst) => _rowSerializer.WriteRow(dst, row);
+
+            var itemIndex = page.AddItem(rowSize, Writer);
             var pageIndex = page.PageId.Index;
 
             if (pageIndex > 0xffffff)
