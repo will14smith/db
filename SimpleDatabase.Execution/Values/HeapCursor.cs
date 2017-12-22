@@ -1,6 +1,7 @@
 ﻿using System;
 using SimpleDatabase.Execution.Tables;
 using SimpleDatabase.Schemas;
+using SimpleDatabase.Storage.Heap;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 using SimpleDatabase.Utils;
@@ -58,7 +59,12 @@ namespace SimpleDatabase.Execution.Values
 
         public ColumnValue Column(int index)
         {
-            throw new NotImplementedException();
+            var cursor = _cursor.Value;
+
+            var page = HeapPage.Read(SourcePager.Get(cursor.Page.Index));
+            var cell = page.GetItem(cursor.CellNumber);
+
+            return _rowSerializer.ReadColumn(cell, index);
         }
 
         public InsertTargetResult Insert(Row row)

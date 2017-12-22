@@ -58,7 +58,7 @@ namespace SimpleDatabase.Storage.Heap
             return _page[itemOffset].Slice(0, _layout.ItemPointerSize);
         }
 
-        private (ushort, ushort) GetItemPointer(int index)
+        private (ushort offset, ushort length) GetItemPointer(int index)
         {
             var pointerOffset = GetItemPointerOffset(index);
             var offset = pointerOffset.Read<ushort>();
@@ -84,7 +84,7 @@ namespace SimpleDatabase.Storage.Heap
                 lastOffset = PageLayout.PageSize - 1;
             else
             {
-                (_, lastOffset) = GetItemPointer(ItemCount - 1);
+                (lastOffset, _) = GetItemPointer(ItemCount - 1);
             }
 
             var offset = lastOffset - length;
@@ -137,7 +137,7 @@ namespace SimpleDatabase.Storage.Heap
             }
             else
             {
-                var (_, lastOffset) = GetItemPointer(ItemCount - 1);
+                var (lastOffset, _) = GetItemPointer(ItemCount - 1);
                 var availableSpace = lastOffset - _layout.HeaderSize - (_layout.ItemPointerSize + 1) * ItemCount;
 
                 return availableSpace >= itemSize;
