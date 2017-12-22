@@ -37,7 +37,7 @@ namespace SimpleDatabase.Execution.Tables
                 // TODO check result, rollback all inserts (heap & index) if no success...
             }
 
-            throw new NotImplementedException();
+            return result;
         }
     }
 }

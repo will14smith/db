@@ -125,7 +125,23 @@ namespace SimpleDatabase.Storage.Heap
 
         public bool CanInsert(int itemSize)
         {
-            throw new NotImplementedException();
+            if (ItemCount == 0)
+            {
+                var availableSpace = PageLayout.PageSize - _layout.HeaderSize - _layout.ItemPointerSize;
+                if (availableSpace < itemSize)
+                {
+                    throw new InvalidOperationException("Item will not fit on one page.");
+                }
+
+                return true;
+            }
+            else
+            {
+                var (_, lastOffset) = GetItemPointer(ItemCount - 1);
+                var availableSpace = lastOffset - _layout.HeaderSize - (_layout.ItemPointerSize + 1) * ItemCount;
+
+                return availableSpace >= itemSize;
+            }
         }
     }
 }
