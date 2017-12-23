@@ -85,7 +85,7 @@ namespace SimpleDatabase.Execution.Values
         public DeleteTargetResult Delete()
         {
             var deleter = new TableDeleter(_pager, Table);
-            var result = deleter.Delete(Key(), _cursor.Value);
+            var result = deleter.Delete(_cursor.Value);
 
             switch (result)
             {

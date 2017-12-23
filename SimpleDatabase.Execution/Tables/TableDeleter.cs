@@ -21,7 +21,7 @@ namespace SimpleDatabase.Execution.Tables
             _rowSerializer = new RowSerializer(table, new ColumnTypeSerializerFactory());
         }
 
-        public DeleteResult Delete(int key, Cursor cursor)
+        public DeleteResult Delete(Cursor cursor)
         {
             // TODO check cursor.Table == _table
 
@@ -31,12 +31,15 @@ namespace SimpleDatabase.Execution.Tables
 
             foreach (var index in _table.Indices)
             {
+                // TODO calculate key
+                var key = 0;
+
                 var treeDeleter = new TreeDeleter(new SourcePager(_pager, new PageSource.Index(_table.Name, index.Name)), _rowSerializer, index);
                 result = treeDeleter.Delete(key);
                 // TODO check result, rollback all inserts (heap & index) if no success...
             }
 
-            throw new NotImplementedException();
+            return result;
         }
     }
 }

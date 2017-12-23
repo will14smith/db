@@ -21,9 +21,8 @@ namespace SimpleDatabase.Execution.Tables
             var page = HeapPage.Read(_pager.Get(0));
 
             var tableIsEmpty = page.ItemCount == 0;
-            var hasNextPage = page.NextPageIndex != 0;
 
-            return new Cursor(pageId, 0, tableIsEmpty && !hasNextPage);
+            return new Cursor(pageId, 0, tableIsEmpty);
         }
 
         public Cursor AdvanceCursor(Cursor cursor)
@@ -33,18 +32,24 @@ namespace SimpleDatabase.Execution.Tables
 
             var page = HeapPage.Read(_pager.Get(pageId.Index));
 
-            if (cell >= page.ItemCount)
+            if (cell < page.ItemCount)
             {
-                pageId = new PageId(pageId.Source, page.NextPageIndex);
-                cell = 0;
-
-                page = HeapPage.Read(_pager.Get(pageId.Index));
+                return new Cursor(pageId, cell, false);
             }
-            
-            var itemIsLast = cell + 1 == page.ItemCount;
-            var hasNextPage = page.NextPageIndex != 0;
 
-            return new Cursor(pageId, cell, itemIsLast && !hasNextPage);
+            if (page.NextPageIndex == 0)
+            {
+                return new Cursor(pageId, cell, true);
+            }
+
+            pageId = new PageId(pageId.Source, page.NextPageIndex);
+            cell = 0;
+
+            page = HeapPage.Read(_pager.Get(pageId.Index));
+
+            var pageIsEmpty = page.ItemCount == 0;
+
+            return new Cursor(pageId, cell, pageIsEmpty);
         }
     }
 }

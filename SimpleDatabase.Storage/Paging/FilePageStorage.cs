@@ -22,7 +22,7 @@ namespace SimpleDatabase.Storage.Paging
 
         public Page Read(PageId id)
         {
-            if (id.Source != Source)
+            if (!Equals(id.Source, Source))
             {
                 throw new InvalidOperationException("requested source doesn't match");
             }
@@ -49,7 +49,7 @@ namespace SimpleDatabase.Storage.Paging
             }
 
             var id = page.Id;
-            if (id.Source != Source)
+            if (!Equals(id.Source, Source))
             {
                 throw new InvalidOperationException("requested source doesn't match");
             }

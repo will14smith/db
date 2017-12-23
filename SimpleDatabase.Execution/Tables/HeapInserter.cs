@@ -31,15 +31,21 @@ namespace SimpleDatabase.Execution.Tables
             var rowSize = _rowSerializer.GetRowSize();
             if (!page.CanInsert(rowSize))
             {
-                throw new NotImplementedException("page is full, create a new one");
+                var newPage = HeapPage.New(_pager.Allocate());
+
+                page.NextPageIndex = newPage.PageId.Index;
+                _pager.Flush(page.PageId.Index);
+
+                page = newPage;
             }
             
             // insert into page
             void Writer(in Span<byte> dst) => _rowSerializer.WriteRow(dst, row);
 
             var itemIndex = page.AddItem(rowSize, Writer);
-            var pageIndex = page.PageId.Index;
+            _pager.Flush(page.PageId.Index);
 
+            var pageIndex = page.PageId.Index;
             if (pageIndex > 0xffffff)
             {
                 // TODO add result type?
