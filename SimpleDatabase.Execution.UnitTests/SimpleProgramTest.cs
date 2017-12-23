@@ -60,15 +60,15 @@ namespace SimpleDatabase.Execution.UnitTests
                 new NextOperation(Finish),
                 new StoreOperation(Cursor),
 
-                // if cursor.Key == 2 -> loop
+                // if cursor.Column[Id] == 2 -> loop
                 new LoadOperation(Cursor),
-                new KeyOperation(),
+                new ColumnOperation(0),
                 new ConstIntOperation(2),
                 new ConditionalJumpOperation(Comparison.Equal, Loop),
 
-                // id = cursor.Key
+                // id = cursor.Column[Id]
                 new LoadOperation(Cursor),
-                new KeyOperation(),
+                new ColumnOperation(0),
                 
                 // username = cursor.Column[Username]
                 new LoadOperation(Cursor),
