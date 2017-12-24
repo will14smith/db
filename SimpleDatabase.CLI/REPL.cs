@@ -1,13 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using Antlr4.Runtime.Misc;
 using SimpleDatabase.Execution;
 using SimpleDatabase.Parsing;
+using SimpleDatabase.Parsing.Statements;
 using SimpleDatabase.Planning;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Schemas.Types;
 using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Paging;
-using SimpleDatabase.Storage.Serialization;
+using Table = SimpleDatabase.Schemas.Table;
 
 namespace SimpleDatabase.CLI
 {
@@ -126,8 +129,16 @@ namespace SimpleDatabase.CLI
             var database = new Database(new[] { _table });
 
             var parser = new Parser();
-            var statements = parser.Parse(input);
-            
+            IReadOnlyCollection<Statement> statements;
+            try
+            {
+                statements = parser.Parse(input);
+            }
+            catch (ParseCanceledException ex)
+            {
+                return new ExecuteStatementResponse.SyntaxError(ex.Message);
+            }
+
             var planner = new Planner(database);
             var plans = statements.Select(planner.Plan);
 

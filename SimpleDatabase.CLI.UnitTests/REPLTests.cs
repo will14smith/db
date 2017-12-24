@@ -69,26 +69,7 @@ namespace SimpleDatabase.CLI.UnitTests
             "INSERT INTO table VALUES(3, 'a', 'b')",
             "INSERT INTO table VALUES(1, 'a', 'b')",
             "INSERT INTO table VALUES(2, 'a', 'b')",
-            ".btree",
-            ".exit"
-        }, new[]
-        {
-            "db > Executed.",
-            "db > Executed.",
-            "db > Executed.",
-            "db > Tree:",
-            "- leaf (size 3)",
-            "  - 1",
-            "  - 2",
-            "  - 3",
-            "db >"
-        }, 0, ExitCode.Success)]
-        [InlineData(new[]
-        {
-            "INSERT INTO table VALUES(3, 'a', 'b')",
-            "INSERT INTO table VALUES(1, 'a', 'b')",
-            "INSERT INTO table VALUES(2, 'a', 'b')",
-            "SELECT * FROM table",
+            "SELECT * FROM table ORDER BY id",
             ".exit"
         }, new[]
         {
@@ -157,52 +138,16 @@ namespace SimpleDatabase.CLI.UnitTests
         }
 
         [Fact]
-        public void PrintingInternalNodes()
-        {
-            var commands = new string[17];
-            for (var i = 0; i < 14; i++)
-                commands[i] = $"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')";
-            commands[14] = ".btree";
-            commands[15] = "INSERT INTO table VALUES(14, 'user14', 'person14@example.com')";
-            commands[16] = ".exit";
-
-            var outputs = new[]
-            {
-                "db > Tree:",
-                "- internal (size 1)",
-                "  - leaf (size 7)",
-                "    - 0",
-                "    - 1",
-                "    - 2",
-                "    - 3",
-                "    - 4",
-                "    - 5",
-                "    - 6",
-                "- key 6",
-                "  - leaf (size 7)",
-                "    - 7",
-                "    - 8",
-                "    - 9",
-                "    - 10",
-                "    - 11",
-                "    - 12",
-                "    - 13",
-                "db > Executed.",
-                "db >"
-            };
-
-            RunningCommands_HasCorrectSnapshot(commands, outputs, 14, ExitCode.Success);
-        }
-
-        [Fact]
         public void InsertingInternalNodesInReverse()
         {
             var commands = new string[50];
             var outputs = new List<string>();
             for (var i = 0; i < 48; i++)
             {
-                commands[i] = $"INSERT INTO table VALUES ({47 - i}, 'user{47 - i}', 'person{47 - i}@example.com')";
-                outputs.Add((i == 0 ? "db > " : "") + $"({i}, user{i}, person{i}@example.com)");
+                var x = 47 - i;
+
+                commands[i] = $"INSERT INTO table VALUES ({x}, 'user{x}', 'person{x}@example.com')";
+                outputs.Add((i == 0 ? "db > " : "") + $"({x}, user{x}, person{x}@example.com)");
             }
             commands[48] = "SELECT * FROM table";
             commands[49] = ".exit";
@@ -213,25 +158,7 @@ namespace SimpleDatabase.CLI.UnitTests
         }
 
         [Fact]
-        public void SelectingInternalNodes()
-        {
-            var commands = new string[16];
-            var outputs = new List<string>();
-            for (var i = 0; i < 14; i++)
-            {
-                commands[i] = $"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')";
-                outputs.Add((i == 0 ? "db > " : "") + $"({i}, user{i}, person{i}@example.com)");
-            }
-            commands[14] = "SELECT * FROM table";
-            commands[15] = ".exit";
-            outputs.Add("Executed.");
-            outputs.Add("db >");
-
-            RunningCommands_HasCorrectSnapshot(commands, outputs, 14, ExitCode.Success);
-        }
-
-        [Fact]
-        public void SplittingInternalNodes()
+        public void SelectingAcrossMultiplePages()
         {
             var commands = new string[7000];
             var outputs = new List<string>();
@@ -249,33 +176,11 @@ namespace SimpleDatabase.CLI.UnitTests
         }
 
         [Fact]
-        public void DeleteRootLeaf()
-        {
-            var commands = new string[6];
-            for (var i = 0; i < 3; i++)
-                commands[i] = $"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')";
-            commands[3] = "DELETE FROM table WHERE id = 1";
-            commands[4] = ".btree";
-            commands[5] = ".exit";
-
-            var outputs = new[]
-            {
-                "db > Executed.",
-                "db > Tree:",
-                "- leaf (size 2)",
-                "  - 0",
-                "  - 2",
-                "db >"
-            };
-
-            RunningCommands_HasCorrectSnapshot(commands, outputs, 3, ExitCode.Success);
-        }
-        [Fact]
-        public void DeleteRootLeaf_Single()
+        public void DeleteAllItems()
         {
             var commands = new string[4];
             commands[0] = "INSERT INTO table VALUES(0, 'user0', 'person0@example.com')";
-            commands[1] = "DELETE FROM table WHERE id = 0";
+            commands[1] = "DELETE FROM table";
             commands[2] = ".btree";
             commands[3] = ".exit";
 
@@ -288,140 +193,6 @@ namespace SimpleDatabase.CLI.UnitTests
             };
 
             RunningCommands_HasCorrectSnapshot(commands, outputs, 1, ExitCode.Success);
-        }
-        [Fact]
-        public void DeleteInternalNodes_BorrowFromNext()
-        {
-            var commands = new string[18];
-            for (var i = 0; i < 14; i++)
-                commands[i] = $"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')";
-            commands[14] = "DELETE FROM table WHERE id = 1";
-            commands[15] = "DELETE FROM table WHERE id = 2";
-            commands[16] = ".btree";
-            commands[17] = ".exit";
-
-            var outputs = new[]
-            {
-                "db > Tree:",
-                "- internal (size 1)",
-                "  - leaf (size 6)",
-                "    - 0",
-                "    - 3",
-                "    - 4",
-                "    - 5",
-                "    - 6",
-                "    - 7",
-                "- key 7",
-                "  - leaf (size 6)",
-                "    - 8",
-                "    - 9",
-                "    - 10",
-                "    - 11",
-                "    - 12",
-                "    - 13",
-                "db >"
-            };
-
-            RunningCommands_HasCorrectSnapshot(commands, outputs, 16, ExitCode.Success);
-        }
-        [Fact]
-        public void DeleteInternalNodes_BorrowFromPrev()
-        {
-            var commands = new string[18];
-            for (var i = 0; i < 14; i++)
-                commands[i] = $"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')";
-            commands[14] = "DELETE FROM table WHERE id = 7";
-            commands[15] = "DELETE FROM table WHERE id = 8";
-            commands[16] = ".btree";
-            commands[17] = ".exit";
-
-            var outputs = new[]
-            {
-                "db > Tree:",
-                "- internal (size 1)",
-                "  - leaf (size 6)",
-                "    - 0",
-                "    - 1",
-                "    - 2",
-                "    - 3",
-                "    - 4",
-                "    - 5",
-                "- key 5",
-                "  - leaf (size 6)",
-                "    - 6",
-                "    - 9",
-                "    - 10",
-                "    - 11",
-                "    - 12",
-                "    - 13",
-                "db >"
-            };
-
-            RunningCommands_HasCorrectSnapshot(commands, outputs, 16, ExitCode.Success);
-        }
-        [Fact]
-        public void DeleteInternalNodes_MergeWithNext()
-        {
-            var commands = new List<string>();
-            for (var i = 0; i < 14; i++)
-                commands.Add($"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')");
-            commands.Add("DELETE FROM table WHERE id = 7");
-            commands.Add("DELETE FROM table WHERE id = 1");
-            commands.Add("DELETE FROM table WHERE id = 2");
-            commands.Add(".btree");
-            commands.Add(".exit");
-
-            var outputs = new[]
-            {
-                "db > Tree:",
-                "- leaf (size 11)",
-                "  - 0",
-                "  - 3",
-                "  - 4",
-                "  - 5",
-                "  - 6",
-                "  - 8",
-                "  - 9",
-                "  - 10",
-                "  - 11",
-                "  - 12",
-                "  - 13",
-                "db >"
-            };
-
-            RunningCommands_HasCorrectSnapshot(commands, outputs, 17, ExitCode.Success);
-        }
-        [Fact]
-        public void DeleteInternalNodes_MergeWithPrev()
-        {
-            var commands = new List<string>();
-            for (var i = 0; i < 14; i++)
-                commands.Add($"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')");
-            commands.Add("DELETE FROM table WHERE id = 1");
-            commands.Add("DELETE FROM table WHERE id = 7");
-            commands.Add("DELETE FROM table WHERE id = 8");
-            commands.Add(".btree");
-            commands.Add(".exit");
-
-            var outputs = new[]
-            {
-                "db > Tree:",
-                "- leaf (size 11)",
-                "  - 0",
-                "  - 2",
-                "  - 3",
-                "  - 4",
-                "  - 5",
-                "  - 6",
-                "  - 9",
-                "  - 10",
-                "  - 11",
-                "  - 12",
-                "  - 13",
-                "db >"
-            };
-
-            RunningCommands_HasCorrectSnapshot(commands, outputs, 17, ExitCode.Success);
         }
 
         [Fact]
@@ -448,7 +219,7 @@ namespace SimpleDatabase.CLI.UnitTests
                 "Executed.",
                 "db >"
             };
-            
+
             RunningCommands_HasCorrectSnapshot(commands, outputs, 4, ExitCode.Success);
         }
     }
