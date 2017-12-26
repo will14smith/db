@@ -118,7 +118,8 @@ namespace SimpleDatabase.Execution
                     throw new NotImplementedException($"Unsupported type: {targetValue.GetType()}");
             }
 
-            var insertableRow = new Row(row.Values.Cast<ObjectValue>().Select(x => new ColumnValue(x.Value)).ToList());
+            var values = row.Values.Cast<ObjectValue>().Select(x => new ColumnValue(x.Value)).ToList();
+            var insertableRow = new Row(values, xid, Option.None<TransactionId>());
 
             var insertResult = insertTarget.Insert(insertableRow);
             switch (insertResult)

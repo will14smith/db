@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using SimpleDatabase.Schemas;
+using SimpleDatabase.Utils;
 
 namespace SimpleDatabase.Storage.Serialization
 {
@@ -8,6 +9,11 @@ namespace SimpleDatabase.Storage.Serialization
     {
         private readonly Table _table;
         private readonly ColumnTypeSerializerFactory _columnTypeSerializerFactory;
+
+        private const int MinXidOffset = 0;
+        private const int MinXidSize = sizeof(ulong);
+        private const int MaxXidOffset = MinXidOffset + MinXidSize;
+        private const int MaxXidSize = sizeof(ulong);
 
         private readonly int _size;
         private readonly IReadOnlyList<int> _offsets;
@@ -17,6 +23,8 @@ namespace SimpleDatabase.Storage.Serialization
         {
             _table = table;
             _columnTypeSerializerFactory = columnTypeSerializerFactory;
+
+            _size = MinXidSize + MaxXidSize;
 
             var offsets = new List<int>();
             var sizes = new List<int>();
@@ -45,12 +53,15 @@ namespace SimpleDatabase.Storage.Serialization
         {
             var values = new List<ColumnValue>();
 
+            var minXid = rowStart.Slice(MinXidOffset, MinXidSize).Read<ulong>();
+            var maxXid = rowStart.Slice(MaxXidOffset, MaxXidSize).Read<ulong>();
+
             for (var index = 0; index < _table.Columns.Count; index++)
             {
                 values.Add(ReadColumn(rowStart, index));
             }
 
-            return new Row(values);
+            return new Row(values, new TransactionId(minXid), maxXid != 0 ? Option.Some(new TransactionId(maxXid)) : Option.None<TransactionId>());
         }
         public void WriteRow(Span<byte> rowStart, Row row)
         {
@@ -59,6 +70,9 @@ namespace SimpleDatabase.Storage.Serialization
             {
                 throw new ArgumentException("Row doesn't have correct number of columns", nameof(row));
             }
+
+            rowStart.Slice(MinXidOffset, MinXidSize).Write(row.MinXid.Id);
+            rowStart.Slice(MaxXidOffset, MaxXidSize).Write(row.MaxXid.Select(x => x.Id).OrElse(() => 0ul));
 
             for (var index = 0; index < _table.Columns.Count; index++)
             {
@@ -84,7 +98,7 @@ namespace SimpleDatabase.Storage.Serialization
             {
                 throw new ArgumentOutOfRangeException(nameof(columnIndex));
             }
-            
+
             var columnStart = rowStart.Slice(_offsets[columnIndex], _sizes[columnIndex]);
             var serializer = _columnTypeSerializerFactory.GetSerializer(_table.Columns[columnIndex].Type);
 

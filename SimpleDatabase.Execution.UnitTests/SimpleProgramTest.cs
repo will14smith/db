@@ -14,6 +14,7 @@ using SimpleDatabase.Schemas;
 using SimpleDatabase.Schemas.Types;
 using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Paging;
+using SimpleDatabase.Utils;
 using Xunit;
 
 namespace SimpleDatabase.Execution.UnitTests
@@ -105,8 +106,8 @@ namespace SimpleDatabase.Execution.UnitTests
                 new TableCreator(pager).Create(Table);
 
                 // Insert some data
-                new TableInserter(pager, Table).Insert(new Row(new[] { new ColumnValue(1), new ColumnValue("a"), new ColumnValue("a@a.a") }));
-                new TableInserter(pager, Table).Insert(new Row(new[] { new ColumnValue(2), new ColumnValue("b"), new ColumnValue("b@b.b") }));
+                new TableInserter(pager, Table).Insert(new Row(new[] { new ColumnValue(1), new ColumnValue("a"), new ColumnValue("a@a.a") }, new TransactionId(0), Option.None<TransactionId>()));
+                new TableInserter(pager, Table).Insert(new Row(new[] { new ColumnValue(2), new ColumnValue("b"), new ColumnValue("b@b.b") }, new TransactionId(0), Option.None<TransactionId>()));
 
                 var result = new ProgramExecutor(Program, pager).Execute().ToList();
 
