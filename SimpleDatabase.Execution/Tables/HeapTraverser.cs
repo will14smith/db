@@ -1,5 +1,4 @@
 ﻿using SimpleDatabase.Execution.Transactions;
-using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Heap;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
@@ -10,15 +9,13 @@ namespace SimpleDatabase.Execution.Tables
     {
         private readonly ISourcePager _pager;
         private readonly ITransactionManager _txm;
-        private IRowSerializer _rowSerializer;
-        private readonly Table _table;
+        private readonly IRowSerializer _rowSerializer;
             
-        public HeapTraverser(ISourcePager pager, ITransactionManager txm, IRowSerializer rowSerializer, Table table)
+        public HeapTraverser(ISourcePager pager, ITransactionManager txm, IRowSerializer rowSerializer)
         {
             _pager = pager;
             _txm = txm;
             _rowSerializer = rowSerializer;
-            _table = table;
         }
 
         public Cursor StartCursor()
@@ -55,38 +52,9 @@ namespace SimpleDatabase.Execution.Tables
             var page = HeapPage.Read(_pager.Get(cursor.Page.Index));
             var rowStart = page.GetItem(cursor.CellNumber);
 
-            var tx = _txm.Current.Id;
-
             var (min, maxopt) = _rowSerializer.ReadXid(rowStart);
 
-            if (maxopt.HasValue)
-            {
-                var max = maxopt.Value;
-
-                if (max < tx && _txm.IsCommitted(max))
-                {
-                    // has been deleted
-                    return false;
-                }
-                if (max == tx)
-                {
-                    // has been deleted by this tx
-                    return false;
-                }
-            }
-
-            if (min < tx && _txm.IsCommitted(min))
-            {
-                return true;
-            }
-            if (min == tx)
-            {
-                // inserted by this tx
-                return true;
-            }
-
-
-            return false;
+            return _txm.IsVisible(min, maxopt);
         }
         
         private Cursor AdvanceToNext(Cursor cursor)

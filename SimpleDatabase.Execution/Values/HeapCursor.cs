@@ -41,7 +41,7 @@ namespace SimpleDatabase.Execution.Values
 
         public ICursor First()
         {
-            var traverser = new HeapTraverser(SourcePager, _txm, _rowSerializer, Table);
+            var traverser = new HeapTraverser(SourcePager, _txm, _rowSerializer);
             var cursor = traverser.StartCursor();
 
             return new HeapCursor(cursor, this);
@@ -49,7 +49,7 @@ namespace SimpleDatabase.Execution.Values
 
         public ICursor Next()
         {
-            var traverser = new HeapTraverser(SourcePager, _txm, _rowSerializer, Table);
+            var traverser = new HeapTraverser(SourcePager, _txm, _rowSerializer);
             var cursor = traverser.AdvanceCursor(_cursor.Value);
 
             return new HeapCursor(cursor, this);

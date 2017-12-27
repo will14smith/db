@@ -47,6 +47,7 @@ namespace SimpleDatabase.Execution.Transactions
             var (state, statetx) = stateOpt.Value;
 
             if (state != TransactionState.Committed) return false;
+            // check the commit happened before this tx began
             return Current == null || statetx <= Current.Id;
         }
 
