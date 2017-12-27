@@ -9,12 +9,12 @@ using SimpleDatabase.Execution.Operations.Cursors;
 using SimpleDatabase.Execution.Operations.Jumps;
 using SimpleDatabase.Execution.Operations.Slots;
 using SimpleDatabase.Execution.Tables;
+using SimpleDatabase.Execution.Transactions;
 using SimpleDatabase.Execution.Values;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Schemas.Types;
 using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Paging;
-using SimpleDatabase.Utils;
 using Xunit;
 
 namespace SimpleDatabase.Execution.UnitTests
@@ -101,15 +101,19 @@ namespace SimpleDatabase.Execution.UnitTests
         public void RunProgram()
         {
             var pageStorageFactory = new FolderPageSourceFactory(_folder);
+            var txm = new TransactionManager();
+
             using (var pager = new Pager(pageStorageFactory))
+            using (var tx = txm.Begin())
             {
+
                 new TableCreator(pager).Create(Table);
 
                 // Insert some data
-                new TableInserter(pager, Table).Insert(new Row(new[] { new ColumnValue(1), new ColumnValue("a"), new ColumnValue("a@a.a") }, new TransactionId(0), Option.None<TransactionId>()));
-                new TableInserter(pager, Table).Insert(new Row(new[] { new ColumnValue(2), new ColumnValue("b"), new ColumnValue("b@b.b") }, new TransactionId(0), Option.None<TransactionId>()));
+                new TableInserter(pager, Table).Insert(new Row(new[] { new ColumnValue(1), new ColumnValue("a"), new ColumnValue("a@a.a") }, tx.Id, TransactionId.None()));
+                new TableInserter(pager, Table).Insert(new Row(new[] { new ColumnValue(2), new ColumnValue("b"), new ColumnValue("b@b.b") }, tx.Id, TransactionId.None()));
 
-                var result = new ProgramExecutor(Program, pager).Execute().ToList();
+                var result = new ProgramExecutor(Program, pager, txm).Execute().ToList();
 
                 var resultItem = Assert.Single(result);
                 Assert.Equal("a", ((ObjectValue)resultItem.Skip(1).First()).Value);

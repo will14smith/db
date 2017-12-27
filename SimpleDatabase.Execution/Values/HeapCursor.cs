@@ -1,5 +1,6 @@
 ﻿using System;
 using SimpleDatabase.Execution.Tables;
+using SimpleDatabase.Execution.Transactions;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Heap;
 using SimpleDatabase.Storage.Paging;
@@ -12,6 +13,7 @@ namespace SimpleDatabase.Execution.Values
     {
         private readonly Option<Cursor> _cursor;
         private readonly IPager _pager;
+        private readonly ITransactionManager _txm;
         private readonly IRowSerializer _rowSerializer;
 
         public Table Table { get; }
@@ -20,16 +22,17 @@ namespace SimpleDatabase.Execution.Values
         private PageSource Source => new PageSource.Heap(Table.Name);
         private ISourcePager SourcePager => new SourcePager(_pager, Source);
 
-        public HeapCursor(IPager pager, IRowSerializer rowSerializer, Table table, bool writable)
+        public HeapCursor(IPager pager, ITransactionManager txm, IRowSerializer rowSerializer, Table table, bool writable)
         {
             _pager = pager;
+            _txm = txm;
             _rowSerializer = rowSerializer;
 
             Table = table;
             Writable = writable;
         }
         public HeapCursor(Cursor cursor, HeapCursor heapCursor)
-            : this(heapCursor._pager, heapCursor._rowSerializer, heapCursor.Table, heapCursor.Writable)
+            : this(heapCursor._pager, heapCursor._txm, heapCursor._rowSerializer, heapCursor.Table, heapCursor.Writable)
         {
             _cursor = Option.Some(cursor);
         }
@@ -38,7 +41,7 @@ namespace SimpleDatabase.Execution.Values
 
         public ICursor First()
         {
-            var traverser = new HeapTraverser(SourcePager, Table);
+            var traverser = new HeapTraverser(SourcePager, _txm, _rowSerializer, Table);
             var cursor = traverser.StartCursor();
 
             return new HeapCursor(cursor, this);
@@ -46,7 +49,7 @@ namespace SimpleDatabase.Execution.Values
 
         public ICursor Next()
         {
-            var traverser = new HeapTraverser(SourcePager, Table);
+            var traverser = new HeapTraverser(SourcePager, _txm, _rowSerializer, Table);
             var cursor = traverser.AdvanceCursor(_cursor.Value);
 
             return new HeapCursor(cursor, this);

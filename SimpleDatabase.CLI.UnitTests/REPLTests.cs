@@ -222,5 +222,82 @@ namespace SimpleDatabase.CLI.UnitTests
 
             RunningCommands_HasCorrectSnapshot(commands, outputs, 4, ExitCode.Success);
         }
+
+        [Fact]
+        public void CommittedInsert_ShouldAppear()
+        {
+            var commands = new List<string>
+            {
+                ".begin",
+                "INSERT INTO table VALUES (1, 'c', 'c@c.c')",
+                ".commit",
+
+                "SELECT * FROM table ORDER BY name, email DESC",
+
+                ".exit"
+            };
+
+            var outputs = new List<string>
+            {
+                "db > Beginning transaction",
+                "db > Executed.",
+                "db > Committing transaction",
+                "db > (1, c, c@c.c)",
+                "Executed.",
+                "db >"
+            };
+
+            RunningCommands_HasCorrectSnapshot(commands, outputs, 0, ExitCode.Success);
+        }
+        [Fact]
+        public void InsertInCurrentTx_ShouldAppear()
+        {
+            var commands = new List<string>
+            {
+                ".begin",
+                "INSERT INTO table VALUES (1, 'c', 'c@c.c')",
+                "SELECT * FROM table ORDER BY name, email DESC",
+                ".abort",
+
+                ".exit"
+            };
+
+            var outputs = new List<string>
+            {
+                "db > Beginning transaction",
+                "db > Executed.",
+                "db > (1, c, c@c.c)",
+                "Executed.",
+                "db > Aborting transaction",
+                "db >"
+            };
+
+            RunningCommands_HasCorrectSnapshot(commands, outputs, 0, ExitCode.Success);
+        }
+        [Fact]
+        public void AbortedInsert_ShouldNotAppear()
+        {
+            var commands = new List<string>
+            {
+                ".begin",
+                "INSERT INTO table VALUES (1, 'c', 'c@c.c')",
+                ".abort",
+
+                "SELECT * FROM table ORDER BY name, email DESC",
+
+                ".exit"
+            };
+
+            var outputs = new List<string>
+            {
+                "db > Beginning transaction",
+                "db > Executed.",
+                "db > Aborting transaction",
+                "db > Executed.",
+                "db >"
+            };
+
+            RunningCommands_HasCorrectSnapshot(commands, outputs, 0, ExitCode.Success);
+        }
     }
 }

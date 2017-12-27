@@ -53,15 +53,14 @@ namespace SimpleDatabase.Storage.Serialization
         {
             var values = new List<ColumnValue>();
 
-            var minXid = rowStart.Slice(MinXidOffset, MinXidSize).Read<ulong>();
-            var maxXid = rowStart.Slice(MaxXidOffset, MaxXidSize).Read<ulong>();
+            var (minXid, maxXid) = ReadXid(rowStart);
 
             for (var index = 0; index < _table.Columns.Count; index++)
             {
                 values.Add(ReadColumn(rowStart, index));
             }
 
-            return new Row(values, new TransactionId(minXid), maxXid != 0 ? Option.Some(new TransactionId(maxXid)) : Option.None<TransactionId>());
+            return new Row(values, minXid, maxXid);
         }
         public void WriteRow(Span<byte> rowStart, Row row)
         {
@@ -78,6 +77,14 @@ namespace SimpleDatabase.Storage.Serialization
             {
                 WriteColumn(rowStart, index, row.Values[index]);
             }
+        }
+
+        public (TransactionId min, Option<TransactionId> max) ReadXid(Span<byte> rowStart)
+        {
+            var min = rowStart.Slice(MinXidOffset, MinXidSize).Read<ulong>();
+            var max = rowStart.Slice(MaxXidOffset, MaxXidSize).Read<ulong>();
+            
+            return (new TransactionId(min), max != 0 ? TransactionId.Some(max) : TransactionId.None());
         }
 
         public ColumnValue ReadColumn(Span<byte> rowStart, int columnIndex)

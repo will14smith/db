@@ -9,6 +9,7 @@ using SimpleDatabase.Execution.Operations.Functions;
 using SimpleDatabase.Execution.Operations.Jumps;
 using SimpleDatabase.Execution.Operations.Slots;
 using SimpleDatabase.Execution.Operations.Sorting;
+using SimpleDatabase.Execution.Transactions;
 using SimpleDatabase.Execution.Values;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Paging;
@@ -23,15 +24,18 @@ namespace SimpleDatabase.Execution
 
         private readonly IPager _pager;
         private readonly Program _program;
+        private readonly ITransactionManager _txm;
 
         private readonly IReadOnlyDictionary<ProgramLabel, int> _labelAddresses;
 
-        public FunctionExecutor(Function function, IReadOnlyList<Value> arguments, IPager pager, Program program)
+        public FunctionExecutor(Function function, IReadOnlyList<Value> arguments,
+            IPager pager, ITransactionManager txm, Program program)
         {
             _function = function;
             _arguments = arguments;
             _pager = pager;
             _program = program;
+            _txm = txm;
 
             _labelAddresses = function.Operations.Select((x, i) => (x, i)).Where(x => x.Item1 is ProgramLabel).ToDictionary(x => (ProgramLabel)x.Item1, x => x.Item2);
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Antlr4.Runtime.Misc;
 using SimpleDatabase.Execution;
+using SimpleDatabase.Execution.Transactions;
 using SimpleDatabase.Parsing;
 using SimpleDatabase.Parsing.Statements;
 using SimpleDatabase.Planning;
@@ -21,6 +22,10 @@ namespace SimpleDatabase.CLI
 
         private readonly Pager _pager;
         private readonly Table _table;
+        private readonly Database _database;
+
+        private readonly TransactionManager _txm;
+        private ITransaction _tx;
 
         public REPL(IREPLInput input, IREPLOutput output, string folder)
         {
@@ -36,6 +41,10 @@ namespace SimpleDatabase.CLI
                 new Column("name", new ColumnType.String(31)),
                 new Column("email", new ColumnType.String(255)),
             });
+
+            _database = new Database(new[] { _table });
+
+            _txm = new TransactionManager();
         }
 
         private Table CreateTable(string name, Column[] columns)
@@ -72,7 +81,8 @@ namespace SimpleDatabase.CLI
                     }
                 }
 
-                var statementResponse = ExecuteStatement(line);
+                var statementResponse = _tx != null ? ExecuteStatement(_tx, line) : ExecuteStatement(line);
+
                 switch (statementResponse)
                 {
                     case ExecuteStatementResponse.Success _:
@@ -110,6 +120,32 @@ namespace SimpleDatabase.CLI
             {
                 return new MetaCommandResponse.Exit(ExitCode.Success);
             }
+
+            if (input == ".begin")
+            {
+                _output.WriteLine("Beginning transaction");
+
+                _tx = _txm.Begin();
+                return new MetaCommandResponse.Success();
+            }
+            if (input == ".commit")
+            {
+                _output.WriteLine("Committing transaction");
+
+                _tx.Commit();
+                _tx = null;
+                return new MetaCommandResponse.Success();
+            }
+            if (input == ".abort")
+            {
+                _output.WriteLine("Aborting transaction");
+
+                _tx.Rollback();
+                _tx = null;
+                return new MetaCommandResponse.Success();
+            }
+
+
             if (input == ".btree")
             {
                 var index = _table.Indices.FirstOrDefault();
@@ -126,9 +162,25 @@ namespace SimpleDatabase.CLI
 
         private ExecuteStatementResponse ExecuteStatement(string input)
         {
-            var database = new Database(new[] { _table });
+            using (var tx = _txm.Begin())
+            {
+                var result = ExecuteStatement(tx, input);
 
+                if (result is ExecuteStatementResponse.Success _)
+                {
+                    tx.Commit();
+                }
+
+                return result;
+            }
+        }
+
+        private ExecuteStatementResponse ExecuteStatement(ITransaction tx, string input)
+        {
             var parser = new Parser();
+            var planner = new Planner(_database);
+            var planCompiler = new PlanCompiler(_database);
+
             IReadOnlyCollection<Statement> statements;
             try
             {
@@ -139,15 +191,12 @@ namespace SimpleDatabase.CLI
                 return new ExecuteStatementResponse.SyntaxError(ex.Message);
             }
 
-            var planner = new Planner(database);
             var plans = statements.Select(planner.Plan);
-
-            var planCompiler = new PlanCompiler(database);
             var programs = plans.Select(planCompiler.Compile);
 
             foreach (var program in programs)
             {
-                var executor = new ProgramExecutor(program, _pager);
+                var executor = new ProgramExecutor(program, _pager, _txm);
 
                 foreach (var result in executor.Execute())
                 {
@@ -162,6 +211,7 @@ namespace SimpleDatabase.CLI
 
         public void Dispose()
         {
+            _tx?.Dispose();
             _pager?.Dispose();
         }
     }

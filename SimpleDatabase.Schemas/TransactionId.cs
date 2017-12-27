@@ -1,6 +1,9 @@
-﻿namespace SimpleDatabase.Schemas
+﻿using System;
+using SimpleDatabase.Utils;
+
+namespace SimpleDatabase.Schemas
 {
-    public struct TransactionId
+    public struct TransactionId : IComparable<TransactionId>
     {
         public ulong Id { get; }
 
@@ -24,6 +27,11 @@
             return Id.GetHashCode();
         }
 
+        public int CompareTo(TransactionId other)
+        {
+            return Id.CompareTo(other.Id);
+        }
+
         public static bool operator ==(TransactionId left, TransactionId right)
         {
             return left.Equals(right);
@@ -32,6 +40,35 @@
         public static bool operator !=(TransactionId left, TransactionId right)
         {
             return !left.Equals(right);
+        }
+
+        public static bool operator <(TransactionId left, TransactionId right)
+        {
+            return left.CompareTo(right) < 0;
+        }
+
+        public static bool operator >(TransactionId left, TransactionId right)
+        {
+            return left.CompareTo(right) > 0;
+        }
+
+        public static bool operator <=(TransactionId left, TransactionId right)
+        {
+            return left.CompareTo(right) <= 0;
+        }
+
+        public static bool operator >=(TransactionId left, TransactionId right)
+        {
+            return left.CompareTo(right) >= 0;
+        }
+
+        public static Option<TransactionId> Some(ulong id)
+        {
+            return Option.Some(new TransactionId(id));
+        }
+        public static Option<TransactionId> None()
+        {
+            return Option.None<TransactionId>();
         }
     }
 }

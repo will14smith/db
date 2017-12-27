@@ -38,7 +38,7 @@ namespace SimpleDatabase.Execution
 
             var function = _program.Functions[handle.Function];
 
-            var coroutineExecutor = new FunctionExecutor(function, handle.Args, _pager, _program);
+            var coroutineExecutor = new FunctionExecutor(function, handle.Args, _pager, _txm, _program);
             var (coroutineState, coroutineValue) = coroutineExecutor.ExecuteStep(handle.State);
 
             handle.SetState(coroutineState);

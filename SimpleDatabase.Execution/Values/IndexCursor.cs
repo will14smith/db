@@ -3,7 +3,6 @@ using SimpleDatabase.Execution.Tables;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
-using SimpleDatabase.Storage.Tree;
 using SimpleDatabase.Utils;
 
 namespace SimpleDatabase.Execution.Values
@@ -50,6 +49,8 @@ namespace SimpleDatabase.Execution.Values
         {
             var searcher = new TreeTraverser(SourcePager, _rowSerializer, Index);
             var cursor = searcher.AdvanceCursor(_cursor.Value);
+
+            // TODO check target row is visible
 
             return new IndexCursor(cursor, this);
         }
