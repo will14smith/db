@@ -22,7 +22,7 @@ namespace SimpleDatabase.Execution
         public IEnumerable<IReadOnlyCollection<Value>> Execute()
         {
             var entry = _program.Functions[_program.Entry];
-            var executor = new FunctionExecutor(entry, new Value[0], _pager, _txm, _program);
+            var executor = new FunctionExecutor(_pager, _txm, _program, entry, new Value[0]);
 
             return executor.Execute().Cast<RowValue>().Select(x => x.Values);
         }

@@ -1,43 +1,62 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using SimpleDatabase.Execution.OperationExecutors;
+using SimpleDatabase.Execution.OperationExecutors.Columns;
+using SimpleDatabase.Execution.OperationExecutors.Constants;
+using SimpleDatabase.Execution.OperationExecutors.Cursors;
+using SimpleDatabase.Execution.OperationExecutors.Functions;
+using SimpleDatabase.Execution.OperationExecutors.Jumps;
+using SimpleDatabase.Execution.OperationExecutors.Slots;
+using SimpleDatabase.Execution.OperationExecutors.Sorting;
 using SimpleDatabase.Execution.Operations;
-using SimpleDatabase.Execution.Operations.Columns;
-using SimpleDatabase.Execution.Operations.Constants;
-using SimpleDatabase.Execution.Operations.Cursors;
-using SimpleDatabase.Execution.Operations.Functions;
-using SimpleDatabase.Execution.Operations.Jumps;
-using SimpleDatabase.Execution.Operations.Slots;
-using SimpleDatabase.Execution.Operations.Sorting;
 using SimpleDatabase.Execution.Transactions;
 using SimpleDatabase.Execution.Values;
-using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Paging;
-using SimpleDatabase.Storage.Serialization;
 
 namespace SimpleDatabase.Execution
 {
-    public partial class FunctionExecutor
+    public class FunctionExecutor
     {
+        private static readonly IReadOnlyDictionary<string, Func<FunctionExecutor, FunctionState, IOperation, (FunctionState, OperationResult)>> OperationExecutors = CreateOperationExecutors();
+
+        private readonly IPager _pager;
+        private readonly ITransactionManager _txm;
+        private readonly IRowSerializerFactory _rowSerializerFactory = new RowSerializerFactory();
+
+        private readonly Program _program;
         private readonly Function _function;
         private readonly IReadOnlyList<Value> _arguments;
 
-        private readonly IPager _pager;
-        private readonly Program _program;
-        private readonly ITransactionManager _txm;
-
         private readonly IReadOnlyDictionary<ProgramLabel, int> _labelAddresses;
 
-        public FunctionExecutor(Function function, IReadOnlyList<Value> arguments,
-            IPager pager, ITransactionManager txm, Program program)
+        public FunctionExecutor(IPager pager, ITransactionManager txm, Program program, Function function, IReadOnlyList<Value> arguments)
         {
-            _function = function;
-            _arguments = arguments;
             _pager = pager;
-            _program = program;
             _txm = txm;
 
-            _labelAddresses = function.Operations.Select((x, i) => (x, i)).Where(x => x.Item1 is ProgramLabel).ToDictionary(x => (ProgramLabel)x.Item1, x => x.Item2);
+            _program = program;
+            (_function, _labelAddresses) = RemoveLabels(function);
+            _arguments = arguments;
+        }
+
+        private static (Function, IReadOnlyDictionary<ProgramLabel, int>) RemoveLabels(Function input)
+        {
+            var labels = new Dictionary<ProgramLabel, int>();
+            var operations = new List<IOperation>();
+
+            foreach (var op in input.Operations)
+            {
+                if (op is ProgramLabel label)
+                {
+                    labels.Add(label, operations.Count);
+                }
+                else
+                {
+                    operations.Add(op);
+                }
+            }
+
+            return (new Function(operations, input.Slots), labels);
         }
 
         public IEnumerable<Value> Execute()
@@ -66,17 +85,17 @@ namespace SimpleDatabase.Execution
 
                 var (nextState, result) = ExecuteOperation(state, operation);
 
-                switch (result is Result.Yield y ? y.Inner : result)
+                switch (result is OperationResult.Yield y ? y.Inner : result)
                 {
-                    case Result.Next _:
+                    case OperationResult.Next _:
                         state = nextState.SetPC(nextState.GetPC() + 1);
                         break;
 
-                    case Result.Jump jump:
+                    case OperationResult.Jump jump:
                         state = nextState.SetPC(_labelAddresses[jump.Address]);
                         break;
 
-                    case Result.Finished _:
+                    case OperationResult.Finished _:
                         // TODO cleanup open resources
                         return (state, null);
 
@@ -84,7 +103,7 @@ namespace SimpleDatabase.Execution
                         throw new NotImplementedException($"Unsupported result type: {result.GetType().Name}");
                 }
 
-                if (result is Result.Yield yield)
+                if (result is OperationResult.Yield yield)
                 {
                     return (state, yield.Value);
                 }
@@ -102,119 +121,72 @@ namespace SimpleDatabase.Execution
             return _function.Operations[pc];
         }
 
-        private (FunctionState, Result) ExecuteOperation(FunctionState state, IOperation operation)
+        private (FunctionState, OperationResult) ExecuteOperation(FunctionState state, IOperation operation)
         {
-            switch (operation)
+            var key = operation.GetType().FullName;
+
+            if (!OperationExecutors.TryGetValue(key, out var executor))
             {
-                // Cursor
-                case OpenReadTableOperation openRead:
-                    return Execute(state, openRead);
-                case OpenReadIndexOperation openRead:
-                    return Execute(state, openRead);
-                case OpenWriteOperation openWrite:
-                    return Execute(state, openWrite);
-                case FirstOperation first:
-                    return Execute(state, first);
-                case NextOperation next:
-                    return Execute(state, next);
-                case InsertOperation insert:
-                    return Execute(state, insert);
-                case DeleteOperation delete:
-                    return Execute(state, delete);
-
-                // Columns
-                case KeyOperation key:
-                    return Execute(state, key);
-                case ColumnOperation column:
-                    return Execute(state, column);
-
-                // Slots
-                case LoadOperation load:
-                    return Execute(state, load);
-                case StoreOperation store:
-                    return Execute(state, store);
-
-                // Jumps
-                case ConditionalJumpOperation conditionalJump:
-                    return Execute(state, conditionalJump);
-                case JumpOperation jump:
-                    return Execute(state, jump);
-
-                // Constants
-                case ConstIntOperation constInt:
-                    return Execute(state, constInt);
-                case ConstStringOperation constStr:
-                    return Execute(state, constStr);
-
-                // Functions
-                case ReturnOperation ret:
-                    return Execute(state, ret);
-                case SetupCoroutineOperation setup:
-                    return Execute(state, setup);
-                case CallCoroutineOperation call:
-                    return Execute(state, call);
-
-                // Sorting
-                case SorterNew op:
-                    return Execute(state, op);
-                case SorterSort op:
-                    return Execute(state, op);
-                case SorterCursor op:
-                    return Execute(state, op);
-
-                // Other
-                case ProgramLabel _:
-                    return (state, new Result.Next());
-                case MakeRowOperation makeRow:
-                    return Execute(state, makeRow);
-                case YieldOperation yield:
-                    return Execute(state, yield);
-                case FinishOperation _:
-                    return (state, new Result.Finished());
-
-                default:
-                    throw new NotImplementedException($"Unsupported operation type: {operation.GetType().Name}");
+                throw new Exception($"No executor found for {key}");
             }
+
+            return executor(this, state, operation);
         }
 
-        private IRowSerializer CreateRowSerializer(Table table)
+        private static IReadOnlyDictionary<string, Func<FunctionExecutor, FunctionState, IOperation, (FunctionState, OperationResult)>> CreateOperationExecutors()
         {
-            return new RowSerializer(
-                table,
-                new ColumnTypeSerializerFactory()
-            );
+            var executors = new Dictionary<string, Func<FunctionExecutor, FunctionState, IOperation, (FunctionState, OperationResult)>>();
+
+            AddExecutor(executors, _ => new FinishOperationExecutor());
+            AddExecutor(executors, _ => new MakeRowOperationExecutor());
+            AddExecutor(executors, _ => new YieldOperationExecutor());
+            
+            // columns
+            AddExecutor(executors, _ => new ColumnOperationExecutor());
+            AddExecutor(executors, _ => new KeyOperationExecutor());
+
+            // constants
+            AddExecutor(executors, _ => new ConstIntOperationExecutor());
+            AddExecutor(executors, _ => new ConstStringOperationExecutor());
+
+            // cursors
+            AddExecutor(executors, _ => new FirstOperationExecutor());
+            AddExecutor(executors, _ => new DeleteOperationExecutor());
+            AddExecutor(executors, fexec => new InsertOperationExecutor(fexec._txm));
+            AddExecutor(executors, _ => new NextOperationExecutor());
+            AddExecutor(executors, fexec => new OpenReadIndexOperationExecutor(fexec._pager, fexec._rowSerializerFactory));
+            AddExecutor(executors, fexec => new OpenReadTableOperationExecutor(fexec._pager, fexec._txm, fexec._rowSerializerFactory));
+            AddExecutor(executors, fexec => new OpenWriteOperationExecutor(fexec._pager, fexec._txm, fexec._rowSerializerFactory));
+
+            // functions
+            AddExecutor(executors, fexec => new CallCoroutineOperationExecutor(fexec._pager, fexec._txm, fexec._program));
+            AddExecutor(executors, _ => new ReturnOperationExecutor());
+            AddExecutor(executors, fexec => new SetupCoroutineOperationExecutor(fexec._program.Functions));
+
+            // jumps
+            AddExecutor(executors, _ => new ConditionalJumpOperationExecutor());
+            AddExecutor(executors, _ => new JumpOperationExecutor());
+
+            // slots
+            AddExecutor(executors, _ => new LoadOperationExecutor());
+            AddExecutor(executors, _ => new StoreOperationExecutor());
+
+            // sorting
+            AddExecutor(executors, _ => new SorterCursorOperationExecutor());
+            AddExecutor(executors, _ => new SorterNewOperationExecutor());
+            AddExecutor(executors, _ => new SorterSortOperationExecutor());
+
+            return executors;
         }
 
-        private abstract class Result
+        private static void AddExecutor<TOperation>(IDictionary<string, Func<FunctionExecutor, FunctionState, IOperation, (FunctionState, OperationResult)>> executors, Func<FunctionExecutor, IOperationExecutor<TOperation>> factory)
+            where TOperation : IOperation
         {
-            public class Next : Result { }
-            public class Jump : Result
-            {
-                public ProgramLabel Address { get; }
+            var key = typeof(TOperation).FullName;
 
-                public Jump(ProgramLabel address)
-                {
-                    Address = address;
-                }
-            }
-            public class Finished : Result { }
+            (FunctionState, OperationResult) Executor(FunctionExecutor fexec, FunctionState state, IOperation op) => factory(fexec).Execute(state, (TOperation)op);
 
-            public class Yield : Result
-            {
-                public Result Inner { get; }
-                public Value Value { get; }
-
-                public Yield(Result inner, Value value)
-                {
-                    if (inner is Yield)
-                    {
-                        throw new InvalidOperationException("Cannot have recursive yields");
-                    }
-
-                    Inner = inner;
-                    Value = value;
-                }
-            }
+            executors.Add(key, Executor);
         }
     }
 }

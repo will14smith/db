@@ -2,27 +2,22 @@
 using SimpleDatabase.Execution.Operations.Jumps;
 using SimpleDatabase.Execution.Values;
 
-namespace SimpleDatabase.Execution
+namespace SimpleDatabase.Execution.OperationExecutors.Jumps
 {
-    public partial class FunctionExecutor
+    public class ConditionalJumpOperationExecutor : IOperationExecutor<ConditionalJumpOperation>
     {
-        private (FunctionState, Result) Execute(FunctionState state, ConditionalJumpOperation conditionalJumpOperation)
+        public (FunctionState, OperationResult) Execute(FunctionState state, ConditionalJumpOperation operation)
         {
             Value value1, value2;
             (state, value1) = state.PopValue();
             (state, value2) = state.PopValue();
 
-            if (Compare(conditionalJumpOperation.Comparison, value1, value2))
+            if (Compare(operation.Comparison, value1, value2))
             {
-                return (state, new Result.Jump(conditionalJumpOperation.Address));
+                return (state, new OperationResult.Jump(operation.Address));
             }
 
-            return (state, new Result.Next());
-        }
-
-        private static (FunctionState, Result) Execute(FunctionState state, JumpOperation jumpOperation)
-        {
-            return (state, new Result.Jump(jumpOperation.Address));
+            return (state, new OperationResult.Next());
         }
 
         private bool Compare(Comparison comparison, Value value1, Value value2)
