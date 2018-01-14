@@ -39,18 +39,20 @@ namespace SimpleDatabase.Execution.Values
 
         public ICursor First()
         {
-            var searcher = new TreeTraverser(SourcePager, _rowSerializer, Index);
-            var cursor = searcher.StartCursor();
+            var traverser = new TreeTraverser(SourcePager, _rowSerializer, Index);
+            var cursor = traverser.StartCursor();
+
+            cursor = AdvanceUntilVisible(traverser, cursor);
 
             return new IndexCursor(cursor, this);
         }
 
         public ICursor Next()
         {
-            var searcher = new TreeTraverser(SourcePager, _rowSerializer, Index);
-            var cursor = searcher.AdvanceCursor(_cursor.Value);
+            var traverser = new TreeTraverser(SourcePager, _rowSerializer, Index);
+            var cursor = traverser.AdvanceCursor(_cursor.Value);
 
-            // TODO check target row is visible
+            cursor = AdvanceUntilVisible(traverser, cursor);
 
             return new IndexCursor(cursor, this);
         }
@@ -99,6 +101,11 @@ namespace SimpleDatabase.Execution.Values
                 default:
                     throw new NotImplementedException($"Unsupported type: {result.GetType().Name}");
             }
+        }
+
+        private Cursor AdvanceUntilVisible(TreeTraverser traverser, Cursor cursor)
+        {
+            throw new NotImplementedException();
         }
     }
 }
