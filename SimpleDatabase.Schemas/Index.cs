@@ -5,8 +5,8 @@
         public string Name { get; }
         public KeyStructure Structure { get; }
 
-        // TODO should this always be 0?
-        public int RootPage => 0;
+        // TODO either immutable or store somewhere else....
+        public int RootPage { get; set; }
 
         public Index(string name, KeyStructure structure)
         {

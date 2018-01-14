@@ -1,6 +1,4 @@
-﻿using System;
-using SimpleDatabase.Execution.Values;
-using SimpleDatabase.Schemas;
+﻿using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 
@@ -27,16 +25,20 @@ namespace SimpleDatabase.Execution.Tables
 
             var heapDeleter = new HeapDeleter(new SourcePager(_pager, new PageSource.Heap(_table.Name)), _table);
             var result = heapDeleter.Delete(cursor);
-            // TODO check result
+            // TODO check result, abort if failed....
 
             foreach (var index in _table.Indices)
             {
-                // TODO calculate key
+                // TODO create serializer for index row
+                var serializer = _rowSerializer;
+
+                var treeDeleter = new TreeDeleter(new SourcePager(_pager, new PageSource.Index(_table.Name, index.Name)), serializer, index);
+
+                // TODO get key value from row
                 var key = 0;
 
-                var treeDeleter = new TreeDeleter(new SourcePager(_pager, new PageSource.Index(_table.Name, index.Name)), _rowSerializer, index);
                 result = treeDeleter.Delete(key);
-                // TODO check result, rollback all inserts (heap & index) if no success...
+                // TODO check result, abort if failed....
             }
 
             return result;

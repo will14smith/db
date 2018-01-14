@@ -1,5 +1,4 @@
-﻿using System;
-using SimpleDatabase.Schemas;
+﻿using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 
@@ -20,21 +19,29 @@ namespace SimpleDatabase.Execution.Tables
             _rowSerializer = new RowSerializer(table, new ColumnTypeSerializerFactory());
         }
 
+        // TODO remove this...
+        private static int _fakeKey = 0;
+
         public InsertResult Insert(Row row)
         {
             var heapInserter = new HeapInserter(new SourcePager(_pager, new PageSource.Heap(_table.Name)), _table);
             var result = heapInserter.Insert(row);
-            // TODO check result
+            // TODO check result, abort if failed...
 
             foreach (var index in _table.Indices)
             {
-                // TODO get key from row
-                // TODO create virtual "table" with heap key & index data columns
-                var key = 0;
+                // TODO create serializer for index row
+                var serializer = _rowSerializer;
 
-                var treeInserter = new TreeInserter(new SourcePager(_pager, new PageSource.Index(_table.Name, index.Name)), _rowSerializer, index);
-                result = treeInserter.Insert(key, row);
-                // TODO check result, rollback all inserts (heap & index) if no success...
+                var treeInserter = new TreeInserter(new SourcePager(_pager, new PageSource.Index(_table.Name, index.Name)), serializer, index);
+                
+                // TODO get key value from row
+                var key = _fakeKey++;
+                // TODO create row for data
+                var indexData = row;
+
+                result = treeInserter.Insert(key, indexData);
+                // TODO check result, abort if failed...
             }
 
             return result;
