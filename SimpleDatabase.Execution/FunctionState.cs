@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using SimpleDatabase.Execution.Values;
+using SimpleDatabase.Utils;
 
 namespace SimpleDatabase.Execution
 {
@@ -23,7 +25,6 @@ namespace SimpleDatabase.Execution
             }
         }
 
-
         public int GetPC()
         {
             return _pc;
@@ -39,8 +40,7 @@ namespace SimpleDatabase.Execution
 
             return this;
         }
-
-
+        
         public (FunctionState, Value) PopValue()
         {
             return (this, _stack.Pop());
@@ -61,5 +61,39 @@ namespace SimpleDatabase.Execution
 
             return this;
         }
+
+
+
+        private sealed class PCStackSlotsEqualityComparer : IEqualityComparer<FunctionState>
+        {
+            public bool Equals(FunctionState x, FunctionState y)
+            {
+                if (ReferenceEquals(x, y)) return true;
+
+                if (x is null) return false;
+                if (y is null) return false;
+
+                if (x.GetType() != y.GetType()) return false;
+
+                if (x._pc != y._pc) return false;
+                if (!x._stack.SequenceEqual(y._stack)) return false;
+                if (!new DictionaryComparer<SlotLabel, Value>().Equals(x._slots, y._slots)) return false;
+                
+                return true;
+            }
+
+            public int GetHashCode(FunctionState obj)
+            {
+                unchecked
+                {
+                    var hashCode = obj._pc;
+                    hashCode = (hashCode * 397) ^ (obj._stack != null ? obj._stack.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (obj._slots != null ? obj._slots.GetHashCode() : 0);
+                    return hashCode;
+                }
+            }
+        }
+
+        public static IEqualityComparer<FunctionState> EqualityComparer { get; } = new PCStackSlotsEqualityComparer();
     }
 }
