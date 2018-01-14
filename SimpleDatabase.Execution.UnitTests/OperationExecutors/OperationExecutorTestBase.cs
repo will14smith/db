@@ -1,11 +1,15 @@
 ﻿using System.Collections.Generic;
+using SimpleDatabase.Execution.Values;
 using Xunit;
 
 namespace SimpleDatabase.Execution.UnitTests.OperationExecutors
 {
     public abstract class OperationExecutorTestBase
     {
+        private int _counter;
+
         public FunctionState BlankState => new FunctionState(new Dictionary<SlotLabel, SlotDefinition>());
+        public Value RandomValue => new ObjectValue(++_counter);
 
         public void AssertEqualState(FunctionState expected, FunctionState actual)
         {

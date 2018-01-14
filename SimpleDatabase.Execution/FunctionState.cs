@@ -62,8 +62,6 @@ namespace SimpleDatabase.Execution
             return this;
         }
 
-
-
         private sealed class PCStackSlotsEqualityComparer : IEqualityComparer<FunctionState>
         {
             public bool Equals(FunctionState x, FunctionState y)
@@ -72,8 +70,6 @@ namespace SimpleDatabase.Execution
 
                 if (x is null) return false;
                 if (y is null) return false;
-
-                if (x.GetType() != y.GetType()) return false;
 
                 if (x._pc != y._pc) return false;
                 if (!x._stack.SequenceEqual(y._stack)) return false;
@@ -84,13 +80,7 @@ namespace SimpleDatabase.Execution
 
             public int GetHashCode(FunctionState obj)
             {
-                unchecked
-                {
-                    var hashCode = obj._pc;
-                    hashCode = (hashCode * 397) ^ (obj._stack != null ? obj._stack.GetHashCode() : 0);
-                    hashCode = (hashCode * 397) ^ (obj._slots != null ? obj._slots.GetHashCode() : 0);
-                    return hashCode;
-                }
+                throw new NotSupportedException();
             }
         }
 

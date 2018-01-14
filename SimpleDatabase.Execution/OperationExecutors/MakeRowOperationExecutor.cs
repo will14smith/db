@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using SimpleDatabase.Execution.Operations;
 using SimpleDatabase.Execution.Values;
 
