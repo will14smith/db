@@ -40,6 +40,10 @@ namespace SimpleDatabase.CLI
                 new Column("id", new ColumnType.Integer()),
                 new Column("name", new ColumnType.String(31)),
                 new Column("email", new ColumnType.String(255)),
+            }, new []
+            {
+                ("pk", new [] { ("id", KeyOrdering.Ascending) }),
+                ("k_email", new [] { ("email", KeyOrdering.Ascending) }),
             });
 
             _database = new Database(new[] { _table });
@@ -47,9 +51,11 @@ namespace SimpleDatabase.CLI
             _txm = new TransactionManager();
         }
 
-        private Table CreateTable(string name, Column[] columns)
+        private Table CreateTable(string name, IReadOnlyList<Column> columns, IEnumerable<(string, (string, KeyOrdering)[])> indexDefs)
         {
-            var table = new Table(name, columns, new Index[0]);
+            var indices = indexDefs.Select(x => new Index(x.Item1, new KeyStructure(x.Item2.Select(c => (columns.Single(v => v.Name == c.Item1), c.Item2)).ToList(), new Column[0]))).ToList();
+
+            var table = new Table(name, columns, indices);
 
             new TableCreator(_pager).Create(table);
 

@@ -1,8 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using SimpleDatabase.Parsing.Expressions;
 using SimpleDatabase.Parsing.Statements;
 using SimpleDatabase.Planning.Nodes;
+using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage;
+using SimpleDatabase.Utils;
+using Table = SimpleDatabase.Parsing.Statements.Table;
 
 namespace SimpleDatabase.Planning
 {
@@ -21,14 +26,26 @@ namespace SimpleDatabase.Planning
             {
                 case SelectStatement select:
                     {
-                        Node root = new ScanTableNode(((Table.TableName)select.Table).Name);
+                        Node root;
+
+                        var index = TryFindIndex(select.Table, select.Ordering);
+                        if (index.HasValue)
+                        {
+                            root = new ScanIndexNode(((Table.TableName)select.Table).Name, index.Value.Name);
+                        }
+                        else
+                        {
+                            root = new ScanTableNode(((Table.TableName)select.Table).Name);
+                        }
+
                         root = select.Where.Map(
                             pred => new FilterNode(root, pred),
                             () => root
                         );
+
                         root = new ProjectionNode(root, select.Columns);
 
-                        if (select.Ordering.Any())
+                        if (!index.HasValue && select.Ordering.Any())
                         {
                             root = new SortNode(root, select.Ordering);
                         }
@@ -66,6 +83,53 @@ namespace SimpleDatabase.Planning
 
                 default: throw new ArgumentOutOfRangeException(nameof(statment), $"Unhandled type: {statment.GetType().FullName}");
             }
+        }
+
+        private Option<Index> TryFindIndex(Table selectTable, IReadOnlyList<OrderExpression> ordering)
+        {
+            if (!ordering.Any())
+            {
+                return Option.None<Index>();
+            }
+
+            var tableName = ((Table.TableName)selectTable).Name;
+            var table = _database.GetTable(tableName);
+
+            foreach (var index in table.Indices)
+            {
+                if (IndexMatch(index, ordering))
+                {
+                    return Option.Some(index);
+                }
+            }
+
+            return Option.None<Index>();
+        }
+
+        private bool IndexMatch(Index index, IReadOnlyList<OrderExpression> ordering)
+        {
+            var oi = 0;
+            foreach (var key in index.Structure.Keys)
+            {
+                if (!KeyMatch(key, ordering[oi]))
+                {
+                    continue;
+                }
+
+                if (++oi == ordering.Count) return true;
+            }
+
+            return oi == ordering.Count;
+        }
+
+        private bool KeyMatch((Column, KeyOrdering) key, OrderExpression ordering)
+        {
+            if (key.Item2 == KeyOrdering.Ascending && ordering.Order == Order.Descending) return false;
+            if (key.Item2 == KeyOrdering.Descending && ordering.Order == Order.Ascending) return false;
+
+            var column = (ColumnNameExpression) ordering.Expression;
+
+            return key.Item1.Name == column.Name;
         }
     }
 }

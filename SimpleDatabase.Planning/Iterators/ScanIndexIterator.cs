@@ -1,24 +1,26 @@
+using System;
 using System.Collections.Generic;
 using SimpleDatabase.Execution;
-using SimpleDatabase.Execution.Operations;
 using SimpleDatabase.Execution.Operations.Cursors;
 using SimpleDatabase.Planning.Items;
 using SimpleDatabase.Schemas;
 
 namespace SimpleDatabase.Planning.Iterators
 {
-    public class ScanTableIterator : IIterator
+    public class ScanIndexIterator : IIterator
     {
         private readonly IOperationGenerator _generator;
         private readonly Table _table;
+        private readonly Index _index;
         private readonly bool _writable;
 
         private readonly SlotItem _cursor;
 
-        public ScanTableIterator(IOperationGenerator generator, Table table, bool writable)
+        public ScanIndexIterator(IOperationGenerator generator, Table table, Index index, bool writable)
         {
             _generator = generator;
             _table = table;
+            _index = index;
             _writable = writable;
 
             _cursor = new SlotItem(_generator.NewSlot(new SlotDefinition("cursor")));
@@ -30,7 +32,12 @@ namespace SimpleDatabase.Planning.Iterators
 
         public void GenerateInit()
         {
-            _generator.Emit(_writable ? (IOperation)new OpenWriteOperation(_table) : new OpenReadTableOperation(_table));
+            if (_writable)
+            {
+                throw new NotImplementedException();
+            }
+
+            _generator.Emit(new OpenReadIndexOperation(_table, _index));
             _generator.Emit(new FirstOperation());
             _cursor.Store(_generator);
         }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using SimpleDatabase.Execution;
 using SimpleDatabase.Execution.Operations;
 using SimpleDatabase.Execution.Operations.Jumps;
@@ -56,6 +57,7 @@ namespace SimpleDatabase.Planning
             {
                 case ConstantNode constant: return new ConstantIterator(generator, constant.Columns, constant.Values);
                 case ScanTableNode scan: return new ScanTableIterator(generator, _database.GetTable(scan.TableName), writable);
+                case ScanIndexNode scan: { var table = _database.GetTable(scan.TableName); return new ScanIndexIterator(generator, table, table.Indices.Single(x => x.Name == scan.IndexName), writable); } 
                 case ProjectionNode projection: return new ProjectionIterator(Compile(projection.Input, generator, writable), projection.Columns);
                 case FilterNode filter: return new FilterIterator(generator, Compile(filter.Input, generator, writable), filter.Predicate);
                 case InsertNode insert: return new InsertIterator(generator, Compile(insert.Input, generator, writable), _database.GetTable(insert.TableName));

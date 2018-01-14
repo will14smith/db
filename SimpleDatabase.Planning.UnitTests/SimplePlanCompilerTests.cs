@@ -31,7 +31,8 @@ namespace SimpleDatabase.Planning.UnitTests
                     new Expression[] { new NumberLiteralExpression(2), new StringLiteralExpression("b") },
                 }
             )) },
-            new object[] {"Scan", new Plan(new ScanTableNode("table")) },
+            new object[] {"Scan table", new Plan(new ScanTableNode("table")) },
+            new object[] {"Scan index", new Plan(new ScanIndexNode("table", "k_email")) },
             new object[] {"Project *", new Plan(new ProjectionNode(new ScanTableNode("table"), new []{ new ResultColumn.Star(Option.None<string>()) })) },
             new object[] {"Project column", new Plan(new ProjectionNode(new ScanTableNode("table"), new[]{ new ResultColumn.Expression(new ColumnNameExpression("name"), Option.None<string>()) })) },
             new object[] {"Filter name='a'", new Plan(new FilterNode(new ScanTableNode("table"), new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a")))) },
@@ -79,7 +80,16 @@ namespace SimpleDatabase.Planning.UnitTests
         {
             var database = new Database(new[]
             {
-                new Table("table", new []{ new Column("id", new ColumnType.Integer()), new Column("name", new ColumnType.String(127)), new Column("email", new ColumnType.String(255)) }, new Index[0])
+                new Table("table",
+                    new []{
+                        new Column("id", new ColumnType.Integer()),
+                        new Column("name", new ColumnType.String(127)),
+                        new Column("email", new ColumnType.String(255))
+                    },
+                    new []{
+                        new Index("k_email", new KeyStructure(new [] { (new Column("email", new ColumnType.String(1023)), KeyOrdering.Ascending) }, new Column[0])),
+                    }
+                )
             });
             var compiler = new PlanCompiler(database);
 
