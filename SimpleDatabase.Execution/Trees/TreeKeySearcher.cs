@@ -1,12 +1,13 @@
-﻿using SimpleDatabase.Storage.Tree;
+﻿using SimpleDatabase.Storage.Serialization;
+using SimpleDatabase.Storage.Tree;
 
 namespace SimpleDatabase.Execution.Trees
 {
     public class TreeKeySearcher : ITreeSearchStrategy
     {
-        private readonly int _key;
+        private readonly IndexKey _key;
 
-        public TreeKeySearcher(int key)
+        public TreeKeySearcher(IndexKey key)
         {
             _key = key;
         }

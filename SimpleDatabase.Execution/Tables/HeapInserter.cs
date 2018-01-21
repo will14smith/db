@@ -19,7 +19,7 @@ namespace SimpleDatabase.Execution.Tables
             _rowSerializer = new HeapSerializer(table.Columns, new ColumnTypeSerializerFactory());
         }
 
-        public InsertResult Insert(Row row)
+        public int Insert(Row row)
         {
             // find the last page
             var page = HeapPage.Read(_pager.Get(0));
@@ -52,9 +52,7 @@ namespace SimpleDatabase.Execution.Tables
                 throw new IndexOutOfRangeException("Page index will overflow");
             }
 
-            var key = (pageIndex << 8) | itemIndex;
-
-            return new InsertResult.Success(key);
+            return (pageIndex << 8) | itemIndex;
         }
     }
 }

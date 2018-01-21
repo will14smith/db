@@ -4,22 +4,11 @@
     {
         public class Success : DeleteResult
         {
-            public int Key { get; }
-
-            public Success(int key)
+            public Success()
             {
-                Key = key;
             }
         }
 
-        public class KeyNotFound : DeleteResult
-        {
-            public int Key { get; }
-
-            public KeyNotFound(int key)
-            {
-                Key = key;
-            }
-        }
+        public class KeyNotFound : DeleteResult { }
     }
 }

@@ -1,11 +1,12 @@
 ﻿using System;
+using SimpleDatabase.Storage.Serialization;
 using SimpleDatabase.Storage.Tree;
 
 namespace SimpleDatabase.Execution.Trees
 {
     public static class NodeExtensions
     {
-        public static int GetMaxKey(this Node node)
+        public static IndexKey GetMaxKey(this Node node)
         {
             switch (node)
             {

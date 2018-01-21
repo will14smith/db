@@ -22,7 +22,7 @@ namespace SimpleDatabase.Execution.Tables
             _index = index;
         }
 
-        public InsertResult Insert(int key, Row row)
+        public InsertResult Insert(IndexKey key, IndexData data)
         {
             var page = _pager.Get(_index.RootPage);
             var node = Node.Read(page, _serializer);
@@ -31,10 +31,10 @@ namespace SimpleDatabase.Execution.Tables
             switch (node)
             {
                 case LeafNode leafNode:
-                    result = LeafInsert(leafNode, key, row);
+                    result = LeafInsert(leafNode, key, data);
                     break;
                 case InternalNode internalNode:
-                    result = InternalInsert(internalNode, key, row);
+                    result = InternalInsert(internalNode, key, data);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -43,13 +43,13 @@ namespace SimpleDatabase.Execution.Tables
             switch (result)
             {
                 case Result.Success _:
-                    return new InsertResult.Success(key);
+                    return new InsertResult.Success();
                 case Result.DuplicateKey r:
-                    return new InsertResult.DuplicateKey(r.Key);
+                    return new InsertResult.DuplicateKey();
 
                 case Result.WasSplit split:
                     SplitRoot(split);
-                    return new InsertResult.Success(key);
+                    return new InsertResult.Success();
 
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -79,13 +79,13 @@ namespace SimpleDatabase.Execution.Tables
             rootNode.SetChild(1, rightPage.Id.Index);
         }
 
-        private Result LeafInsert(LeafNode node, int key, Row row)
+        private Result LeafInsert(LeafNode node, IndexKey key, IndexData data)
         {
             var cellIndex = new TreeKeySearcher(key).FindCell(node);
 
             if (node.CellCount < node.Layout.LeafNodeMaxCells)
             {
-                return LeafInsertNonFull(node, key, row, cellIndex);
+                return LeafInsertNonFull(node, key, data, cellIndex);
             }
 
             var newPage = _pager.Allocate();
@@ -105,11 +105,11 @@ namespace SimpleDatabase.Execution.Tables
 
             if (cellIndex < threshold)
             {
-                LeafInsertNonFull(node, key, row, cellIndex);
+                LeafInsertNonFull(node, key, data, cellIndex);
             }
             else
             {
-                LeafInsertNonFull(newNode, key, row, cellIndex - threshold);
+                LeafInsertNonFull(newNode, key, data, cellIndex - threshold);
             }
 
             return new Result.WasSplit(
@@ -119,7 +119,7 @@ namespace SimpleDatabase.Execution.Tables
             );
         }
 
-        private Result LeafInsertNonFull(LeafNode node, int key, Row row, int cellIndex)
+        private Result LeafInsertNonFull(LeafNode node, IndexKey key, IndexData data, int cellIndex)
         {
             if (node.CellCount >= node.Layout.LeafNodeMaxCells)
             {
@@ -148,16 +148,16 @@ namespace SimpleDatabase.Execution.Tables
             }
 
             node.CellCount += 1;
-            node.SetCell(cellIndex, key, row);
+            node.SetCell(cellIndex, key, data);
 
             return new Result.Success();
         }
 
-        private Result InternalInsert(InternalNode node, int key, Row row)
+        private Result InternalInsert(InternalNode node, IndexKey key, IndexData data)
         {
             if (node.KeyCount < node.Layout.InternalNodeMaxCells)
             {
-                return InnerInsertNonFull(node, key, row);
+                return InnerInsertNonFull(node, key, data);
             }
 
             // this split is pre-emptive as there might be space in the children
@@ -180,12 +180,12 @@ namespace SimpleDatabase.Execution.Tables
             node.KeyCount = threshold - 1;
             node.SetChild(threshold - 1, rightChild);
 
-            InnerInsertNonFull(key < splitKey ? node : newNode, key, row);
+            InnerInsertNonFull(key < splitKey ? node : newNode, key, data);
 
             return new Result.WasSplit(splitKey, node.PageId.Index, newNode.PageId.Index);
         }
 
-        private Result InnerInsertNonFull(InternalNode node, int key, Row row)
+        private Result InnerInsertNonFull(InternalNode node, IndexKey key, IndexData data)
         {
             var cellIndex = new TreeKeySearcher(key).FindCell(node);
 
@@ -197,10 +197,10 @@ namespace SimpleDatabase.Execution.Tables
             switch (childNode)
             {
                 case LeafNode leafNode:
-                    result = LeafInsert(leafNode, key, row);
+                    result = LeafInsert(leafNode, key, data);
                     break;
                 case InternalNode internalNode:
-                    result = InternalInsert(internalNode, key, row);
+                    result = InternalInsert(internalNode, key, data);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -240,24 +240,24 @@ namespace SimpleDatabase.Execution.Tables
 
             public class DuplicateKey : Result
             {
-                public DuplicateKey(int key)
+                public DuplicateKey(IndexKey key)
                 {
                     Key = key;
                 }
 
-                public int Key { get; }
+                public IndexKey Key { get; }
             }
 
             public class WasSplit : Result
             {
-                public WasSplit(int key, int left, int right)
+                public WasSplit(IndexKey key, int left, int right)
                 {
                     Key = key;
                     Left = left;
                     Right = right;
                 }
 
-                public int Key { get; }
+                public IndexKey Key { get; }
                 public int Left { get; }
                 public int Right { get; }
             }

@@ -23,9 +23,10 @@ namespace SimpleDatabase.Execution.Tables
         public InsertResult Insert(Row row)
         {
             var heapInserter = new HeapInserter(new SourcePager(_pager, new PageSource.Heap(_table.Name)), _table);
-            var result = heapInserter.Insert(row);
+            var heapKey = heapInserter.Insert(row);
             // TODO check result, abort if failed...
 
+            var result = new InsertResult.Success();
             foreach (var index in _table.Indices)
             {
                 var treeInserter = new TreeInserter(new SourcePager(_pager, new PageSource.Index(_table.Name, index.Name)), index);

@@ -22,7 +22,7 @@ namespace SimpleDatabase.Execution.Tables
             _index = index;
         }
 
-        public DeleteResult Delete(int key)
+        public DeleteResult Delete(IndexKey key)
         {
             var page = _pager.Get(_index.RootPage);
             var node = Node.Read(page, _serializer);
@@ -43,14 +43,14 @@ namespace SimpleDatabase.Execution.Tables
             switch (result)
             {
                 case Result.Success _:
-                    return new DeleteResult.Success(key);
+                    return new DeleteResult.Success();
 
-                case Result.KeyNotFound keyNotFound:
-                    return new DeleteResult.KeyNotFound(keyNotFound.Key);
+                case Result.KeyNotFound _:
+                    return new DeleteResult.KeyNotFound();
 
                 case Result.NodeUnderflow underflow:
                     PromoteSingleChildToRoot(page, (InternalNode)underflow.Node);
-                    return new DeleteResult.Success(key);
+                    return new DeleteResult.Success();
 
                 default:
                     throw new ArgumentOutOfRangeException($"Unhandled result: {result}");
@@ -75,7 +75,7 @@ namespace SimpleDatabase.Execution.Tables
             _pager.Free(childPageNumber);
         }
 
-        private Result LeafDelete(LeafNode node, int key)
+        private Result LeafDelete(LeafNode node, IndexKey key)
         {
             var result = LeafDeleteNoUnderflow(node, key);
             if (result is Result.KeyNotFound)
@@ -92,7 +92,7 @@ namespace SimpleDatabase.Execution.Tables
             return new Result.NodeUnderflow(node);
         }
 
-        private Result LeafDeleteNoUnderflow(LeafNode node, int key)
+        private Result LeafDeleteNoUnderflow(LeafNode node, IndexKey key)
         {
             var cellIndex = new TreeKeySearcher(key).FindCell(node);
             if (node.GetCellKey(cellIndex) != key)
@@ -109,7 +109,7 @@ namespace SimpleDatabase.Execution.Tables
             return new Result.Success();
         }
 
-        private Result InternalDelete(InternalNode internalNode, int key)
+        private Result InternalDelete(InternalNode internalNode, IndexKey key)
         {
             var childIndex = new TreeKeySearcher(key).FindCell(internalNode);
             var childPage = _pager.Get(internalNode.GetChild(childIndex));
@@ -221,7 +221,7 @@ namespace SimpleDatabase.Execution.Tables
             }
         }
 
-        private int BorrowFromPrev(Node node, Node prevNode)
+        private IndexKey BorrowFromPrev(Node node, Node prevNode)
         {
             // move max(prevNode) -> start(node)
 
@@ -246,7 +246,7 @@ namespace SimpleDatabase.Execution.Tables
                     throw new ArgumentOutOfRangeException();
             }
         }
-        private int BorrowFromNext(Node node, Node nextNode)
+        private IndexKey BorrowFromNext(Node node, Node nextNode)
         {
             // move min(nextNode) -> end(node)
 
@@ -304,9 +304,9 @@ namespace SimpleDatabase.Execution.Tables
 
             public class KeyNotFound : Result
             {
-                public int Key { get; }
+                public IndexKey Key { get; }
 
-                public KeyNotFound(int key)
+                public KeyNotFound(IndexKey key)
                 {
                     Key = key;
                 }
