@@ -7,7 +7,7 @@ namespace SimpleDatabase.Storage.Serialization
 {
     public class RowSerializer : IRowSerializer
     {
-        private readonly Table _table;
+        private readonly IReadOnlyList<Column> _columns;
         private readonly ColumnTypeSerializerFactory _columnTypeSerializerFactory;
 
         private const int MinXidOffset = 0;
@@ -19,9 +19,9 @@ namespace SimpleDatabase.Storage.Serialization
         private readonly IReadOnlyList<int> _offsets;
         private readonly IReadOnlyList<int> _sizes;
 
-        public RowSerializer(Table table, ColumnTypeSerializerFactory columnTypeSerializerFactory)
+        public RowSerializer(IReadOnlyList<Column> columns, ColumnTypeSerializerFactory columnTypeSerializerFactory)
         {
-            _table = table;
+            _columns = columns;
             _columnTypeSerializerFactory = columnTypeSerializerFactory;
 
             _size = MinXidSize + MaxXidSize;
@@ -29,7 +29,7 @@ namespace SimpleDatabase.Storage.Serialization
             var offsets = new List<int>();
             var sizes = new List<int>();
 
-            foreach (var column in table.Columns)
+            foreach (var column in _columns)
             {
                 var serializer = _columnTypeSerializerFactory.GetSerializer(column.Type);
                 var columnSize = serializer.GetColumnSize();
@@ -55,7 +55,7 @@ namespace SimpleDatabase.Storage.Serialization
 
             var (minXid, maxXid) = ReadXid(rowStart);
 
-            for (var index = 0; index < _table.Columns.Count; index++)
+            for (var index = 0; index < _columns.Count; index++)
             {
                 values.Add(ReadColumn(rowStart, index));
             }
@@ -65,7 +65,7 @@ namespace SimpleDatabase.Storage.Serialization
         public void WriteRow(Span<byte> rowStart, Row row)
         {
             // TODO check column types match
-            if (row.Values.Count != _table.Columns.Count)
+            if (row.Values.Count != _columns.Count)
             {
                 throw new ArgumentException("Row doesn't have correct number of columns", nameof(row));
             }
@@ -73,41 +73,45 @@ namespace SimpleDatabase.Storage.Serialization
             rowStart.Slice(MinXidOffset, MinXidSize).Write(row.MinXid.Id);
             rowStart.Slice(MaxXidOffset, MaxXidSize).Write(row.MaxXid.Select(x => x.Id).OrElse(() => 0ul));
 
-            for (var index = 0; index < _table.Columns.Count; index++)
+            for (var index = 0; index < _columns.Count; index++)
             {
                 WriteColumn(rowStart, index, row.Values[index]);
             }
         }
 
-        public (TransactionId min, Option<TransactionId> max) ReadXid(Span<byte> rowStart)
+        (TransactionId min, Option<TransactionId> max) IRowSerializer.ReadXid(Span<byte> rowStart)
+        {
+            return ReadXid(rowStart);
+        }
+        public static (TransactionId min, Option<TransactionId> max) ReadXid(Span<byte> rowStart)
         {
             var min = rowStart.Slice(MinXidOffset, MinXidSize).Read<ulong>();
             var max = rowStart.Slice(MaxXidOffset, MaxXidSize).Read<ulong>();
-            
+
             return (new TransactionId(min), max != 0 ? TransactionId.Some(max) : TransactionId.None());
         }
 
         public ColumnValue ReadColumn(Span<byte> rowStart, int columnIndex)
         {
-            if (columnIndex < 0 || columnIndex >= _table.Columns.Count)
+            if (columnIndex < 0 || columnIndex >= _columns.Count)
             {
                 throw new ArgumentOutOfRangeException(nameof(columnIndex));
             }
 
             var columnStart = rowStart.Slice(_offsets[columnIndex], _sizes[columnIndex]);
-            var serializer = _columnTypeSerializerFactory.GetSerializer(_table.Columns[columnIndex].Type);
+            var serializer = _columnTypeSerializerFactory.GetSerializer(_columns[columnIndex].Type);
 
             return serializer.ReadColumn(columnStart);
         }
         public void WriteColumn(Span<byte> rowStart, int columnIndex, ColumnValue value)
         {
-            if (columnIndex < 0 || columnIndex >= _table.Columns.Count)
+            if (columnIndex < 0 || columnIndex >= _columns.Count)
             {
                 throw new ArgumentOutOfRangeException(nameof(columnIndex));
             }
 
             var columnStart = rowStart.Slice(_offsets[columnIndex], _sizes[columnIndex]);
-            var serializer = _columnTypeSerializerFactory.GetSerializer(_table.Columns[columnIndex].Type);
+            var serializer = _columnTypeSerializerFactory.GetSerializer(_columns[columnIndex].Type);
 
             serializer.WriteColumn(columnStart, value);
         }

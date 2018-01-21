@@ -2,19 +2,19 @@
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
-using SimpleDatabase.Utils;
 
 namespace SimpleDatabase.Storage.Tree
 {
     public class LeafNode : Node
     {
-        private LeafNode(IRowSerializer rowSerializer, Page page) : base(rowSerializer, page)
+        public LeafNode(Page page, IRowSerializer keySerializer, IRowSerializer dataSerializer) 
+            : base(page, keySerializer, dataSerializer)
         {
         }
 
-        public static LeafNode New(IRowSerializer rowSerializer, Page page)
+        public static LeafNode New(Page page, IRowSerializer keySerializer, IRowSerializer dataSerializer)
         {
-            return new LeafNode(rowSerializer, page)
+            return new LeafNode(page, keySerializer, dataSerializer)
             {
                 Type = PageType.Leaf,
                 IsRoot = false,
@@ -23,14 +23,14 @@ namespace SimpleDatabase.Storage.Tree
             };
         }
 
-        public new static LeafNode Read(IRowSerializer rowSerializer, Page page)
+        public new static LeafNode Read(Page page, IRowSerializer keySerializer, IRowSerializer dataSerializer)
         {
             if (page.Type != PageType.Leaf)
             {
                 throw new InvalidOperationException($"Tried to read a {PageType.Leaf} node but found a {page.Type} node instead");
             }
 
-            return new LeafNode(rowSerializer, page);
+            return new LeafNode(page, keySerializer, dataSerializer);
         }
 
         public int CellCount
@@ -50,34 +50,26 @@ namespace SimpleDatabase.Storage.Tree
         }
         public Span<byte> GetCellKeyOffset(int index)
         {
-            return GetCellOffset(index);
+            return GetCellOffset(index).Slice(0, Layout.LeafNodeKeySize);
         }
         public Span<byte> GetCellValueOffset(int index)
         {
             return GetCellOffset(index).Slice(Layout.LeafNodeKeySize, Layout.LeafNodeValueSize);
         }
 
-        public int GetCellKey(int cellNumber)
+        public Row GetCellKey(int cellNumber)
         {
-            return GetCellKeyOffset(cellNumber).Read<int>();
+            return KeySerializer.ReadRow(GetCellKeyOffset(cellNumber));
         }
         public Row GetCellValue(int cellNumber)
         {
-            return RowSerializer.ReadRow(GetCellValueOffset(cellNumber));
-        }
-        public ColumnValue GetCellColumn(int cellNumber, int columnIndex)
-        {
-            return RowSerializer.ReadColumn(GetCellValueOffset(cellNumber), columnIndex);
+            return DataSerializer.ReadRow(GetCellValueOffset(cellNumber));
         }
 
-        public void SetCell(int cellNumber, int key, Row row)
+        public void SetCell(int cellNumber, Row key, Row data)
         {
-            GetCellKeyOffset(cellNumber).Write(key);
-            RowSerializer.WriteRow(GetCellValueOffset(cellNumber), row);
-        }
-        public void SetCellColumn(int cellNumber, int columnIndex, ColumnValue column)
-        {
-            RowSerializer.WriteColumn(GetCellValueOffset(cellNumber), columnIndex, column);
+            KeySerializer.WriteRow(GetCellKeyOffset(cellNumber), key);
+            DataSerializer.WriteRow(GetCellValueOffset(cellNumber), data);
         }
 
         public void CopyCell(LeafNode source, int sourceCell, int destinationCell)

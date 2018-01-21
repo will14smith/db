@@ -10,14 +10,20 @@ namespace SimpleDatabase.Execution.Tables
     public class TreeInserter
     {
         private readonly ISourcePager _pager;
-        private readonly IRowSerializer _rowSerializer;
+
+        private readonly RowSerializer _keySerializer;
+        private readonly RowSerializer _dataSerializer;
 
         private readonly Index _index;
 
-        public TreeInserter(ISourcePager pager, IRowSerializer rowSerializer, Index index)
+        public TreeInserter(ISourcePager pager, Index index)
         {
             _pager = pager;
-            _rowSerializer = rowSerializer;
+
+            var (keyColumns, dataColumns) = index.GetPersistenceColumns();
+
+            _keySerializer = new RowSerializer(keyColumns, new ColumnTypeSerializerFactory());
+            _dataSerializer = new RowSerializer(dataColumns, new ColumnTypeSerializerFactory());
 
             _index = index;
         }
@@ -25,7 +31,7 @@ namespace SimpleDatabase.Execution.Tables
         public InsertResult Insert(int key, Row row)
         {
             var page = _pager.Get(_index.RootPage);
-            var node = Node.Read(_rowSerializer, page);
+            var node = Node.Read(page, _keySerializer, _dataSerializer);
 
             Result result;
             switch (node)
@@ -68,10 +74,10 @@ namespace SimpleDatabase.Execution.Tables
             var rootPage = _pager.Get(split.Left);
 
             Array.Copy(rootPage.Data, leftPage.Data, PageLayout.PageSize);
-            var leftNode = Node.Read(_rowSerializer, leftPage);
+            var leftNode = Node.Read(leftPage, _keySerializer, _dataSerializer);
             leftNode.IsRoot = false;
 
-            var rootNode = InternalNode.New(_rowSerializer, rootPage);
+            var rootNode = InternalNode.New(rootPage, _keySerializer, _dataSerializer);
             rootNode.IsRoot = true;
 
             rootNode.KeyCount = 1;
@@ -89,7 +95,7 @@ namespace SimpleDatabase.Execution.Tables
             }
 
             var newPage = _pager.Allocate();
-            var newNode = LeafNode.New(_rowSerializer, newPage);
+            var newNode = LeafNode.New(newPage, _keySerializer, _dataSerializer);
 
             newNode.NextLeaf = node.NextLeaf;
             node.NextLeaf = newPage.Id.Index;
@@ -164,7 +170,7 @@ namespace SimpleDatabase.Execution.Tables
             // all the B+ tree invariants still hold though
 
             var newPage = _pager.Allocate();
-            var newNode = InternalNode.New(_rowSerializer, newPage);
+            var newNode = InternalNode.New(newPage, _keySerializer, _dataSerializer);
 
             var threshold = newNode.Layout.InternalNodeLeftSplitCount;
             var splitKey = node.GetKey(threshold - 1);
@@ -191,7 +197,7 @@ namespace SimpleDatabase.Execution.Tables
 
             var childPageNumber = node.GetChild(cellIndex);
             var childPage = _pager.Get(childPageNumber);
-            var childNode = Node.Read(_rowSerializer, childPage);
+            var childNode = Node.Read(childPage, _keySerializer, _dataSerializer);
 
             Result result;
             switch (childNode)

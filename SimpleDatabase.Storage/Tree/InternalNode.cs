@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 using SimpleDatabase.Utils;
@@ -8,13 +9,14 @@ namespace SimpleDatabase.Storage.Tree
 {
     public class InternalNode : Node
     {
-        private InternalNode(IRowSerializer rowSerializer, Page page) : base(rowSerializer, page)
+        private InternalNode(Page page, IRowSerializer keySerializer, IRowSerializer dataSerializer) 
+            : base(page, keySerializer, dataSerializer)
         {
         }
 
-        public static InternalNode New(IRowSerializer rowSerializer, Page page)
+        public static InternalNode New(Page page, IRowSerializer keySerializer, IRowSerializer dataSerializer)
         {
-            return new InternalNode(rowSerializer, page)
+            return new InternalNode(page, keySerializer, dataSerializer)
             {
                 Type = PageType.Internal,
                 IsRoot = false,
@@ -22,14 +24,14 @@ namespace SimpleDatabase.Storage.Tree
             };
         }
 
-        public new static InternalNode Read(IRowSerializer rowSerializer, Page page)
+        public new static InternalNode Read(Page page, IRowSerializer keySerializer, IRowSerializer dataSerializer)
         {
             if (page.Type != PageType.Internal)
             {
                 throw new InvalidOperationException($"Tried to read a {PageType.Internal} node but found a {page.Type} node instead");
             }
 
-            return new InternalNode(rowSerializer, page);
+            return new InternalNode(page, keySerializer, dataSerializer);
         }
 
         public int KeyCount
@@ -55,7 +57,7 @@ namespace SimpleDatabase.Storage.Tree
         }
         public Span<byte> GetKeyOffset(int cellNumber)
         {
-            return GetCellOffset(cellNumber).Slice(Layout.InternalNodeChildSize);
+            return GetCellOffset(cellNumber).Slice(Layout.InternalNodeChildSize, Layout.InternalNodeKeySize);
         }
 
         public int GetChild(int childNumber)
@@ -89,16 +91,16 @@ namespace SimpleDatabase.Storage.Tree
             }
         }
 
-        public int GetKey(int keyNumber)
+        public Row GetKey(int keyNumber)
         {
-            return GetKeyOffset(keyNumber).Read<int>();
+            return KeySerializer.ReadRow(GetKeyOffset(keyNumber));
         }
-        public void SetKey(int keyNumber, int key)
+        public void SetKey(int keyNumber, Row key)
         {
-            GetKeyOffset(keyNumber).Write(key);
+            KeySerializer.WriteRow(GetKeyOffset(keyNumber), key);
         }
 
-        public void SetCell(int cellNumber, int child, int key)
+        public void SetCell(int cellNumber, int child, Row key)
         {
             SetChild(cellNumber, child);
             SetKey(cellNumber, key);

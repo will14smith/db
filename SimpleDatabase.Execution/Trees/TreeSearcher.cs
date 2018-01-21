@@ -1,4 +1,5 @@
 ﻿using System;
+using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 using SimpleDatabase.Storage.Tree;
@@ -9,19 +10,25 @@ namespace SimpleDatabase.Execution.Trees
     {
         private readonly ISourcePager _pager;
         private readonly ITreeSearchStrategy _treeSearchStrategy;
-        private readonly IRowSerializer _rowSerializer;
 
-        public TreeSearcher(ISourcePager pager, ITreeSearchStrategy treeSearchStrategy, IRowSerializer rowSerializer)
+        private readonly RowSerializer _keySerializer;
+        private readonly RowSerializer _dataSerializer;
+
+        public TreeSearcher(ISourcePager pager, ITreeSearchStrategy treeSearchStrategy, Index index)
         {
             _pager = pager;
             _treeSearchStrategy = treeSearchStrategy;
-            _rowSerializer = rowSerializer;
+
+            var (keyColumns, dataColumns) = index.GetPersistenceColumns();
+
+            _keySerializer = new RowSerializer(keyColumns, new ColumnTypeSerializerFactory());
+            _dataSerializer = new RowSerializer(dataColumns, new ColumnTypeSerializerFactory());
         }
 
         public Cursor FindCursor(int pageIndex)
         {
             var page = _pager.Get(pageIndex);
-            var node = Node.Read(_rowSerializer, page);
+            var node = Node.Read(page, _keySerializer, _dataSerializer);
 
             switch (node)
             {

@@ -22,7 +22,7 @@ namespace SimpleDatabase.Storage
             foreach (var index in table.Indices)
             {
                 var indexPager = new SourcePager(_pager, new PageSource.Index(table.Name, index.Name));
-                new IndexCreator(indexPager, table, index).Create();
+                new IndexCreator(indexPager, index).Create();
             }
         }
     }

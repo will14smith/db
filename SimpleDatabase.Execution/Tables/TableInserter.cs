@@ -1,4 +1,6 @@
-﻿using SimpleDatabase.Schemas;
+﻿using System;
+using System.Collections.Generic;
+using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 
@@ -16,7 +18,7 @@ namespace SimpleDatabase.Execution.Tables
             _pager = pager;
             _table = table;
 
-            _rowSerializer = new RowSerializer(table, new ColumnTypeSerializerFactory());
+            _rowSerializer = new RowSerializer(table.Columns, new ColumnTypeSerializerFactory());
         }
 
         // TODO remove this...
@@ -30,10 +32,7 @@ namespace SimpleDatabase.Execution.Tables
 
             foreach (var index in _table.Indices)
             {
-                // TODO create serializer for index row
-                var serializer = _rowSerializer;
-
-                var treeInserter = new TreeInserter(new SourcePager(_pager, new PageSource.Index(_table.Name, index.Name)), serializer, index);
+                var treeInserter = new TreeInserter(new SourcePager(_pager, new PageSource.Index(_table.Name, index.Name)), index);
                 
                 // TODO get key value from row
                 var key = _fakeKey++;

@@ -1,7 +1,6 @@
 ﻿using System;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Paging;
-using SimpleDatabase.Storage.Serialization;
 using SimpleDatabase.Storage.Tree;
 
 namespace SimpleDatabase.CLI
@@ -20,7 +19,8 @@ namespace SimpleDatabase.CLI
         private static void PrintNode(IREPLOutput output, ISourcePager pager, Table table, int pageNumber, int level)
         {
             var page = pager.Get(pageNumber);
-            var node = Node.Read(new RowSerializer(table, new ColumnTypeSerializerFactory()), page);
+            // TODO
+            var node = Node.Read(page, null, null);
 
             switch (node)
             {

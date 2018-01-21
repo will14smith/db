@@ -16,7 +16,7 @@ namespace SimpleDatabase.Execution
         public IRowSerializer Create(Table table)
         {
             return new RowSerializer(
-                table,
+                table.Columns,
                 new ColumnTypeSerializerFactory()
             );
         }

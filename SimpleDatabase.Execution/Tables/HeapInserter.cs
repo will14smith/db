@@ -16,7 +16,7 @@ namespace SimpleDatabase.Execution.Tables
         {
             _pager = pager;
 
-            _rowSerializer = new RowSerializer(table, new ColumnTypeSerializerFactory());
+            _rowSerializer = new RowSerializer(table.Columns, new ColumnTypeSerializerFactory());
         }
 
         public InsertResult Insert(Row row)
