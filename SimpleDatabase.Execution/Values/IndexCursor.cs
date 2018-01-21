@@ -1,5 +1,6 @@
 ﻿using System;
 using SimpleDatabase.Execution.Tables;
+using SimpleDatabase.Execution.Transactions;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
@@ -12,25 +13,34 @@ namespace SimpleDatabase.Execution.Values
         private readonly Option<Cursor> _cursor;
         private readonly IPager _pager;
         private readonly IRowSerializer _rowSerializer;
+        private readonly ITransactionManager _txm;
+
+        private readonly TreeTraverser _treeTraverser;
 
         public Table Table { get; }
         public Index Index { get; }
         public bool Writable { get; }
 
-        private PageSource Source => new PageSource.Index(Table.Name, Index.Name);
-        private ISourcePager SourcePager => new SourcePager(_pager, Source);
-
-        public IndexCursor(IPager pager, IRowSerializer rowSerializer, Table table, Index index, bool writable)
+        public IndexCursor(IPager pager, IRowSerializer rowSerializer, ITransactionManager txm, Table table, Index index, bool writable)
         {
             _pager = pager;
             _rowSerializer = rowSerializer;
+            _txm = txm;
+
+            _treeTraverser = new TreeTraverser(
+                new SourcePager(_pager, new PageSource.Index(table.Name, index.Name)),
+                new SourcePager(_pager, new PageSource.Heap(table.Name)),
+                rowSerializer,
+                txm,
+                index
+            );
 
             Table = table;
             Index = index;
             Writable = writable;
         }
         public IndexCursor(Cursor cursor, IndexCursor indexCursor)
-            : this(indexCursor._pager, indexCursor._rowSerializer, indexCursor.Table, indexCursor.Index, indexCursor.Writable)
+            : this(indexCursor._pager, indexCursor._rowSerializer, indexCursor._txm, indexCursor.Table, indexCursor.Index, indexCursor.Writable)
         {
             _cursor = Option.Some(cursor);
         }
@@ -39,20 +49,14 @@ namespace SimpleDatabase.Execution.Values
 
         public ICursor First()
         {
-            var traverser = new TreeTraverser(SourcePager, _rowSerializer, Index);
-            var cursor = traverser.StartCursor();
-
-            cursor = AdvanceUntilVisible(traverser, cursor);
+            var cursor = _treeTraverser.StartCursor();
 
             return new IndexCursor(cursor, this);
         }
 
         public ICursor Next()
         {
-            var traverser = new TreeTraverser(SourcePager, _rowSerializer, Index);
-            var cursor = traverser.AdvanceCursor(_cursor.Value);
-
-            cursor = AdvanceUntilVisible(traverser, cursor);
+            var cursor = _treeTraverser.AdvanceCursor(_cursor.Value);
 
             return new IndexCursor(cursor, this);
         }
@@ -101,11 +105,6 @@ namespace SimpleDatabase.Execution.Values
                 default:
                     throw new NotImplementedException($"Unsupported type: {result.GetType().Name}");
             }
-        }
-
-        private Cursor AdvanceUntilVisible(TreeTraverser traverser, Cursor cursor)
-        {
-            throw new NotImplementedException();
         }
     }
 }
