@@ -4,7 +4,7 @@ using SimpleDatabase.Utils;
 
 namespace SimpleDatabase.Storage.Serialization
 {
-    public interface IRowSerializer
+    public interface IHeapSerializer
     {
         int GetRowSize();
 

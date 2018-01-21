@@ -3,7 +3,6 @@ using SimpleDatabase.Execution.Tables;
 using SimpleDatabase.Execution.Transactions;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Paging;
-using SimpleDatabase.Storage.Serialization;
 using SimpleDatabase.Utils;
 
 namespace SimpleDatabase.Execution.Values
@@ -12,7 +11,6 @@ namespace SimpleDatabase.Execution.Values
     {
         private readonly Option<Cursor> _cursor;
         private readonly IPager _pager;
-        private readonly IRowSerializer _rowSerializer;
         private readonly ITransactionManager _txm;
 
         private readonly TreeTraverser _treeTraverser;
@@ -21,26 +19,19 @@ namespace SimpleDatabase.Execution.Values
         public Index Index { get; }
         public bool Writable { get; }
 
-        public IndexCursor(IPager pager, IRowSerializer rowSerializer, ITransactionManager txm, Table table, Index index, bool writable)
+        public IndexCursor(IPager pager, ITransactionManager txm, Table table, Index index, bool writable)
         {
             _pager = pager;
-            _rowSerializer = rowSerializer;
             _txm = txm;
 
-            _treeTraverser = new TreeTraverser(
-                new SourcePager(_pager, new PageSource.Index(table.Name, index.Name)),
-                new SourcePager(_pager, new PageSource.Heap(table.Name)),
-                rowSerializer,
-                txm,
-                index
-            );
+            _treeTraverser = new TreeTraverser(pager, txm, table, index);
 
             Table = table;
             Index = index;
             Writable = writable;
         }
         public IndexCursor(Cursor cursor, IndexCursor indexCursor)
-            : this(indexCursor._pager, indexCursor._rowSerializer, indexCursor._txm, indexCursor.Table, indexCursor.Index, indexCursor.Writable)
+            : this(indexCursor._pager, indexCursor._txm, indexCursor.Table, indexCursor.Index, indexCursor.Writable)
         {
             _cursor = Option.Some(cursor);
         }

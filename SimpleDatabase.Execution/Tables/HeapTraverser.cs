@@ -9,9 +9,9 @@ namespace SimpleDatabase.Execution.Tables
     {
         private readonly ISourcePager _pager;
         private readonly ITransactionManager _txm;
-        private readonly IRowSerializer _rowSerializer;
+        private readonly IHeapSerializer _rowSerializer;
             
-        public HeapTraverser(ISourcePager pager, ITransactionManager txm, IRowSerializer rowSerializer)
+        public HeapTraverser(ISourcePager pager, ITransactionManager txm, IHeapSerializer rowSerializer)
         {
             _pager = pager;
             _txm = txm;

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text;
-using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 using SimpleDatabase.Utils;
@@ -9,14 +8,14 @@ namespace SimpleDatabase.Storage.Tree
 {
     public class InternalNode : Node
     {
-        private InternalNode(Page page, IRowSerializer keySerializer, IRowSerializer dataSerializer) 
-            : base(page, keySerializer, dataSerializer)
+        private InternalNode(Page page, IIndexSerializer serializer) 
+            : base(page, serializer)
         {
         }
 
-        public static InternalNode New(Page page, IRowSerializer keySerializer, IRowSerializer dataSerializer)
+        public static InternalNode New(Page page, IIndexSerializer serializer)
         {
-            return new InternalNode(page, keySerializer, dataSerializer)
+            return new InternalNode(page, serializer)
             {
                 Type = PageType.Internal,
                 IsRoot = false,
@@ -24,14 +23,14 @@ namespace SimpleDatabase.Storage.Tree
             };
         }
 
-        public new static InternalNode Read(Page page, IRowSerializer keySerializer, IRowSerializer dataSerializer)
+        public new static InternalNode Read(Page page, IIndexSerializer serializer)
         {
             if (page.Type != PageType.Internal)
             {
                 throw new InvalidOperationException($"Tried to read a {PageType.Internal} node but found a {page.Type} node instead");
             }
 
-            return new InternalNode(page, keySerializer, dataSerializer);
+            return new InternalNode(page, serializer);
         }
 
         public int KeyCount
@@ -91,16 +90,16 @@ namespace SimpleDatabase.Storage.Tree
             }
         }
 
-        public Row GetKey(int keyNumber)
+        public IndexKey GetKey(int keyNumber)
         {
-            return KeySerializer.ReadRow(GetKeyOffset(keyNumber));
+            return Serializer.ReadKey(GetKeyOffset(keyNumber));
         }
-        public void SetKey(int keyNumber, Row key)
+        public void SetKey(int keyNumber, IndexKey key)
         {
-            KeySerializer.WriteRow(GetKeyOffset(keyNumber), key);
+            Serializer.WriteKey(GetKeyOffset(keyNumber), key);
         }
 
-        public void SetCell(int cellNumber, int child, Row key)
+        public void SetCell(int cellNumber, int child, IndexKey key)
         {
             SetChild(cellNumber, child);
             SetKey(cellNumber, key);

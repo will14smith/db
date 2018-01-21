@@ -5,7 +5,7 @@ using SimpleDatabase.Utils;
 
 namespace SimpleDatabase.Storage.Serialization
 {
-    public class RowSerializer : IRowSerializer
+    public class HeapSerializer : IHeapSerializer
     {
         private readonly IReadOnlyList<Column> _columns;
         private readonly ColumnTypeSerializerFactory _columnTypeSerializerFactory;
@@ -19,29 +19,16 @@ namespace SimpleDatabase.Storage.Serialization
         private readonly IReadOnlyList<int> _offsets;
         private readonly IReadOnlyList<int> _sizes;
 
-        public RowSerializer(IReadOnlyList<Column> columns, ColumnTypeSerializerFactory columnTypeSerializerFactory)
+        public HeapSerializer(IReadOnlyList<Column> columns, ColumnTypeSerializerFactory columnTypeSerializerFactory)
         {
             _columns = columns;
             _columnTypeSerializerFactory = columnTypeSerializerFactory;
+            
+            var info = columnTypeSerializerFactory.ComputeSerializedDataInfo(columns, MinXidSize + MaxXidSize);
 
-            _size = MinXidSize + MaxXidSize;
-
-            var offsets = new List<int>();
-            var sizes = new List<int>();
-
-            foreach (var column in _columns)
-            {
-                var serializer = _columnTypeSerializerFactory.GetSerializer(column.Type);
-                var columnSize = serializer.GetColumnSize();
-
-                offsets.Add(_size);
-                sizes.Add(columnSize);
-
-                _size += columnSize;
-            }
-
-            _offsets = offsets;
-            _sizes = sizes;
+            _size = info.Size;
+            _offsets = info.Offsets;
+            _sizes = info.Sizes;
         }
 
         public int GetRowSize()
@@ -79,7 +66,7 @@ namespace SimpleDatabase.Storage.Serialization
             }
         }
 
-        (TransactionId min, Option<TransactionId> max) IRowSerializer.ReadXid(Span<byte> rowStart)
+        (TransactionId min, Option<TransactionId> max) IHeapSerializer.ReadXid(Span<byte> rowStart)
         {
             return ReadXid(rowStart);
         }

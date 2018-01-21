@@ -9,20 +9,18 @@ namespace SimpleDatabase.Execution.OperationExecutors.Cursors
     {
         private readonly IPager _pager;
         private readonly ITransactionManager _txm;
-        private readonly IRowSerializerFactory _rowSerializerFactory;
 
-        public OpenWriteOperationExecutor(IPager pager, ITransactionManager txm, IRowSerializerFactory rowSerializerFactory)
+        public OpenWriteOperationExecutor(IPager pager, ITransactionManager txm)
         {
             _pager = pager;
             _txm = txm;
-            _rowSerializerFactory = rowSerializerFactory;
         }
 
         public (FunctionState, OperationResult) Execute(FunctionState state, OpenWriteOperation operation)
         {
             // TODO aquire write lock
             var table = operation.Table;
-            var heapCursor = new HeapCursor(_pager, _txm, _rowSerializerFactory.Create(table), table, true);
+            var heapCursor = new HeapCursor(_pager, _txm, table, true);
 
             var cursor = new CursorValue(true);
             cursor = cursor.SetNextCursor(heapCursor);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using SimpleDatabase.Schemas;
+using SimpleDatabase.Storage.Serialization;
 
 namespace SimpleDatabase.Storage.Tree
 {
@@ -14,6 +15,13 @@ namespace SimpleDatabase.Storage.Tree
             throw new NotImplementedException();
 
             return (key, data);
+        }
+
+        public static IIndexSerializer CreateSerializer(this Index index)
+        {
+            var (key, data) = index.GetPersistenceColumns();
+
+            return new IndexSerializer(key, data, new ColumnTypeSerializerFactory());
         }
     }
 }

@@ -5,13 +5,11 @@ namespace SimpleDatabase.Storage.Tree
 {
     public class NodeLayout : PageLayout
     {
-        private readonly IRowSerializer _keySerializer;
-        private readonly IRowSerializer _dataSerializer;
+        private readonly IIndexSerializer _serializer;
 
-        public NodeLayout(IRowSerializer keySerializer, IRowSerializer dataSerializer)
+        public NodeLayout(IIndexSerializer serializer)
         {
-            _keySerializer = keySerializer;
-            _dataSerializer = dataSerializer;
+            _serializer = serializer;
         }
 
         // Common Node Header
@@ -30,8 +28,8 @@ namespace SimpleDatabase.Storage.Tree
         public int LeafNodeHeaderSize => CommonNodeHeaderSize + LeafNodeCellCountSize + LeafNodeNextLeafSize;
 
         // Leaf Node Body
-        public int LeafNodeKeySize => _keySerializer.GetRowSize();
-        public int LeafNodeValueSize => _dataSerializer.GetRowSize();
+        public int LeafNodeKeySize => _serializer.GetKeySize();
+        public int LeafNodeValueSize => _serializer.GetDataSize();
         public int LeafNodeCellSize => LeafNodeKeySize + LeafNodeValueSize;
 
         public int LeafNodeKeyOffset = 0;
@@ -53,7 +51,7 @@ namespace SimpleDatabase.Storage.Tree
         public int InternalNodeHeaderSize => CommonNodeHeaderSize + InternalNodeKeyCountSize + InternalNodeRightChildSize;
 
         // Internal Node Body
-        public int InternalNodeKeySize => _keySerializer.GetRowSize();
+        public int InternalNodeKeySize => _serializer.GetKeySize();
         public int InternalNodeChildSize = sizeof(int);
 
         public int InternalNodeCellSize => InternalNodeChildSize + InternalNodeKeySize;

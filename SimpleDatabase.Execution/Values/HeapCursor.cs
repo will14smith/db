@@ -14,25 +14,26 @@ namespace SimpleDatabase.Execution.Values
         private readonly Option<Cursor> _cursor;
         private readonly IPager _pager;
         private readonly ITransactionManager _txm;
-        private readonly IRowSerializer _rowSerializer;
+
+        private readonly ISourcePager _sourcePager;
+        private readonly IHeapSerializer _heapSerializer;
 
         public Table Table { get; }
         public bool Writable { get; }
 
-        private PageSource Source => new PageSource.Heap(Table.Name);
-        private ISourcePager SourcePager => new SourcePager(_pager, Source);
-
-        public HeapCursor(IPager pager, ITransactionManager txm, IRowSerializer rowSerializer, Table table, bool writable)
+        public HeapCursor(IPager pager, ITransactionManager txm, Table table, bool writable)
         {
             _pager = pager;
             _txm = txm;
-            _rowSerializer = rowSerializer;
+
+            _sourcePager = new SourcePager(_pager, new PageSource.Heap(table.Name));
+            _heapSerializer = new HeapSerializer(table.Columns, new ColumnTypeSerializerFactory());
 
             Table = table;
             Writable = writable;
         }
         public HeapCursor(Cursor cursor, HeapCursor heapCursor)
-            : this(heapCursor._pager, heapCursor._txm, heapCursor._rowSerializer, heapCursor.Table, heapCursor.Writable)
+            : this(heapCursor._pager, heapCursor._txm, heapCursor.Table, heapCursor.Writable)
         {
             _cursor = Option.Some(cursor);
         }
@@ -41,7 +42,7 @@ namespace SimpleDatabase.Execution.Values
 
         public ICursor First()
         {
-            var traverser = new HeapTraverser(SourcePager, _txm, _rowSerializer);
+            var traverser = new HeapTraverser(_sourcePager, _txm, _heapSerializer);
             var cursor = traverser.StartCursor();
 
             return new HeapCursor(cursor, this);
@@ -49,7 +50,7 @@ namespace SimpleDatabase.Execution.Values
 
         public ICursor Next()
         {
-            var traverser = new HeapTraverser(SourcePager, _txm, _rowSerializer);
+            var traverser = new HeapTraverser(_sourcePager, _txm, _heapSerializer);
             var cursor = traverser.AdvanceCursor(_cursor.Value);
 
             return new HeapCursor(cursor, this);
@@ -64,10 +65,10 @@ namespace SimpleDatabase.Execution.Values
         {
             var cursor = _cursor.Value;
 
-            var page = HeapPage.Read(SourcePager.Get(cursor.Page.Index));
+            var page = HeapPage.Read(_sourcePager.Get(cursor.Page.Index));
             var cell = page.GetItem(cursor.CellNumber);
 
-            return _rowSerializer.ReadColumn(cell, index);
+            return _heapSerializer.ReadColumn(cell, index);
         }
 
         public InsertTargetResult Insert(Row row)

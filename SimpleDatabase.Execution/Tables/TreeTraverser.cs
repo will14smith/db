@@ -16,25 +16,19 @@ namespace SimpleDatabase.Execution.Tables
         private readonly ISourcePager _heapPager;
         private readonly ITransactionManager _txm;
 
+        private readonly IIndexSerializer _treeSerializer;
+        
         private readonly Index _index;
-
-        private readonly RowSerializer _keySerializer;
-        private readonly RowSerializer _dataSerializer;
-
-        public TreeTraverser(ISourcePager treePager, ISourcePager heapPager, ITransactionManager txm, Index index)
+        
+        public TreeTraverser(IPager pager, ITransactionManager txm, Table table, Index index)
         {
-            _treePager = treePager;
-            _heapPager = heapPager;
+            _treePager = new SourcePager(pager, new PageSource.Index(table.Name, index.Name));
+            _heapPager = new SourcePager(pager, new PageSource.Heap(table.Name));
             _txm = txm;
 
             _index = index;
 
-            var (keyColumns, dataColumns) = index.GetPersistenceColumns();
-
-            _keySerializer = new RowSerializer(keyColumns, new ColumnTypeSerializerFactory());
-            _dataSerializer = new RowSerializer(dataColumns, new ColumnTypeSerializerFactory());
-
-            
+            _treeSerializer = index.CreateSerializer();
         }
 
         public Cursor StartCursor()
@@ -72,7 +66,7 @@ namespace SimpleDatabase.Execution.Tables
             }
 
             var page = _treePager.Get(cursor.Page.Index);
-            var node = LeafNode.Read(page, _keySerializer, _dataSerializer);
+            var node = LeafNode.Read(page, _treeSerializer);
 
             var cellNumber = cursor.CellNumber + 1;
 
@@ -107,7 +101,7 @@ namespace SimpleDatabase.Execution.Tables
         
         private bool IsVisible(Cursor cursor)
         {
-            var leaf = LeafNode.Read(_treePager.Get(cursor.Page.Index), _keySerializer, _dataSerializer);
+            var leaf = LeafNode.Read(_treePager.Get(cursor.Page.Index), _treeSerializer);
             var cell = leaf.GetCellOffset(cursor.CellNumber);
 
             // TODO wrap in an accessor class
@@ -117,7 +111,7 @@ namespace SimpleDatabase.Execution.Tables
             var page = HeapPage.Read(_heapPager.Get(heapPage));
             var rowStart = page.GetItem(heapCell);
 
-            var (min, maxopt) = RowSerializer.ReadXid(rowStart);
+            var (min, maxopt) = HeapSerializer.ReadXid(rowStart);
 
             return _txm.IsVisible(min, maxopt);
         }

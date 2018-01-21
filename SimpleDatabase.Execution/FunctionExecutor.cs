@@ -21,7 +21,6 @@ namespace SimpleDatabase.Execution
 
         private readonly IPager _pager;
         private readonly ITransactionManager _txm;
-        private readonly IRowSerializerFactory _rowSerializerFactory = new RowSerializerFactory();
 
         private readonly Program _program;
         private readonly Function _function;
@@ -154,9 +153,9 @@ namespace SimpleDatabase.Execution
             AddExecutor(executors, _ => new DeleteOperationExecutor());
             AddExecutor(executors, fexec => new InsertOperationExecutor(fexec._txm));
             AddExecutor(executors, _ => new NextOperationExecutor());
-            AddExecutor(executors, fexec => new OpenReadIndexOperationExecutor(fexec._pager, fexec._rowSerializerFactory, fexec._txm));
-            AddExecutor(executors, fexec => new OpenReadTableOperationExecutor(fexec._pager, fexec._txm, fexec._rowSerializerFactory));
-            AddExecutor(executors, fexec => new OpenWriteOperationExecutor(fexec._pager, fexec._txm, fexec._rowSerializerFactory));
+            AddExecutor(executors, fexec => new OpenReadIndexOperationExecutor(fexec._pager, fexec._txm));
+            AddExecutor(executors, fexec => new OpenReadTableOperationExecutor(fexec._pager, fexec._txm));
+            AddExecutor(executors, fexec => new OpenWriteOperationExecutor(fexec._pager, fexec._txm));
 
             // functions
             AddExecutor(executors, fexec => new CallCoroutineOperationExecutor(fexec._pager, fexec._txm, fexec._program));

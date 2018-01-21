@@ -10,20 +10,14 @@ namespace SimpleDatabase.Execution.Tables
     public class TreeDeleter
     {
         private readonly ISourcePager _pager;
-
-        private readonly RowSerializer _keySerializer;
-        private readonly RowSerializer _dataSerializer;
+        private readonly IIndexSerializer _serializer;
 
         private readonly Index _index;
 
         public TreeDeleter(ISourcePager pager, Index index)
         {
             _pager = pager;
-
-            var (keyColumns, dataColumns) = index.GetPersistenceColumns();
-
-            _keySerializer = new RowSerializer(keyColumns, new ColumnTypeSerializerFactory());
-            _dataSerializer = new RowSerializer(dataColumns, new ColumnTypeSerializerFactory());
+            _serializer = index.CreateSerializer();
 
             _index = index;
         }
@@ -31,7 +25,7 @@ namespace SimpleDatabase.Execution.Tables
         public DeleteResult Delete(int key)
         {
             var page = _pager.Get(_index.RootPage);
-            var node = Node.Read(page, _keySerializer, _dataSerializer);
+            var node = Node.Read(page, _serializer);
 
             Result result;
             switch (node)
@@ -119,7 +113,7 @@ namespace SimpleDatabase.Execution.Tables
         {
             var childIndex = new TreeKeySearcher(key).FindCell(internalNode);
             var childPage = _pager.Get(internalNode.GetChild(childIndex));
-            var childNode = Node.Read(childPage, _keySerializer, _dataSerializer);
+            var childNode = Node.Read(childPage, _serializer);
 
             Result childResult;
             switch (childNode)
@@ -175,8 +169,8 @@ namespace SimpleDatabase.Execution.Tables
                 throw new InvalidOperationException("Cannot have a node with no siblings unless we are root (in which case this shouldn't have been called)");
             }
 
-            var prevNode = hasPrevSibling ? Node.Read(_pager.Get(internalNode.GetChild(childIndex - 1)), _keySerializer, _dataSerializer) : null;
-            var nextNode = hasNextSibling ? Node.Read(_pager.Get(internalNode.GetChild(childIndex + 1)), _keySerializer, _dataSerializer) : null;
+            var prevNode = hasPrevSibling ? Node.Read(_pager.Get(internalNode.GetChild(childIndex - 1)), _serializer) : null;
+            var nextNode = hasNextSibling ? Node.Read(_pager.Get(internalNode.GetChild(childIndex + 1)), _serializer) : null;
 
             if (hasPrevSibling && HasMoreThanMinimumChildren(prevNode))
             {

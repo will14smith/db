@@ -11,14 +11,10 @@ namespace SimpleDatabase.Execution.Tables
         private readonly IPager _pager;
         private readonly Table _table;
 
-        private readonly IRowSerializer _rowSerializer;
-
         public TableInserter(IPager pager, Table table)
         {
             _pager = pager;
             _table = table;
-
-            _rowSerializer = new RowSerializer(table.Columns, new ColumnTypeSerializerFactory());
         }
 
         // TODO remove this...

@@ -1,5 +1,4 @@
 ﻿using System;
-using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 
@@ -7,14 +6,14 @@ namespace SimpleDatabase.Storage.Tree
 {
     public class LeafNode : Node
     {
-        public LeafNode(Page page, IRowSerializer keySerializer, IRowSerializer dataSerializer) 
-            : base(page, keySerializer, dataSerializer)
+        public LeafNode(Page page, IIndexSerializer serializer) 
+            : base(page, serializer)
         {
         }
 
-        public static LeafNode New(Page page, IRowSerializer keySerializer, IRowSerializer dataSerializer)
+        public static LeafNode New(Page page, IIndexSerializer serializer)
         {
-            return new LeafNode(page, keySerializer, dataSerializer)
+            return new LeafNode(page, serializer)
             {
                 Type = PageType.Leaf,
                 IsRoot = false,
@@ -23,14 +22,14 @@ namespace SimpleDatabase.Storage.Tree
             };
         }
 
-        public new static LeafNode Read(Page page, IRowSerializer keySerializer, IRowSerializer dataSerializer)
+        public new static LeafNode Read(Page page, IIndexSerializer serializer)
         {
             if (page.Type != PageType.Leaf)
             {
                 throw new InvalidOperationException($"Tried to read a {PageType.Leaf} node but found a {page.Type} node instead");
             }
 
-            return new LeafNode(page, keySerializer, dataSerializer);
+            return new LeafNode(page, serializer);
         }
 
         public int CellCount
@@ -57,19 +56,19 @@ namespace SimpleDatabase.Storage.Tree
             return GetCellOffset(index).Slice(Layout.LeafNodeKeySize, Layout.LeafNodeValueSize);
         }
 
-        public Row GetCellKey(int cellNumber)
+        public IndexKey GetCellKey(int cellNumber)
         {
-            return KeySerializer.ReadRow(GetCellKeyOffset(cellNumber));
+            return Serializer.ReadKey(GetCellKeyOffset(cellNumber));
         }
-        public Row GetCellValue(int cellNumber)
+        public IndexData GetCellValue(int cellNumber)
         {
-            return DataSerializer.ReadRow(GetCellValueOffset(cellNumber));
+            return Serializer.ReadData(GetCellValueOffset(cellNumber));
         }
 
-        public void SetCell(int cellNumber, Row key, Row data)
+        public void SetCell(int cellNumber, IndexKey key, IndexData data)
         {
-            KeySerializer.WriteRow(GetCellKeyOffset(cellNumber), key);
-            DataSerializer.WriteRow(GetCellValueOffset(cellNumber), data);
+            Serializer.WriteKey(GetCellKeyOffset(cellNumber), key);
+            Serializer.WriteData(GetCellValueOffset(cellNumber), data);
         }
 
         public void CopyCell(LeafNode source, int sourceCell, int destinationCell)

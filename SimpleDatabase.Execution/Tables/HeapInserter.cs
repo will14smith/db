@@ -10,13 +10,13 @@ namespace SimpleDatabase.Execution.Tables
     {
         private readonly ISourcePager _pager;
 
-        private readonly IRowSerializer _rowSerializer;
+        private readonly IHeapSerializer _rowSerializer;
 
         public HeapInserter(ISourcePager pager, Table table)
         {
             _pager = pager;
 
-            _rowSerializer = new RowSerializer(table.Columns, new ColumnTypeSerializerFactory());
+            _rowSerializer = new HeapSerializer(table.Columns, new ColumnTypeSerializerFactory());
         }
 
         public InsertResult Insert(Row row)

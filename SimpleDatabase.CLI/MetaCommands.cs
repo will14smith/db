@@ -20,7 +20,7 @@ namespace SimpleDatabase.CLI
         {
             var page = pager.Get(pageNumber);
             // TODO
-            var node = Node.Read(page, null, null);
+            var node = Node.Read(page, null);
 
             switch (node)
             {

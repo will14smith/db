@@ -7,20 +7,16 @@ namespace SimpleDatabase.Storage.Tree
     public abstract class Node
     {
         protected readonly Page Page;
-
-        protected readonly IRowSerializer KeySerializer;
-        protected readonly IRowSerializer DataSerializer;
+        protected readonly IIndexSerializer Serializer;
 
         public NodeLayout Layout { get; }
 
-        protected Node(Page page, IRowSerializer keySerializer, IRowSerializer dataSerializer)
+        protected Node(Page page, IIndexSerializer serializer)
         {
             Page = page;
+            Serializer = serializer;
 
-            KeySerializer = keySerializer;
-            DataSerializer = dataSerializer;
-
-            Layout = new NodeLayout(keySerializer, dataSerializer);
+            Layout = new NodeLayout(Serializer);
         }
 
         public PageId PageId => Page.Id;
@@ -37,14 +33,14 @@ namespace SimpleDatabase.Storage.Tree
             set => Page.Data[Layout.IsRootOffset] = (byte)(value ? 1 : 0);
         }
         
-        public static Node Read(Page page, IRowSerializer keySerializer, IRowSerializer dataSerializer)
+        public static Node Read(Page page, IIndexSerializer serializer)
         {
             switch (page.Type)
             {
                 case PageType.Internal:
-                    return InternalNode.Read(page, keySerializer, dataSerializer);
+                    return InternalNode.Read(page, serializer);
                 case PageType.Leaf:
-                    return LeafNode.Read(page, keySerializer, dataSerializer);
+                    return LeafNode.Read(page, serializer);
                 default:
                     throw new ArgumentOutOfRangeException();
             }
