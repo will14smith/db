@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using SimpleDatabase.Schemas;
+using SimpleDatabase.Schemas.Types;
 using SimpleDatabase.Storage.Serialization;
 
 namespace SimpleDatabase.Storage.Tree
@@ -9,10 +11,13 @@ namespace SimpleDatabase.Storage.Tree
     {
         public static (IReadOnlyList<Column> key, IReadOnlyList<Column> data) GetPersistenceColumns(this Index index)
         {
-            var key = new List<Column>();
-            var data = new List<Column>();
+            var key = index.Structure.Keys.Select(col => col.Item1).ToList();
 
-            throw new NotImplementedException();
+            var data = new List<Column>
+            {
+                new Column("__heapkey", new ColumnType.Integer())
+            };
+            data.AddRange(index.Structure.Data);
 
             return (key, data);
         }

@@ -102,11 +102,12 @@ namespace SimpleDatabase.Execution.Tables
         private bool IsVisible(Cursor cursor)
         {
             var leaf = LeafNode.Read(_treePager.Get(cursor.Page.Index), _treeSerializer);
-            var cell = leaf.GetCellOffset(cursor.CellNumber);
+            var cell = leaf.GetCellValueOffset(cursor.CellNumber);
 
             // TODO wrap in an accessor class
-            var heapPage = cell.Slice(0).Read<int>();
-            var heapCell = cell.Slice(sizeof(int)).Read<int>();
+            var heapKey = cell.Slice(0).Read<int>();
+            var heapPage = heapKey >> 8;
+            var heapCell = heapKey & 0xff;
 
             var page = HeapPage.Read(_heapPager.Get(heapPage));
             var rowStart = page.GetItem(heapCell);

@@ -9,13 +9,11 @@ namespace SimpleDatabase.Execution.Tables
     {
         private readonly ISourcePager _pager;
         private readonly ITransactionManager _txm;
-        private readonly IHeapSerializer _rowSerializer;
             
-        public HeapTraverser(ISourcePager pager, ITransactionManager txm, IHeapSerializer rowSerializer)
+        public HeapTraverser(ISourcePager pager, ITransactionManager txm)
         {
             _pager = pager;
             _txm = txm;
-            _rowSerializer = rowSerializer;
         }
 
         public Cursor StartCursor()
@@ -52,7 +50,7 @@ namespace SimpleDatabase.Execution.Tables
             var page = HeapPage.Read(_pager.Get(cursor.Page.Index));
             var rowStart = page.GetItem(cursor.CellNumber);
 
-            var (min, maxopt) = _rowSerializer.ReadXid(rowStart);
+            var (min, maxopt) = HeapSerializer.ReadXid(rowStart);
 
             return _txm.IsVisible(min, maxopt);
         }

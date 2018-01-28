@@ -82,8 +82,8 @@ namespace SimpleDatabase.Execution.Values
 
         public DeleteTargetResult Delete()
         {
-            var deleter = new TableDeleter(_pager, Table);
-            var result = deleter.Delete(_cursor.Value);
+            var deleter = new TableDeleter(_pager, _txm, Table);
+            var result = deleter.Delete(GetHeap());
 
             switch (result)
             {
@@ -96,6 +96,11 @@ namespace SimpleDatabase.Execution.Values
                 default:
                     throw new NotImplementedException($"Unsupported type: {result.GetType().Name}");
             }
+        }
+
+        private HeapCursor GetHeap()
+        {
+            throw new NotImplementedException();
         }
     }
 }

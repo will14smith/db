@@ -11,7 +11,8 @@ namespace SimpleDatabase.Execution.Values
 {
     public class HeapCursor : ICursor, IInsertTarget, IDeleteTarget
     {
-        private readonly Option<Cursor> _cursor;
+        public Option<Cursor> Cursor { get; }
+
         private readonly IPager _pager;
         private readonly ITransactionManager _txm;
 
@@ -35,14 +36,14 @@ namespace SimpleDatabase.Execution.Values
         public HeapCursor(Cursor cursor, HeapCursor heapCursor)
             : this(heapCursor._pager, heapCursor._txm, heapCursor.Table, heapCursor.Writable)
         {
-            _cursor = Option.Some(cursor);
+            Cursor = Option.Some(cursor);
         }
 
-        public bool EndOfTable => _cursor.Value.EndOfTable;
+        public bool EndOfTable => Cursor.Value.EndOfTable;
 
         public ICursor First()
         {
-            var traverser = new HeapTraverser(_sourcePager, _txm, _heapSerializer);
+            var traverser = new HeapTraverser(_sourcePager, _txm);
             var cursor = traverser.StartCursor();
 
             return new HeapCursor(cursor, this);
@@ -50,8 +51,8 @@ namespace SimpleDatabase.Execution.Values
 
         public ICursor Next()
         {
-            var traverser = new HeapTraverser(_sourcePager, _txm, _heapSerializer);
-            var cursor = traverser.AdvanceCursor(_cursor.Value);
+            var traverser = new HeapTraverser(_sourcePager, _txm);
+            var cursor = traverser.AdvanceCursor(Cursor.Value);
 
             return new HeapCursor(cursor, this);
         }
@@ -63,7 +64,7 @@ namespace SimpleDatabase.Execution.Values
 
         public ColumnValue Column(int index)
         {
-            var cursor = _cursor.Value;
+            var cursor = Cursor.Value;
 
             var page = HeapPage.Read(_sourcePager.Get(cursor.Page.Index));
             var cell = page.GetItem(cursor.CellNumber);
@@ -91,8 +92,8 @@ namespace SimpleDatabase.Execution.Values
 
         public DeleteTargetResult Delete()
         {
-            var deleter = new TableDeleter(_pager, Table);
-            var result = deleter.Delete(_cursor.Value);
+            var deleter = new TableDeleter(_pager, _txm, Table);
+            var result = deleter.Delete(this);
 
             switch (result)
             {

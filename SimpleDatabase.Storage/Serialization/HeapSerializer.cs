@@ -66,16 +66,16 @@ namespace SimpleDatabase.Storage.Serialization
             }
         }
 
-        (TransactionId min, Option<TransactionId> max) IHeapSerializer.ReadXid(Span<byte> rowStart)
-        {
-            return ReadXid(rowStart);
-        }
         public static (TransactionId min, Option<TransactionId> max) ReadXid(Span<byte> rowStart)
         {
             var min = rowStart.Slice(MinXidOffset, MinXidSize).Read<ulong>();
             var max = rowStart.Slice(MaxXidOffset, MaxXidSize).Read<ulong>();
 
             return (new TransactionId(min), max != 0 ? TransactionId.Some(max) : TransactionId.None());
+        }
+        public static void SetXidMax(Span<byte> rowStart, TransactionId max)
+        {
+            rowStart.Slice(MaxXidOffset, MaxXidSize).Write(max.Id);
         }
 
         public ColumnValue ReadColumn(Span<byte> rowStart, int columnIndex)

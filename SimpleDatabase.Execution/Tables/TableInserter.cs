@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
@@ -17,30 +17,44 @@ namespace SimpleDatabase.Execution.Tables
             _table = table;
         }
 
-        // TODO remove this...
-        private static int _fakeKey = 0;
-
         public InsertResult Insert(Row row)
         {
             var heapInserter = new HeapInserter(new SourcePager(_pager, new PageSource.Heap(_table.Name)), _table);
             var heapKey = heapInserter.Insert(row);
-            // TODO check result, abort if failed...
+            // TODO handle result of ^
 
-            var result = new InsertResult.Success();
+            InsertResult result = new InsertResult.Success();
             foreach (var index in _table.Indices)
             {
                 var treeInserter = new TreeInserter(new SourcePager(_pager, new PageSource.Index(_table.Name, index.Name)), index);
-                
-                // TODO get key value from row
-                var key = _fakeKey++;
-                // TODO create row for data
-                var indexData = row;
 
-                result = treeInserter.Insert(key, indexData);
+                var (key, data) = CreateIndexData(index, heapKey, row);
+
+                result = treeInserter.Insert(key, data);
                 // TODO check result, abort if failed...
             }
 
             return result;
+        }
+
+        private (IndexKey, IndexData) CreateIndexData(Index index, int heapKey, Row row)
+        {
+            var key = index.Structure.Keys.Select(col => GetValue(col.Item1, row)).ToList();
+
+            var data = new List<ColumnValue>
+            {
+                new ColumnValue(heapKey)
+            };
+            key.AddRange(index.Structure.Data.Select(col => GetValue(col, row)));
+
+            return (new IndexKey(key), new IndexData(data));
+        }
+
+        private ColumnValue GetValue(Column col, Row row)
+        {
+            var colIndex = _table.IndexOf(col).Value;
+
+            return row.Values[colIndex];
         }
     }
 }

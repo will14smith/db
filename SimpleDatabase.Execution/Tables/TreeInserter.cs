@@ -44,7 +44,7 @@ namespace SimpleDatabase.Execution.Tables
             {
                 case Result.Success _:
                     return new InsertResult.Success();
-                case Result.DuplicateKey r:
+                case Result.DuplicateKey _:
                     return new InsertResult.DuplicateKey();
 
                 case Result.WasSplit split:
@@ -136,7 +136,7 @@ namespace SimpleDatabase.Execution.Tables
 
             if (cellIndex < node.CellCount && node.GetCellKey(cellIndex) == key)
             {
-                return new Result.DuplicateKey(key);
+                return new Result.DuplicateKey();
             }
 
             if (cellIndex < node.CellCount)
@@ -217,7 +217,6 @@ namespace SimpleDatabase.Execution.Tables
                     }
                     else
                     {
-                        node.KeyCount += 1;
                         for (var i = node.KeyCount; i > cellIndex; i--)
                         {
                             node.CopyCell(node, i - 1, i);
@@ -238,15 +237,7 @@ namespace SimpleDatabase.Execution.Tables
         {
             public class Success : Result { }
 
-            public class DuplicateKey : Result
-            {
-                public DuplicateKey(IndexKey key)
-                {
-                    Key = key;
-                }
-
-                public IndexKey Key { get; }
-            }
+            public class DuplicateKey : Result { }
 
             public class WasSplit : Result
             {
