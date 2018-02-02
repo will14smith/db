@@ -239,9 +239,9 @@ namespace SimpleDatabase.CLI.UnitTests
 
             var outputs = new List<string>
             {
-                "db > (4, a, b@b.b)",
-                "(2, a, a@a.a)",
+                "db > (2, a, a@a.a)",
                 "(3, b, b@b.b)",
+                "(4, a, b@b.b)",
                 "(1, c, c@c.c)",
                 "Executed.",
                 "db >"

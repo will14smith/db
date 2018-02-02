@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Linq;
 using SimpleDatabase.Execution.Tables;
 using SimpleDatabase.Execution.Transactions;
 using SimpleDatabase.Schemas;
+using SimpleDatabase.Storage.Heap;
 using SimpleDatabase.Storage.Paging;
+using SimpleDatabase.Storage.Serialization;
+using SimpleDatabase.Storage.Tree;
 using SimpleDatabase.Utils;
 
 namespace SimpleDatabase.Execution.Values
@@ -14,6 +18,7 @@ namespace SimpleDatabase.Execution.Values
         private readonly ITransactionManager _txm;
 
         private readonly TreeTraverser _treeTraverser;
+        private readonly IIndexSerializer _treeSerializer;
 
         public Table Table { get; }
         public Index Index { get; }
@@ -25,6 +30,7 @@ namespace SimpleDatabase.Execution.Values
             _txm = txm;
 
             _treeTraverser = new TreeTraverser(pager, txm, table, index);
+            _treeSerializer = index.CreateSerializer();
 
             Table = table;
             Index = index;
@@ -57,9 +63,11 @@ namespace SimpleDatabase.Execution.Values
             throw new NotImplementedException();
         }
 
-        public ColumnValue Column(int index)
+        public ColumnValue Column(int columnIndex)
         {
-            throw new NotImplementedException();
+            // TODO check if column is in Index key or data
+
+            return GetHeap().Column(columnIndex);
         }
 
         public InsertTargetResult Insert(Row row)
@@ -100,7 +108,13 @@ namespace SimpleDatabase.Execution.Values
 
         private HeapCursor GetHeap()
         {
-            throw new NotImplementedException();
+            var page = _pager.Get(_cursor.Value.Page);
+            var leaf = LeafNode.Read(page, _treeSerializer);
+
+            // (pageIndex << 8) | itemIndex
+            var heapLocation = (int)leaf.GetCellValue(_cursor.Value.CellNumber).Values.First().Value;
+
+            return HeapCursor.FromLocation(_pager, _txm, Table, Writable, heapLocation);
         }
     }
 }

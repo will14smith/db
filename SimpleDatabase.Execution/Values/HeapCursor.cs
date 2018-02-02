@@ -107,5 +107,23 @@ namespace SimpleDatabase.Execution.Values
                     throw new NotImplementedException($"Unsupported type: {result.GetType().Name}");
             }
         }
+
+        public static HeapCursor FromLocation(IPager pager, ITransactionManager txm, Table table, bool writable, int heapLocation)
+        {
+            var pageIndex = heapLocation >> 8;
+            var itemIndex = heapLocation & 0xff;
+
+            var pageId = new PageId(new PageSource.Heap(table.Name), pageIndex);
+
+            var heapPage = pager.Get(pageId);
+            var heap = HeapPage.Read(heapPage);
+
+            var endOfTable = itemIndex + 1 == heap.ItemCount && heap.NextPageIndex == 0;
+
+            return new HeapCursor(
+                new Cursor(pageId, itemIndex, endOfTable), 
+                new HeapCursor(pager, txm, table, writable)
+            );
+        }
     }
 }

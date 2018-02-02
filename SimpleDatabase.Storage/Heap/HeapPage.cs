@@ -81,7 +81,9 @@ namespace SimpleDatabase.Storage.Heap
             // find last item offset
             int lastOffset;
             if (ItemCount == 0)
+            {
                 lastOffset = PageLayout.PageSize - 1;
+            }
             else
             {
                 (lastOffset, _) = GetItemPointer(ItemCount - 1);
