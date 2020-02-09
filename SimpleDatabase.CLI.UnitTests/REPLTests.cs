@@ -66,16 +66,16 @@ namespace SimpleDatabase.CLI.UnitTests
         }, 0, ExitCode.Success)]
         [InlineData(new[]
         {
-            "INSERT INTO table VALUES(3, 'a', 'b')",
-            "INSERT INTO table VALUES(1, 'a', 'b')",
-            "INSERT INTO table VALUES(2, 'a', 'b')",
+            "INSERT INTO table VALUES(3, 'a', 'b3')",
+            "INSERT INTO table VALUES(1, 'a', 'b1')",
+            "INSERT INTO table VALUES(2, 'a', 'b2')",
             "SELECT * FROM table ORDER BY id",
             ".exit"
         }, new[]
         {
-            "db > (1, a, b)",
-            "(2, a, b)",
-            "(3, a, b)",
+            "db > (1, a, b1)",
+            "(2, a, b2)",
+            "(3, a, b3)",
             "Executed.",
             "db >"
         }, 3, ExitCode.Success)]
@@ -202,8 +202,8 @@ namespace SimpleDatabase.CLI.UnitTests
             {
                 "INSERT INTO table VALUES (1, 'c', 'c@c.c')",
                 "INSERT INTO table VALUES (2, 'a', 'a@a.a')",
-                "INSERT INTO table VALUES (3, 'b', 'b@b.b')",
-                "INSERT INTO table VALUES (4, 'a', 'b@b.b')",
+                "INSERT INTO table VALUES (3, 'b', 'b1@b.b')",
+                "INSERT INTO table VALUES (4, 'a', 'b2@b.b')",
 
                 "SELECT * FROM table ORDER BY name, email DESC",
 
@@ -212,9 +212,9 @@ namespace SimpleDatabase.CLI.UnitTests
 
             var outputs = new List<string>
             {
-                "db > (4, a, b@b.b)",
+                "db > (4, a, b2@b.b)",
                 "(2, a, a@a.a)",
-                "(3, b, b@b.b)",
+                "(3, b, b1@b.b)",
                 "(1, c, c@c.c)",
                 "Executed.",
                 "db >"
@@ -229,8 +229,8 @@ namespace SimpleDatabase.CLI.UnitTests
             {
                 "INSERT INTO table VALUES (1, 'c', 'c@c.c')",
                 "INSERT INTO table VALUES (2, 'a', 'a@a.a')",
-                "INSERT INTO table VALUES (3, 'b', 'b@b.b')",
-                "INSERT INTO table VALUES (4, 'a', 'b@b.b')",
+                "INSERT INTO table VALUES (3, 'b', 'b1@b.b')",
+                "INSERT INTO table VALUES (4, 'a', 'b2@b.b')",
 
                 "SELECT * FROM table ORDER BY email ASC",
 
@@ -240,8 +240,8 @@ namespace SimpleDatabase.CLI.UnitTests
             var outputs = new List<string>
             {
                 "db > (2, a, a@a.a)",
-                "(3, b, b@b.b)",
-                "(4, a, b@b.b)",
+                "(3, b, b1@b.b)",
+                "(4, a, b2@b.b)",
                 "(1, c, c@c.c)",
                 "Executed.",
                 "db >"

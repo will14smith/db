@@ -20,9 +20,9 @@ namespace SimpleDatabase.Planning
             _database = database;
         }
 
-        public Plan Plan(Statement statment)
+        public Plan Plan(Statement statement)
         {
-            switch (statment)
+            switch (statement)
             {
                 case SelectStatement select:
                     {
@@ -81,7 +81,7 @@ namespace SimpleDatabase.Planning
                         return new Plan(root);
                     }
 
-                default: throw new ArgumentOutOfRangeException(nameof(statment), $"Unhandled type: {statment.GetType().FullName}");
+                default: throw new ArgumentOutOfRangeException(nameof(statement), $"Unhandled type: {statement.GetType().FullName}");
             }
         }
 

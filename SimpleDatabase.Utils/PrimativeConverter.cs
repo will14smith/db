@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace SimpleDatabase.Utils
@@ -13,7 +14,7 @@ namespace SimpleDatabase.Utils
                 throw new NotImplementedException();
             }
 
-            return span.NonPortableCast<byte, T>()[0];
+            return MemoryMarshal.Cast<byte, T>(span)[0];
         }
         public static void Write<T>(this Span<byte> span, T value)
             where T : struct
@@ -23,7 +24,7 @@ namespace SimpleDatabase.Utils
                 throw new NotImplementedException();
             }
 
-            span.NonPortableCast<byte, T>()[0] = value;
+            MemoryMarshal.Cast<byte, T>(span)[0] = value;
         }
 
         public static string ReadString(this Span<byte> span)

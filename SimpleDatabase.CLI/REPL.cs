@@ -150,8 +150,7 @@ namespace SimpleDatabase.CLI
                 _tx = null;
                 return new MetaCommandResponse.Success();
             }
-
-
+            
             if (input == ".btree")
             {
                 var index = _table.Indices.FirstOrDefault();

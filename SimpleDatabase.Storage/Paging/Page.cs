@@ -19,6 +19,6 @@ namespace SimpleDatabase.Storage.Paging
             set => Data[PageLayout.PageTypeOffset] = (byte) value;
         }
 
-        public Span<byte> this[int index] => new Span<byte>(Data, index);
+        public Span<byte> this[int index] => Data.AsSpan(index);
     }
 }

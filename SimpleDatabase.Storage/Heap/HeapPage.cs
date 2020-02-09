@@ -37,13 +37,13 @@ namespace SimpleDatabase.Storage.Heap
         public PageType Type
         {
             get => _page.Type;
-            protected set => _page.Type = value;
+            private set => _page.Type = value;
         }
 
         public byte ItemCount
         {
             get => _page[_layout.ItemCountOffset].Read<byte>();
-            set => _page[_layout.ItemCountOffset].Write(value);
+            private set => _page[_layout.ItemCountOffset].Write(value);
         }
         public int NextPageIndex
         {
@@ -106,7 +106,7 @@ namespace SimpleDatabase.Storage.Heap
         {
             var (_, length) = GetItemPointer(index);
 
-            for (var i = index + 1; i < ItemCount - 1; i++)
+            for (var i = index + 1; i < ItemCount; i++)
             {
                 var (ioffset, ilength) = GetItemPointer(i);
 
@@ -119,31 +119,31 @@ namespace SimpleDatabase.Storage.Heap
                 _page[ioffset].Slice(0, ilength).CopyTo(_page[ioffset + length]);
             }
 
-            for (var i = index + 1; i < ItemCount - 1; i++)
+            for (var i = index + 1; i < ItemCount; i++)
             {
                 GetItemPointerOffset(i).CopyTo(GetItemPointerOffset(i - 1));
             }
+
+            ItemCount--;
         }
 
         public bool CanInsert(int itemSize)
         {
+            var maxAvailableSpace = PageLayout.PageSize - _layout.HeaderSize - _layout.ItemPointerSize;
+            if (maxAvailableSpace < itemSize)
+            {
+                throw new InvalidOperationException("Item will not fit on one page.");
+            }
+
             if (ItemCount == 0)
             {
-                var availableSpace = PageLayout.PageSize - _layout.HeaderSize - _layout.ItemPointerSize;
-                if (availableSpace < itemSize)
-                {
-                    throw new InvalidOperationException("Item will not fit on one page.");
-                }
-
                 return true;
             }
-            else
-            {
-                var (lastOffset, _) = GetItemPointer(ItemCount - 1);
-                var availableSpace = lastOffset - _layout.HeaderSize - (_layout.ItemPointerSize + 1) * ItemCount;
 
-                return availableSpace >= itemSize;
-            }
+            var (lastOffset, _) = GetItemPointer(ItemCount - 1);
+            var availableSpace = lastOffset - _layout.HeaderSize - (_layout.ItemPointerSize + 1) * ItemCount;
+
+            return availableSpace >= itemSize;
         }
     }
 }
