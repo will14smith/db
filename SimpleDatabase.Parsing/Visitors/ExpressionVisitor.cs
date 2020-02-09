@@ -3,7 +3,7 @@ using SimpleDatabase.Parsing.Expressions;
 
 namespace SimpleDatabase.Parsing.Visitors
 {
-    public class ExpressionVisitor : SQLBaseVisitor<Expression>
+    internal class ExpressionVisitor : SQLBaseVisitor<Expression>
     {
         public override Expression VisitExpression_literal(SQLParser.Expression_literalContext context)
         {
@@ -18,14 +18,15 @@ namespace SimpleDatabase.Parsing.Visitors
             }
 
             var str = context.STRING_LITERAL();
-            if (str != null)
+            if (str == null)
             {
-                var value = str.GetText();
-
-                return new StringLiteralExpression(value.Substring(1, value.Length - 2));
+                return base.VisitLiteral_value(context);
             }
+            
+            var value = str.GetText();
+            
+            return new StringLiteralExpression(value.Substring(1, value.Length - 2));
 
-            return base.VisitLiteral_value(context);
         }
 
         public override Expression VisitExpression_column(SQLParser.Expression_columnContext context)

@@ -13,7 +13,7 @@ namespace SimpleDatabase.Planning.UnitTests
 {
     public class SimplePlannerTests
     {
-        private readonly Database _database = new Database(new Table[]
+        private readonly Database _database = new Database(new[]
         {
             new Table("table",
                 new []
@@ -32,7 +32,7 @@ namespace SimpleDatabase.Planning.UnitTests
         public void Test_Star_NoFilter()
         {
             var statement = new SelectStatement(
-                new List<ResultColumn> { new ResultColumn.Star(Option.None<string>()) },
+                new List<ResultColumn> { new ResultColumn.Star(null) },
                 new Parsing.Statements.Table.TableName("table"),
                 Option.None<Expression>(),
                 new OrderExpression[0]
@@ -53,8 +53,8 @@ namespace SimpleDatabase.Planning.UnitTests
             var statement = new SelectStatement(
                 new List<ResultColumn>
                 {
-                    new ResultColumn.Expression(new ColumnNameExpression("name"), Option.None<string>()),
-                    new ResultColumn.Expression(new ColumnNameExpression("email"), Option.None<string>()),
+                    new ResultColumn.Expression(new ColumnNameExpression("name"), null),
+                    new ResultColumn.Expression(new ColumnNameExpression("email"), null),
                 },
                 new Parsing.Statements.Table.TableName("table"),
                 Option.None<Expression>(),
@@ -75,7 +75,7 @@ namespace SimpleDatabase.Planning.UnitTests
         public void Test_Star_Filter()
         {
             var statement = new SelectStatement(
-                new List<ResultColumn> { new ResultColumn.Star(Option.None<string>()) },
+                new List<ResultColumn> { new ResultColumn.Star(null) },
                 new Parsing.Statements.Table.TableName("table"),
                 Option.Some<Expression>(new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a"))),
                 new OrderExpression[0]
@@ -96,7 +96,7 @@ namespace SimpleDatabase.Planning.UnitTests
         public void Test_Star_OrderBy()
         {
             var statement = new SelectStatement(
-                new List<ResultColumn> { new ResultColumn.Star(Option.None<string>()) },
+                new List<ResultColumn> { new ResultColumn.Star(null) },
                 new Parsing.Statements.Table.TableName("table"),
                 Option.None<Expression>(),
                 new[] { new OrderExpression(new ColumnNameExpression("name"), Order.Ascending) }
@@ -117,7 +117,7 @@ namespace SimpleDatabase.Planning.UnitTests
         public void Test_Star_OrderBy_Using_Index()
         {
             var statement = new SelectStatement(
-                new List<ResultColumn> { new ResultColumn.Star(Option.None<string>()) },
+                new List<ResultColumn> { new ResultColumn.Star(null) },
                 new Parsing.Statements.Table.TableName("table"),
                 Option.None<Expression>(),
                 new[] { new OrderExpression(new ColumnNameExpression("email"), Order.Ascending) }

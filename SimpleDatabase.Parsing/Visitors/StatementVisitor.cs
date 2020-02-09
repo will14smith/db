@@ -8,7 +8,7 @@ using SimpleDatabase.Utils;
 
 namespace SimpleDatabase.Parsing.Visitors
 {
-    public class StatementVisitor : SQLBaseVisitor<Statement>
+    internal class StatementVisitor : SQLBaseVisitor<Statement>
     {
         public override Statement VisitStatement(SQLParser.StatementContext context)
         {
@@ -63,25 +63,25 @@ namespace SimpleDatabase.Parsing.Visitors
             return new DeleteStatement(table, where);
         }
 
-        private Expression HandleExpression(SQLParser.ExpressionContext context)
+        private static Expression HandleExpression(SQLParser.ExpressionContext context)
         {
             return context.Accept(new ExpressionVisitor());
         }
 
-        private ResultColumn HandleResultColumn(SQLParser.Result_columnContext context)
+        private static ResultColumn HandleResultColumn(SQLParser.Result_columnContext context)
         {
             switch (context)
             {
                 case SQLParser.Result_column_starContext star:
                     {
-                        var table = star.table_name().ToOption().Select(x => x.IDENTIFIER().GetText());
+                        var table = star.table_name().Select(x => x.IDENTIFIER().GetText());
 
                         return new ResultColumn.Star(table);
                     }
                 case SQLParser.Result_column_exprContext expression:
                     {
                         var parsedExpression = HandleExpression(expression.expression());
-                        var alias = expression.column_alias().ToOption().Select(x => x.IDENTIFIER().GetText());
+                        var alias = expression.column_alias().Select(x => x.IDENTIFIER().GetText());
 
                         return new ResultColumn.Expression(parsedExpression, alias);
                     }
@@ -90,7 +90,7 @@ namespace SimpleDatabase.Parsing.Visitors
             }
         }
 
-        private Table HandleTable(SQLParser.Table_nameContext context)
+        private static Table HandleTable(SQLParser.Table_nameContext context)
         {
             return new Table.TableName(context.IDENTIFIER().GetText());
         }

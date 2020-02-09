@@ -5,6 +5,7 @@ using SimpleDatabase.Execution;
 using SimpleDatabase.Parsing.Expressions;
 using SimpleDatabase.Parsing.Statements;
 using SimpleDatabase.Planning.Items;
+using SimpleDatabase.Utils;
 
 namespace SimpleDatabase.Planning.Iterators
 {
@@ -43,13 +44,13 @@ namespace SimpleDatabase.Planning.Iterators
                 switch (column)
                 {
                     case ResultColumn.Star star:
-                        if (star.Table.HasValue) { throw new NotImplementedException(); }
+                        if (star.Table != null) { throw new NotImplementedException(); }
 
                         columns.AddRange(innerOutput.Columns);
                         break;
 
                     case ResultColumn.Expression expr:
-                        var name = expr.Alias.Map<IteratorOutputName>(x => new IteratorOutputName.Constant(x), () => new IteratorOutputName.Expression(expr.Value));
+                        var name = expr.Alias.Select(x => new IteratorOutputName.Constant(x)) ?? (IteratorOutputName) new IteratorOutputName.Expression(expr.Value);
                         var item = Compile(innerOutput, expr.Value);
 
                         columns.Add(new IteratorOutput.Named(name, item));

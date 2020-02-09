@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using FluentAssertions;
+using Xunit;
 
 namespace SimpleDatabase.Parsing.UnitTests
 {
@@ -23,11 +24,9 @@ namespace SimpleDatabase.Parsing.UnitTests
         
         public void CanParse(string input)
         {
-            var parser = new Parser();
+            var statements = Parser.Parse(input);
 
-            var statements = parser.Parse(input);
-
-            Assert.Equal(1, statements.Count);
+            statements.Should().ContainSingle();
         }
     }
 }

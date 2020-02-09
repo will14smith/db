@@ -10,6 +10,13 @@ namespace SimpleDatabase.Utils
             where TOut : struct
         {
             return value.HasValue ? selector(value.Value) : default(TOut?);
+        }  
+        
+        public static TOut Select<TIn, TOut>(this TIn value, Func<TIn, TOut> selector)
+            where TIn : class?
+            where TOut : class?
+        {
+            return value != null ? selector(value) : null;
         }
         
         public static T OrElse<T>(this T? opt, Func<T> func)

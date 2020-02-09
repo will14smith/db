@@ -189,7 +189,7 @@ namespace SimpleDatabase.CLI
             IReadOnlyCollection<Statement> statements;
             try
             {
-                statements = parser.Parse(input);
+                statements = Parser.Parse(input);
             }
             catch (ParseCanceledException ex)
             {

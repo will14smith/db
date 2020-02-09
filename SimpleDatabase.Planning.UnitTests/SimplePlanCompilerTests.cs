@@ -33,8 +33,8 @@ namespace SimpleDatabase.Planning.UnitTests
             )) },
             new object[] {"Scan table", new Plan(new ScanTableNode("table")) },
             new object[] {"Scan index", new Plan(new ScanIndexNode("table", "k_email")) },
-            new object[] {"Project *", new Plan(new ProjectionNode(new ScanTableNode("table"), new []{ new ResultColumn.Star(Option.None<string>()) })) },
-            new object[] {"Project column", new Plan(new ProjectionNode(new ScanTableNode("table"), new[]{ new ResultColumn.Expression(new ColumnNameExpression("name"), Option.None<string>()) })) },
+            new object[] {"Project *", new Plan(new ProjectionNode(new ScanTableNode("table"), new []{ new ResultColumn.Star(null) })) },
+            new object[] {"Project column", new Plan(new ProjectionNode(new ScanTableNode("table"), new[]{ new ResultColumn.Expression(new ColumnNameExpression("name"), null) })) },
             new object[] {"Filter name='a'", new Plan(new FilterNode(new ScanTableNode("table"), new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a")))) },
             new object[] {"Project & Filter", new Plan(
                 new ProjectionNode(
@@ -42,14 +42,14 @@ namespace SimpleDatabase.Planning.UnitTests
                         new ScanTableNode("table"),
                         new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a"))
                     ),
-                    new[] { new ResultColumn.Expression(new ColumnNameExpression("name"), Option.None<string>()) }
+                    new[] { new ResultColumn.Expression(new ColumnNameExpression("name"), null) }
                 ))
             },
             new object[] {"Filter & Project", new Plan(
                 new FilterNode(
                     new ProjectionNode(
                         new ScanTableNode("table"),
-                        new[] { new ResultColumn.Expression(new ColumnNameExpression("name"), Option.None<string>()) }
+                        new[] { new ResultColumn.Expression(new ColumnNameExpression("name"), null) }
                     ),
                     new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a"))
                 ))

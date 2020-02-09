@@ -8,7 +8,7 @@ namespace SimpleDatabase.Parsing
 {
     public class Parser
     {
-        public IReadOnlyCollection<Statement> Parse(string input)
+        public static IReadOnlyCollection<Statement> Parse(string input)
         {
             var inputStream = new CodePointCharStream(input);
             var lexer = new SQLLexer(inputStream);

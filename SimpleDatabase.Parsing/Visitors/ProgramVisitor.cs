@@ -4,7 +4,7 @@ using SimpleDatabase.Parsing.Statements;
 
 namespace SimpleDatabase.Parsing.Visitors
 {
-    public class ProgramVisitor : SQLBaseVisitor<IReadOnlyList<Statement>>
+    internal class ProgramVisitor : SQLBaseVisitor<IReadOnlyList<Statement>>
     {
         public override IReadOnlyList<Statement> VisitProgram(SQLParser.ProgramContext context)
         {
