@@ -8,7 +8,7 @@ namespace SimpleDatabase.Storage.UnitTests.Heap
 {
     public class HeapCreatorTests
     {
-        private readonly Table _table = new Table("a", new Column[0], new Index[0]);
+        private readonly Table _table = new Table("a", new Column[0], new TableIndex[0]);
 
         [Fact]
         public void AllocateReturnsIndex_ShouldThrow()

@@ -87,7 +87,7 @@ namespace SimpleDatabase.Planning.UnitTests
                         new Column("email", new ColumnType.String(255))
                     },
                     new []{
-                        new Index("k_email", new KeyStructure(new [] { (new Column("email", new ColumnType.String(1023)), KeyOrdering.Ascending) }, new Column[0])),
+                        new TableIndex("k_email", new KeyStructure(new [] { (new Column("email", new ColumnType.String(1023)), KeyOrdering.Ascending) }, new Column[0])),
                     }
                 )
             });

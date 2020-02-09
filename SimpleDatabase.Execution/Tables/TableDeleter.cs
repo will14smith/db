@@ -42,7 +42,7 @@ namespace SimpleDatabase.Execution.Tables
             return result;
         }
 
-        private IndexKey GetKey(Index index, ICursor cursor)
+        private IndexKey GetKey(TableIndex index, ICursor cursor)
         {
             var key = index.Structure.Keys
                 .Select(col => _table.IndexOf(col.Item1) ?? -1)

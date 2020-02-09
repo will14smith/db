@@ -12,9 +12,9 @@ namespace SimpleDatabase.Execution.Tables
         private readonly ISourcePager _pager;
         private readonly IIndexSerializer _serializer;
 
-        private readonly Index _index;
+        private readonly TableIndex _index;
 
-        public TreeDeleter(ISourcePager pager, Index index)
+        public TreeDeleter(ISourcePager pager, TableIndex index)
         {
             _pager = pager;
             _serializer = index.CreateSerializer();

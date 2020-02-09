@@ -85,11 +85,11 @@ namespace SimpleDatabase.Planning
             }
         }
 
-        private Option<Index> TryFindIndex(Table selectTable, IReadOnlyList<OrderExpression> ordering)
+        private Option<TableIndex> TryFindIndex(Table selectTable, IReadOnlyList<OrderExpression> ordering)
         {
             if (!ordering.Any())
             {
-                return Option.None<Index>();
+                return Option.None<TableIndex>();
             }
 
             var tableName = ((Table.TableName)selectTable).Name;
@@ -103,10 +103,10 @@ namespace SimpleDatabase.Planning
                 }
             }
 
-            return Option.None<Index>();
+            return Option.None<TableIndex>();
         }
 
-        private bool IndexMatch(Index index, IReadOnlyList<OrderExpression> ordering)
+        private bool IndexMatch(TableIndex index, IReadOnlyList<OrderExpression> ordering)
         {
             var oi = 0;
             foreach (var key in index.Structure.Keys)

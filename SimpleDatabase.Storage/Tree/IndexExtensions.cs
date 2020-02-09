@@ -9,7 +9,7 @@ namespace SimpleDatabase.Storage.Tree
 {
     public static class IndexExtensions
     {
-        public static (IReadOnlyList<Column> key, IReadOnlyList<Column> data) GetPersistenceColumns(this Index index)
+        public static (IReadOnlyList<Column> key, IReadOnlyList<Column> data) GetPersistenceColumns(this TableIndex index)
         {
             var key = index.Structure.Keys.Select(col => col.Item1).ToList();
 
@@ -22,7 +22,7 @@ namespace SimpleDatabase.Storage.Tree
             return (key, data);
         }
 
-        public static IIndexSerializer CreateSerializer(this Index index)
+        public static IIndexSerializer CreateSerializer(this TableIndex index)
         {
             var (key, data) = index.GetPersistenceColumns();
 

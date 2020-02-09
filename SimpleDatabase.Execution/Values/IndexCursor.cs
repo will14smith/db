@@ -21,10 +21,10 @@ namespace SimpleDatabase.Execution.Values
         private readonly IIndexSerializer _treeSerializer;
 
         public Table Table { get; }
-        public Index Index { get; }
+        public TableIndex Index { get; }
         public bool Writable { get; }
 
-        public IndexCursor(IPager pager, ITransactionManager txm, Table table, Index index, bool writable)
+        public IndexCursor(IPager pager, ITransactionManager txm, Table table, TableIndex index, bool writable)
         {
             _pager = pager;
             _txm = txm;

@@ -12,7 +12,7 @@ namespace SimpleDatabase.Execution.Trees
         private readonly ITreeSearchStrategy _treeSearchStrategy;
         private readonly IIndexSerializer _serializer;
 
-        public TreeSearcher(ISourcePager pager, ITreeSearchStrategy treeSearchStrategy, Index index)
+        public TreeSearcher(ISourcePager pager, ITreeSearchStrategy treeSearchStrategy, TableIndex index)
         {
             _pager = pager;
             _treeSearchStrategy = treeSearchStrategy;

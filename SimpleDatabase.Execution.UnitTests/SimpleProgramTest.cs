@@ -41,7 +41,7 @@ namespace SimpleDatabase.Execution.UnitTests
                 new Column("id", new ColumnType.Integer()),
                 new Column("name", new ColumnType.String(63)),
                 new Column("email", new ColumnType.String(255)),
-            }, new Index[0]);
+            }, new TableIndex[0]);
 
         private static readonly FunctionLabel MainLabel = FunctionLabel.Create();
         private static readonly ProgramLabel Loop = ProgramLabel.Create();

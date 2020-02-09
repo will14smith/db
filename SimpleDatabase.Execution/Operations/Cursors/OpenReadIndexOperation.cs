@@ -11,9 +11,9 @@ namespace SimpleDatabase.Execution.Operations.Cursors
     public class OpenReadIndexOperation : IOperation
     {
         public Table Table { get; }
-        public Index Index { get; }
+        public TableIndex Index { get; }
 
-        public OpenReadIndexOperation(Table table, Index index)
+        public OpenReadIndexOperation(Table table, TableIndex index)
         {
             Table = table;
             Index = index;

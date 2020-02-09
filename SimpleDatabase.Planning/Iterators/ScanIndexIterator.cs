@@ -11,12 +11,12 @@ namespace SimpleDatabase.Planning.Iterators
     {
         private readonly IOperationGenerator _generator;
         private readonly Table _table;
-        private readonly Index _index;
+        private readonly TableIndex _index;
         private readonly bool _writable;
 
         private readonly SlotItem _cursor;
 
-        public ScanIndexIterator(IOperationGenerator generator, Table table, Index index, bool writable)
+        public ScanIndexIterator(IOperationGenerator generator, Table table, TableIndex index, bool writable)
         {
             _generator = generator;
             _table = table;

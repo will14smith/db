@@ -7,11 +7,11 @@ namespace SimpleDatabase.Storage.Tree
     public class IndexCreator
     {
         private readonly SourcePager _pager;
-        private readonly Index _index;
+        private readonly TableIndex _index;
 
         private readonly IIndexSerializer _serializer;
 
-        public IndexCreator(SourcePager pager, Index index)
+        public IndexCreator(SourcePager pager, TableIndex index)
         {
             _pager = pager;
             _index = index;

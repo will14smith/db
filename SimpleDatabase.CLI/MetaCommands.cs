@@ -7,7 +7,7 @@ namespace SimpleDatabase.CLI
 {
     public class MetaCommands
     {
-        public static void PrintBTree(IREPLOutput output, Pager pager, Table table, Index index)
+        public static void PrintBTree(IREPLOutput output, Pager pager, Table table, TableIndex index)
         {
             output.WriteLine("Tree:");
 

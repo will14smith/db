@@ -53,7 +53,7 @@ namespace SimpleDatabase.CLI
 
         private Table CreateTable(string name, IReadOnlyList<Column> columns, IEnumerable<(string, (string, KeyOrdering)[])> indexDefs)
         {
-            var indices = indexDefs.Select(x => new Index(x.Item1, new KeyStructure(x.Item2.Select(c => (columns.Single(v => v.Name == c.Item1), c.Item2)).ToList(), new Column[0]))).ToList();
+            var indices = indexDefs.Select(x => new TableIndex(x.Item1, new KeyStructure(x.Item2.Select(c => (columns.Single(v => v.Name == c.Item1), c.Item2)).ToList(), new Column[0]))).ToList();
 
             var table = new Table(name, columns, indices);
 

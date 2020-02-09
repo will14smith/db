@@ -18,6 +18,7 @@ Safe to say: don't use this in production!
   - FROM a table
   - optional WHERE
 - EXPLAIN
+- MVCC (multi-version concurrency control, initial start for ACID)
 
 ### Unsupported
 
@@ -25,5 +26,6 @@ Safe to say: don't use this in production!
 - Friendly API (just a bunch of low level ones)
 
 ## Inspired by
+
 - https://cstack.github.io/db_tutorial/
 - https://www.sqlite.org/

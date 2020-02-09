@@ -37,7 +37,7 @@ namespace SimpleDatabase.Execution.Tables
             return result;
         }
 
-        private (IndexKey, IndexData) CreateIndexData(Index index, int heapKey, Row row)
+        private (IndexKey, IndexData) CreateIndexData(TableIndex index, int heapKey, Row row)
         {
             var key = index.Structure.Keys.Select(col => GetValue(col.Item1, row)).ToList();
 

@@ -18,9 +18,9 @@ namespace SimpleDatabase.Execution.Tables
 
         private readonly IIndexSerializer _treeSerializer;
         
-        private readonly Index _index;
+        private readonly TableIndex _index;
         
-        public TreeTraverser(IPager pager, ITransactionManager txm, Table table, Index index)
+        public TreeTraverser(IPager pager, ITransactionManager txm, Table table, TableIndex index)
         {
             _treePager = new SourcePager(pager, new PageSource.Index(table.Name, index.Name));
             _heapPager = new SourcePager(pager, new PageSource.Heap(table.Name));
