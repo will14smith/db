@@ -5,7 +5,7 @@ namespace SimpleDatabase.Storage.Paging
 {
     public class FilePageStorage : IPageStorage
     {
-        private FileStream _file;
+        private FileStream? _file;
 
         public FilePageStorage(PageSource source, string path)
         {
@@ -18,7 +18,7 @@ namespace SimpleDatabase.Storage.Paging
         }
 
         public PageSource Source { get; }
-        public int PageCount => (int)_file.Length / PageLayout.PageSize;
+        public int PageCount => (int)_file!.Length / PageLayout.PageSize;
 
         public Page Read(PageId id)
         {
@@ -30,9 +30,9 @@ namespace SimpleDatabase.Storage.Paging
             var page = new byte[PageLayout.PageSize];
 
             var offset = id.Index * PageLayout.PageSize;
-            _file.Seek(offset, SeekOrigin.Begin);
+            _file!.Seek(offset, SeekOrigin.Begin);
 
-            var bytesRead = _file.Read(page, 0, PageLayout.PageSize);
+            var bytesRead = _file!.Read(page, 0, PageLayout.PageSize);
             if (bytesRead != PageLayout.PageSize)
             {
                 throw new IOException($"failed to read {PageLayout.PageSize} bytes, read {bytesRead} instead");
@@ -55,9 +55,9 @@ namespace SimpleDatabase.Storage.Paging
             }
 
             var offset = id.Index * PageLayout.PageSize;
-            _file.Seek(offset, SeekOrigin.Begin);
+            _file!.Seek(offset, SeekOrigin.Begin);
 
-            _file.Write(page.Data, 0, PageLayout.PageSize);
+            _file!.Write(page.Data, 0, PageLayout.PageSize);
         }
 
         public void Dispose()

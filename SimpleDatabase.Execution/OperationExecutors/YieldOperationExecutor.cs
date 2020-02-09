@@ -7,7 +7,7 @@ namespace SimpleDatabase.Execution.OperationExecutors
     {
         public (FunctionState, OperationResult) Execute(FunctionState state, YieldOperation operation)
         {
-            Value value;
+            Value? value;
             (state, value) = state.PopValue();
 
             return (state, new OperationResult.Yield(new OperationResult.Next(), value));

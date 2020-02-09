@@ -34,6 +34,12 @@ namespace SimpleDatabase.Storage.Serialization
                 var value1 = Values[index];
                 var value2 = other.Values[index];
 
+                if (value1.Value is null)
+                {
+                    return value2.Value is null ? 0 : 1;
+                }
+                if (value2.Value is null) return -1;
+                
                 // TODO better comparer?
                 var comparison = Comparer<object>.Default.Compare(value1.Value, value2.Value);
                 if (comparison != 0)

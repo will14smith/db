@@ -17,7 +17,7 @@ namespace SimpleDatabase.Utils
             where TOut : class?
         {
             return value != null ? selector(value) : null;
-        }
+        }    
         
         public static T OrElse<T>(this T? opt, Func<T> func)
             where T : struct

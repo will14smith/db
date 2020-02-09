@@ -11,13 +11,13 @@ namespace SimpleDatabase.Execution
         private readonly int _id;
         private readonly string _name;
 
-        public ProgramLabel(int id, string name) : this()
+        public ProgramLabel(int id, string? name) : this()
         {
             _id = id;
             _name = name?.Replace(" ", "_") ?? "";
         }
 
-        public static ProgramLabel Create(string name = null)
+        public static ProgramLabel Create(string? name = null)
         {
             return new ProgramLabel(Interlocked.Increment(ref _counter), name);
         }

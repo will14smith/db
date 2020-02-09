@@ -8,12 +8,12 @@ namespace SimpleDatabase.Storage.Tree
 {
     public class InternalNode : Node
     {
-        private InternalNode(Page page, IIndexSerializer serializer) 
+        private InternalNode(Page page, IIndexSerializer? serializer) 
             : base(page, serializer)
         {
         }
 
-        public static InternalNode New(Page page, IIndexSerializer serializer)
+        public static InternalNode New(Page page, IIndexSerializer? serializer)
         {
             return new InternalNode(page, serializer)
             {
@@ -23,7 +23,7 @@ namespace SimpleDatabase.Storage.Tree
             };
         }
 
-        public new static InternalNode Read(Page page, IIndexSerializer serializer)
+        public new static InternalNode Read(Page page, IIndexSerializer? serializer)
         {
             if (page.Type != PageType.Internal)
             {

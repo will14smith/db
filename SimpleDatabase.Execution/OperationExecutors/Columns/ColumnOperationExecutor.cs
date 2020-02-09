@@ -9,7 +9,7 @@ namespace SimpleDatabase.Execution.OperationExecutors.Columns
     {
         public (FunctionState, OperationResult) Execute(FunctionState state, ColumnOperation operation)
         {
-            Value value;
+            Value? value;
             (state, value) = state.PopValue();
 
             switch (value)
@@ -17,7 +17,7 @@ namespace SimpleDatabase.Execution.OperationExecutors.Columns
                 case CursorValue cursor: return Execute(state, operation, cursor);
                 case RowValue row: return Execute(state, operation, row);
 
-                default: throw new ArgumentOutOfRangeException(nameof(value), $"Unhandled type: {value.GetType().FullName}");
+                default: throw new ArgumentOutOfRangeException(nameof(value), $"Unhandled type: {value?.GetType().FullName ?? "null"}");
             }
         }
 

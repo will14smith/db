@@ -113,7 +113,7 @@ namespace SimpleDatabase.Execution.Values
 
             for (var i = 0; i < _structure.Keys.Count; i++)
             {
-                var comparison = Comparer<object>.Default.Compare(xKeys[i], yKeys[i]);
+                var comparison = Comparer<object?>.Default.Compare(xKeys[i], yKeys[i]);
                 if (comparison != 0)
                 {
                     var (_, ordering) = _structure.Keys[i];
@@ -125,7 +125,7 @@ namespace SimpleDatabase.Execution.Values
             return 0;
         }
 
-        private IReadOnlyList<object> GetKey(Row row)
+        private IReadOnlyList<object?> GetKey(Row row)
         {
             var keyColumnCount = _structure.Keys.Count;
 

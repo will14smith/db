@@ -18,7 +18,7 @@ namespace SimpleDatabase.Execution.Transactions
 
         public void Commit()
         {
-            if (_manager.Current.Id != Id)
+            if (_manager.Current == null || _manager.Current.Id != Id)
             {
                 throw new NotImplementedException();
             }
@@ -27,7 +27,7 @@ namespace SimpleDatabase.Execution.Transactions
 
         public void Rollback()
         {
-            if (_manager.Current.Id != Id)
+            if (_manager.Current == null || _manager.Current.Id != Id)
             {
                 throw new NotImplementedException();
             }

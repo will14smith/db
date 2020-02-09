@@ -142,7 +142,7 @@ namespace SimpleDatabase.Storage.UnitTests.Heap
         {
             return new Page(new PageId(new PageSource.Heap("a"), 0), new byte[PageLayout.PageSize]);
         }
-        private static HeapPage CreateNewHeap(Page page = null)
+        private static HeapPage CreateNewHeap(Page? page = null)
         {
             return HeapPage.New(page ?? CreatePage());
         }

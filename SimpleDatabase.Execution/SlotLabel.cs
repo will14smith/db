@@ -10,13 +10,13 @@ namespace SimpleDatabase.Execution
         private readonly int _id;
         private readonly string _name;
 
-        public SlotLabel(int id, string name) : this()
+        public SlotLabel(int id, string? name) : this()
         {
             _id = id;
             _name = name?.Replace(" ", "_") ?? "";
         }
 
-        public static SlotLabel Create(string name = null)
+        public static SlotLabel Create(string? name = null)
         {
             return new SlotLabel(Interlocked.Increment(ref _counter), name);
         }

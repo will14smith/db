@@ -7,7 +7,7 @@ namespace SimpleDatabase.Execution.OperationExecutors.Slots
     {
         public (FunctionState, OperationResult) Execute(FunctionState state, StoreOperation operation)
         {
-            Value value;
+            Value? value;
             (state, value) = state.PopValue();
 
             state = state.SetSlot(operation.Slot, value);

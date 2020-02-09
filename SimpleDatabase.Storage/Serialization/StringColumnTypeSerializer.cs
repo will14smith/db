@@ -29,7 +29,7 @@ namespace SimpleDatabase.Storage.Serialization
 
         public void WriteColumn(Span<byte> columnStart, ColumnValue value)
         {
-            var str = (string)value.Value;
+            var str = (string?)value.Value ?? "";
             var strLength = Encoding.ASCII.GetByteCount(str);
             if (strLength > _type.Length)
             {

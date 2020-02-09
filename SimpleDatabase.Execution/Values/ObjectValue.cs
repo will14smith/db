@@ -4,7 +4,7 @@ namespace SimpleDatabase.Execution.Values
 {
     public class ObjectValue : Value
     {
-        public object Value { get; }
+        public object? Value { get; }
 
         public ObjectValue(object value)
         {
@@ -22,7 +22,7 @@ namespace SimpleDatabase.Execution.Values
             }
         }
 
-        public override string ToString()
+        public override string? ToString()
         {
             return Value?.ToString();
         }

@@ -39,7 +39,7 @@ namespace SimpleDatabase.Execution.Values
             Cursor = Option.Some(cursor);
         }
 
-        public bool EndOfTable => Cursor.Value.EndOfTable;
+        public bool EndOfTable => Cursor.HasValue && Cursor.Value!.EndOfTable;
 
         public ICursor First()
         {
@@ -51,8 +51,13 @@ namespace SimpleDatabase.Execution.Values
 
         public ICursor Next()
         {
+            if (!Cursor.HasValue)
+            {
+                throw new InvalidOperationException("Attempting to advance without a cursor");
+            }
+            
             var traverser = new HeapTraverser(_sourcePager, _txm);
-            var cursor = traverser.AdvanceCursor(Cursor.Value);
+            var cursor = traverser.AdvanceCursor(Cursor.Value!);
 
             return new HeapCursor(cursor, this);
         }
@@ -64,7 +69,8 @@ namespace SimpleDatabase.Execution.Values
 
         public ColumnValue Column(int index)
         {
-            var cursor = Cursor.Value;
+            if(!Cursor.HasValue) throw new InvalidOperationException("Cannot read column without a cursor");
+            var cursor = Cursor.Value!;
 
             var page = HeapPage.Read(_sourcePager.Get(cursor.Page.Index));
             var cell = page.GetItem(cursor.CellNumber);

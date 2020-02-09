@@ -50,7 +50,7 @@ namespace SimpleDatabase.Planning.Iterators
                         break;
 
                     case ResultColumn.Expression expr:
-                        var name = expr.Alias.Select(x => new IteratorOutputName.Constant(x)) ?? (IteratorOutputName) new IteratorOutputName.Expression(expr.Value);
+                        var name = expr.Alias.Select(x => new IteratorOutputName.Constant(x!)) ?? (IteratorOutputName) new IteratorOutputName.Expression(expr.Value);
                         var item = Compile(innerOutput, expr.Value);
 
                         columns.Add(new IteratorOutput.Named(name, item));

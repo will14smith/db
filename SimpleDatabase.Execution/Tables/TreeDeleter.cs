@@ -172,31 +172,31 @@ namespace SimpleDatabase.Execution.Tables
             var prevNode = hasPrevSibling ? Node.Read(_pager.Get(internalNode.GetChild(childIndex - 1)), _serializer) : null;
             var nextNode = hasNextSibling ? Node.Read(_pager.Get(internalNode.GetChild(childIndex + 1)), _serializer) : null;
 
-            if (hasPrevSibling && HasMoreThanMinimumChildren(prevNode))
+            if (hasPrevSibling && HasMoreThanMinimumChildren(prevNode!))
             {
-                var newKey = BorrowFromPrev(childNode, prevNode);
+                var newKey = BorrowFromPrev(childNode, prevNode!);
                 internalNode.SetKey(childIndex - 1, newKey);
                 return new Result.Success();
             }
 
-            if (hasNextSibling && HasMoreThanMinimumChildren(nextNode))
+            if (hasNextSibling && HasMoreThanMinimumChildren(nextNode!))
             {
-                var newKey = BorrowFromNext(childNode, nextNode);
+                var newKey = BorrowFromNext(childNode, nextNode!);
                 internalNode.SetKey(childIndex, newKey);
                 return new Result.Success();
             }
 
             if (hasPrevSibling)
             {
-                Merge(prevNode, childNode);
+                Merge(prevNode!, childNode);
                 InternalDeleteNoUnderflow(internalNode, childIndex);
                 _pager.Free(childNode.PageId.Index);
             }
             else
             {
-                Merge(childNode, nextNode);
+                Merge(childNode, nextNode!);
                 InternalDeleteNoUnderflow(internalNode, childIndex + 1);
-                _pager.Free(nextNode.PageId.Index);
+                _pager.Free(nextNode!.PageId.Index);
             }
 
             var isValidInternalNode = (internalNode.IsRoot && internalNode.KeyCount > 0) || internalNode.KeyCount >= internalNode.Layout.InternalNodeMinCells;

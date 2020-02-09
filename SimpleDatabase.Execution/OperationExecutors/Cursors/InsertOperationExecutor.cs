@@ -19,6 +19,9 @@ namespace SimpleDatabase.Execution.OperationExecutors.Cursors
 
         public (FunctionState, OperationResult) Execute(FunctionState state, InsertOperation operation)
         {
+            var tx = _txm.Current;
+            if(tx is null) throw new InvalidOperationException("Cannot insert outside a transaction");
+            
             RowValue row;
             Value targetValue;
 
@@ -47,7 +50,7 @@ namespace SimpleDatabase.Execution.OperationExecutors.Cursors
             }
 
             var values = row.Values.Cast<ObjectValue>().Select(x => new ColumnValue(x.Value)).ToList();
-            var insertableRow = new Row(values, _txm.Current.Id, TransactionId.None());
+            var insertableRow = new Row(values, tx.Id, TransactionId.None());
 
             var insertResult = insertTarget.Insert(insertableRow);
             switch (insertResult)

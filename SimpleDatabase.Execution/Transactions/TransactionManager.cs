@@ -13,15 +13,15 @@ namespace SimpleDatabase.Execution.Transactions
 
         private readonly ConcurrentDictionary<TransactionId, (TransactionState, TransactionId)> _states;
         
-        private readonly ThreadLocal<ITransaction> _current;
+        private readonly ThreadLocal<ITransaction?> _current;
 
         public TransactionManager()
         {
             _states = new ConcurrentDictionary<TransactionId, (TransactionState, TransactionId)>();
-            _current = new ThreadLocal<ITransaction>();
+            _current = new ThreadLocal<ITransaction?>();
         }
 
-        public ITransaction Current => _current.Value;
+        public ITransaction? Current => _current.Value;
 
         public ITransaction Begin()
         {
@@ -53,6 +53,8 @@ namespace SimpleDatabase.Execution.Transactions
 
         internal void CommitCurrent()
         {
+            if (Current is null) throw new InvalidOperationException("Cannot commit transaction since there isn't one started"); 
+            
             var currentId = new TransactionId((ulong)Interlocked.Read(ref _id));
 
             _states[Current.Id] = (TransactionState.Committed, currentId);
@@ -60,6 +62,8 @@ namespace SimpleDatabase.Execution.Transactions
         }
         internal void AbortCurrent()
         {
+            if (Current is null) throw new InvalidOperationException("Cannot abort transaction since there isn't one started"); 
+
             var currentId = new TransactionId((ulong)Interlocked.Read(ref _id));
 
             _states[Current.Id] = (TransactionState.Aborted, currentId);

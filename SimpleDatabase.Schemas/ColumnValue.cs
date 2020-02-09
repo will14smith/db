@@ -4,14 +4,14 @@ namespace SimpleDatabase.Schemas
 {
     public class ColumnValue : IEquatable<ColumnValue>
     {
-        public object Value { get; }
+        public object? Value { get; }
 
-        public ColumnValue(object value)
+        public ColumnValue(object? value)
         {
             Value = value;
         }
 
-        public override string ToString()
+        public override string? ToString()
         {
             return Value?.ToString();
         }

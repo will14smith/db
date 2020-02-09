@@ -7,11 +7,11 @@ namespace SimpleDatabase.Storage.Tree
     public abstract class Node
     {
         protected readonly Page Page;
-        protected readonly IIndexSerializer Serializer;
+        protected readonly IIndexSerializer? Serializer;
 
         public NodeLayout Layout { get; }
 
-        protected Node(Page page, IIndexSerializer serializer)
+        protected Node(Page page, IIndexSerializer? serializer)
         {
             Page = page;
             Serializer = serializer;
@@ -33,7 +33,7 @@ namespace SimpleDatabase.Storage.Tree
             set => Page.Data[Layout.IsRootOffset] = (byte)(value ? 1 : 0);
         }
         
-        public static Node Read(Page page, IIndexSerializer serializer)
+        public static Node Read(Page page, IIndexSerializer? serializer)
         {
             switch (page.Type)
             {

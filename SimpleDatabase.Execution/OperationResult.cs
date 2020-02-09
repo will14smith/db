@@ -20,9 +20,9 @@ namespace SimpleDatabase.Execution
         public class Yield : OperationResult
         {
             public OperationResult Inner { get; }
-            public Value Value { get; }
+            public Value? Value { get; }
 
-            public Yield(OperationResult inner, Value value)
+            public Yield(OperationResult inner, Value? value)
             {
                 if (inner is Yield)
                 {

@@ -25,7 +25,7 @@ namespace SimpleDatabase.CLI
         private readonly Database _database;
 
         private readonly TransactionManager _txm;
-        private ITransaction _tx;
+        private ITransaction? _tx;
 
         public REPL(IREPLInput input, IREPLOutput output, string folder)
         {
@@ -136,6 +136,11 @@ namespace SimpleDatabase.CLI
             }
             if (input == ".commit")
             {
+                if (_tx == null)
+                {
+                    return new MetaCommandResponse.Invalid("Cannot commit transaction, there isn't one started");
+                }
+                
                 _output.WriteLine("Committing transaction");
 
                 _tx.Commit();
@@ -144,6 +149,11 @@ namespace SimpleDatabase.CLI
             }
             if (input == ".abort")
             {
+                if (_tx == null)
+                {
+                    return new MetaCommandResponse.Invalid("Cannot abort transaction, there isn't one started");
+                }
+                
                 _output.WriteLine("Aborting transaction");
 
                 _tx.Rollback();

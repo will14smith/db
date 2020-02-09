@@ -6,12 +6,12 @@ namespace SimpleDatabase.Storage.Tree
 {
     public class LeafNode : Node
     {
-        public LeafNode(Page page, IIndexSerializer serializer) 
+        public LeafNode(Page page, IIndexSerializer? serializer) 
             : base(page, serializer)
         {
         }
 
-        public static LeafNode New(Page page, IIndexSerializer serializer)
+        public static LeafNode New(Page page, IIndexSerializer? serializer)
         {
             return new LeafNode(page, serializer)
             {
@@ -22,7 +22,7 @@ namespace SimpleDatabase.Storage.Tree
             };
         }
 
-        public new static LeafNode Read(Page page, IIndexSerializer serializer)
+        public new static LeafNode Read(Page page, IIndexSerializer? serializer)
         {
             if (page.Type != PageType.Leaf)
             {

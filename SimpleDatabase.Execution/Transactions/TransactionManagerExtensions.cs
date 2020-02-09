@@ -1,5 +1,4 @@
 ﻿using SimpleDatabase.Schemas;
-using SimpleDatabase.Utils;
 
 namespace SimpleDatabase.Execution.Transactions
 {
@@ -7,7 +6,8 @@ namespace SimpleDatabase.Execution.Transactions
     {
         public static bool IsVisible(this ITransactionManager txm, TransactionId min, TransactionId? maxopt)
         {
-            var tx = txm.Current.Id;
+            // TODO is this the correct behaviour?
+            var tx = txm.Current?.Id ?? new TransactionId(ulong.MaxValue);
 
             if (maxopt.HasValue)
             {

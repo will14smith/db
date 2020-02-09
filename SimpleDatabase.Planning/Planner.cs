@@ -31,7 +31,7 @@ namespace SimpleDatabase.Planning
                         var index = TryFindIndex(select.Table, select.Ordering);
                         if (index.HasValue)
                         {
-                            root = new ScanIndexNode(((Table.TableName)select.Table).Name, index.Value.Name);
+                            root = new ScanIndexNode(((Table.TableName)select.Table).Name, index.Value!.Name);
                         }
                         else
                         {

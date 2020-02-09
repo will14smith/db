@@ -20,7 +20,7 @@ namespace SimpleDatabase.Storage.Serialization
 
         public void WriteColumn(Span<byte> columnStart, ColumnValue value)
         {
-            columnStart.Write((int)value.Value);
+            columnStart.Write((int?)value.Value ?? 0);
         }
     }
 }

@@ -45,7 +45,7 @@ namespace SimpleDatabase.Execution.Tables
         private IndexKey GetKey(Index index, ICursor cursor)
         {
             var key = index.Structure.Keys
-                .Select(col => _table.IndexOf(col.Item1).Value)
+                .Select(col => _table.IndexOf(col.Item1) ?? -1)
                 .Select(cursor.Column)
                 .ToList();
 

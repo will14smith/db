@@ -22,10 +22,20 @@ namespace SimpleDatabase.Execution.Tables
 
         public DeleteResult Delete(HeapCursor heapCursor)
         {
-            var cursor = heapCursor.Cursor.Value;
+            if (!heapCursor.Cursor.HasValue)
+            {
+                throw new InvalidOperationException("Cannot delete from heap with invalid cursor");
+            }
+            
+            var cursor = heapCursor.Cursor.Value!;
             var page = HeapPage.Read(_pager.Get(cursor.Page.Index));
             var row = page.GetItem(cursor.CellNumber);
 
+            if (_txm.Current is null)
+            {
+                throw new InvalidOperationException("Cannot delete from heap without a transaction");
+            }
+            
             HeapSerializer.SetXidMax(row, _txm.Current.Id);
             _pager.Flush(page.PageId.Index);
 

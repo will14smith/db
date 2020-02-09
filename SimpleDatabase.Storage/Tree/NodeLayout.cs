@@ -5,9 +5,9 @@ namespace SimpleDatabase.Storage.Tree
 {
     public class NodeLayout : PageLayout
     {
-        private readonly IIndexSerializer _serializer;
+        private readonly IIndexSerializer? _serializer;
 
-        public NodeLayout(IIndexSerializer serializer)
+        public NodeLayout(IIndexSerializer? serializer)
         {
             _serializer = serializer;
         }

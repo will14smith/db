@@ -21,7 +21,7 @@ namespace SimpleDatabase.Execution
 
             foreach (var kvp in slotDefinitions)
             {
-                _slots.Add(kvp.Key, null);
+                _slots.Add(kvp.Key, new NullValue());
             }
         }
 

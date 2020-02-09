@@ -64,7 +64,7 @@ namespace SimpleDatabase.Execution
 
             while (true)
             {
-                Value value;
+                Value? value;
                 (state, value) = ExecuteStep(state);
 
                 if (value == null)
@@ -76,7 +76,7 @@ namespace SimpleDatabase.Execution
             }
         }
 
-        public (FunctionState, Value) ExecuteStep(FunctionState state)
+        public (FunctionState, Value?) ExecuteStep(FunctionState state)
         {
             while (true)
             {

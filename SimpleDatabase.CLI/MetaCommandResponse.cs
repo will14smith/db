@@ -25,5 +25,15 @@
                 Input = input;
             }
         }
+
+        public class Invalid : MetaCommandResponse
+        {
+            public Invalid(string message)
+            {
+                Message = message;
+            }
+
+            public string Message { get; }
+        }
     }
 }

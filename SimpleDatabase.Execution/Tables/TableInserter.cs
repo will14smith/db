@@ -52,7 +52,7 @@ namespace SimpleDatabase.Execution.Tables
 
         private ColumnValue GetValue(Column col, Row row)
         {
-            var colIndex = _table.IndexOf(col).Value;
+            var colIndex = _table.IndexOf(col) ?? -1;
 
             return row.Values[colIndex];
         }

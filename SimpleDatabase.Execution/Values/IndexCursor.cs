@@ -42,7 +42,7 @@ namespace SimpleDatabase.Execution.Values
             _cursor = Option.Some(cursor);
         }
 
-        public bool EndOfTable => _cursor.Value.EndOfTable;
+        public bool EndOfTable => _cursor.HasValue && _cursor.Value!.EndOfTable;
 
         public ICursor First()
         {
@@ -53,7 +53,9 @@ namespace SimpleDatabase.Execution.Values
 
         public ICursor Next()
         {
-            var cursor = _treeTraverser.AdvanceCursor(_cursor.Value);
+            if(!_cursor.HasValue) throw new InvalidOperationException("Attempting to advance without a cursor");
+            
+            var cursor = _treeTraverser.AdvanceCursor(_cursor.Value!);
 
             return new IndexCursor(cursor, this);
         }
@@ -108,11 +110,14 @@ namespace SimpleDatabase.Execution.Values
 
         private HeapCursor GetHeap()
         {
-            var page = _pager.Get(_cursor.Value.Page);
+            if(!_cursor.HasValue) throw new InvalidOperationException("Attempting to get heap without a cursor");
+            var cursor = _cursor.Value!;
+            
+            var page = _pager.Get(cursor.Page);
             var leaf = LeafNode.Read(page, _treeSerializer);
 
             // (pageIndex << 8) | itemIndex
-            var heapLocation = (int)leaf.GetCellValue(_cursor.Value.CellNumber).Values.First().Value;
+            var heapLocation = (int?)leaf.GetCellValue(cursor.CellNumber).Values.First().Value ?? 0;
 
             return HeapCursor.FromLocation(_pager, _txm, Table, Writable, heapLocation);
         }
