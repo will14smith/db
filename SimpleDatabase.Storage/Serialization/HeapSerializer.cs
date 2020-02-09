@@ -56,6 +56,7 @@ namespace SimpleDatabase.Storage.Serialization
             {
                 throw new ArgumentException("Row doesn't have correct number of columns", nameof(row));
             }
+            
 
             rowStart.Slice(MinXidOffset, MinXidSize).Write(row.MinXid.Id);
             rowStart.Slice(MaxXidOffset, MaxXidSize).Write(row.MaxXid.Select(x => x.Id).OrElse(() => 0ul));
@@ -66,7 +67,7 @@ namespace SimpleDatabase.Storage.Serialization
             }
         }
 
-        public static (TransactionId min, Option<TransactionId> max) ReadXid(Span<byte> rowStart)
+        public static (TransactionId min, TransactionId? max) ReadXid(Span<byte> rowStart)
         {
             var min = rowStart.Slice(MinXidOffset, MinXidSize).Read<ulong>();
             var max = rowStart.Slice(MaxXidOffset, MaxXidSize).Read<ulong>();

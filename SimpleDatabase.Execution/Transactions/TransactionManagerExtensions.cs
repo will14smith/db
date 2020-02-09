@@ -5,7 +5,7 @@ namespace SimpleDatabase.Execution.Transactions
 {
     public static class TransactionManagerExtensions
     {
-        public static bool IsVisible(this ITransactionManager txm, TransactionId min, Option<TransactionId> maxopt)
+        public static bool IsVisible(this ITransactionManager txm, TransactionId min, TransactionId? maxopt)
         {
             var tx = txm.Current.Id;
 

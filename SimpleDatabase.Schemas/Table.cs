@@ -19,18 +19,18 @@ namespace SimpleDatabase.Schemas
 
     public static class TableExtensions
     {
-        public static Option<int> IndexOf(this Table table, Column column)
+        public static int? IndexOf(this Table table, Column column)
         {
             for (var index = 0; index < table.Columns.Count; index++)
             {
                 var tableColumn = table.Columns[index];
                 if (tableColumn.Name == column.Name)
                 {
-                    return Option.Some(index);
+                    return index;
                 }
             }
 
-            return Option.None<int>();
+            return null;
         }
     }
 }

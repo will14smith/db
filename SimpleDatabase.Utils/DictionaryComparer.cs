@@ -8,7 +8,7 @@ namespace SimpleDatabase.Utils
     {
         private readonly IEqualityComparer<TValue> _valueComparer;
 
-        public DictionaryComparer(IEqualityComparer<TValue> valueComparer = null)
+        public DictionaryComparer(IEqualityComparer<TValue>? valueComparer = null)
         {
             _valueComparer = valueComparer ?? EqualityComparer<TValue>.Default;
         }

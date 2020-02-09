@@ -62,13 +62,13 @@ namespace SimpleDatabase.Schemas
             return left.CompareTo(right) >= 0;
         }
 
-        public static Option<TransactionId> Some(ulong id)
+        public static TransactionId? Some(ulong id)
         {
-            return Option.Some(new TransactionId(id));
+            return new TransactionId(id);
         }
-        public static Option<TransactionId> None()
+        public static TransactionId? None()
         {
-            return Option.None<TransactionId>();
+            return null;
         }
     }
 }
