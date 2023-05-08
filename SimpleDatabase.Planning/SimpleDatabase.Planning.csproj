@@ -19,4 +19,8 @@
     <ProjectReference Include="..\SimpleDatabase.Schemas\SimpleDatabase.Schemas.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="6.11.0" />
+  </ItemGroup>
+
 </Project>

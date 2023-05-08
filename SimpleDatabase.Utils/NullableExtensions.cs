@@ -12,7 +12,7 @@ namespace SimpleDatabase.Utils
             return value.HasValue ? selector(value.Value) : default(TOut?);
         }  
         
-        public static TOut Select<TIn, TOut>(this TIn value, Func<TIn, TOut> selector)
+        public static TOut? Select<TIn, TOut>(this TIn value, Func<TIn, TOut> selector)
             where TIn : class?
             where TOut : class?
         {
@@ -28,7 +28,7 @@ namespace SimpleDatabase.Utils
         public static TValue? TryGet<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> dict, TKey key)
             where TValue : struct
         {
-            return dict.TryGetValue(key, out var value) ? value : (TValue?) null;
+            return dict.TryGetValue(key, out var value) ? value : null;
         }
     }
 }

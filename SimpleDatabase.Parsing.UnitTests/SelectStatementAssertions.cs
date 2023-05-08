@@ -9,10 +9,7 @@ namespace SimpleDatabase.Parsing.UnitTests
 {
     public class SelectStatementAssertions : ReferenceTypeAssertions<SelectStatement, SelectStatementAssertions>
     {
-        public SelectStatementAssertions(SelectStatement statement)
-        {
-            Subject = statement;
-        }
+        public SelectStatementAssertions(SelectStatement subject) : base(subject) { }
 
         protected override string Identifier => "select_statement";
 

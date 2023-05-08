@@ -6,10 +6,7 @@ namespace SimpleDatabase.Parsing.UnitTests
 {
     public class StatementAssertions : ReferenceTypeAssertions<Statement, StatementAssertions>
     {
-        public StatementAssertions(Statement statement)
-        {
-            Subject = statement;
-        }
+        public StatementAssertions(Statement subject) : base(subject) { }
 
         protected override string Identifier => "statement";
 
