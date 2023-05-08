@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Antlr4.Runtime.Misc;
 using SimpleDatabase.Execution;
@@ -31,6 +32,11 @@ namespace SimpleDatabase.CLI
         {
             _input = input;
             _output = output;
+
+            if (!Directory.Exists(folder))
+            {
+                Directory.CreateDirectory(folder);
+            }
 
             var storage = new FolderPageSourceFactory(folder);
             _pager = new Pager(storage);
