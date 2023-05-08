@@ -4,7 +4,7 @@ namespace SimpleDatabase.CLI
 {
     internal class ConsoleREPLInput : IREPLInput
     {
-        public string ReadLine()
+        public string? ReadLine()
         {
             return Console.ReadLine();
         }

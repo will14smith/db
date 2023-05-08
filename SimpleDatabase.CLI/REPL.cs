@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Antlr4.Runtime.Misc;
+using SimpleDatabase.CLI.Commands;
 using SimpleDatabase.Execution;
 using SimpleDatabase.Execution.Transactions;
 using SimpleDatabase.Parsing;
@@ -20,14 +21,10 @@ namespace SimpleDatabase.CLI
     {
         private readonly IREPLInput _input;
         private readonly IREPLOutput _output;
+        private readonly CommandHandler _commands;
 
-        private readonly Pager _pager;
-        private readonly Table _table;
-        private readonly Database _database;
-
-        private readonly TransactionManager _txm;
-        private ITransaction? _tx;
-
+        private readonly REPLState _state;
+        
         public REPL(IREPLInput input, IREPLOutput output, string folder)
         {
             _input = input;
@@ -39,9 +36,9 @@ namespace SimpleDatabase.CLI
             }
 
             var storage = new FolderPageSourceFactory(folder);
-            _pager = new Pager(storage);
+            var pager = new Pager(storage);
 
-            _table = CreateTable("table", new[]
+            var table = CreateTable(pager, "table", new[]
             {
                 new Column("id", new ColumnType.Integer()),
                 new Column("name", new ColumnType.String(31)),
@@ -52,18 +49,32 @@ namespace SimpleDatabase.CLI
                 ("k_email", new [] { ("email", KeyOrdering.Ascending) }),
             });
 
-            _database = new Database(new[] { _table });
+            var database = new Database(new[] { table });
 
-            _txm = new TransactionManager();
+            var txm = new TransactionManager();
+
+            _state = new REPLState(
+                pager,
+                table,
+                database,
+                txm
+            );
+            
+            _commands = new CommandHandler();
+            _commands.Register("exit", new ExitCommand());
+            _commands.Register("begin", new BeginTransactionCommand(_state, _output));
+            _commands.Register("commit", new CommitTransactionCommand(_state, _output));
+            _commands.Register("abort", new AbortTransactionCommand(_state, _output));
+            _commands.Register("btree", new BTreeCommand(_state, _output));
         }
 
-        private Table CreateTable(string name, IReadOnlyList<Column> columns, IEnumerable<(string, (string, KeyOrdering)[])> indexDefs)
+        private Table CreateTable(IPager pager, string name, IReadOnlyList<Column> columns, IEnumerable<(string, (string, KeyOrdering)[])> indexDefs)
         {
             var indices = indexDefs.Select(x => new TableIndex(x.Item1, new KeyStructure(x.Item2.Select(c => (columns.Single(v => v.Name == c.Item1), c.Item2)).ToList(), new Column[0]))).ToList();
 
             var table = new Table(name, columns, indices);
 
-            new TableCreator(_pager).Create(table);
+            new TableCreator(pager).Create(table);
 
             return table;
         }
@@ -77,14 +88,14 @@ namespace SimpleDatabase.CLI
 
                 if (line.StartsWith("."))
                 {
-                    var response = HandleMetaCommand(line);
+                    var response = _commands.Handle(line);
                     switch (response)
                     {
-                        case MetaCommandResponse.Success _:
+                        case CommandResponse.Success _:
                             continue;
-                        case MetaCommandResponse.Exit exit:
+                        case CommandResponse.Exit exit:
                             return exit.Code;
-                        case MetaCommandResponse.Unrecognised resp:
+                        case CommandResponse.Unrecognised resp:
                             _output.WriteLine("Unrecognized command '{0}'.", resp.Input);
                             continue;
                         default:
@@ -93,7 +104,7 @@ namespace SimpleDatabase.CLI
                     }
                 }
 
-                var statementResponse = _tx != null ? ExecuteStatement(_tx, line) : ExecuteStatement(line);
+                var statementResponse = _state.Transaction != null ? ExecuteStatement(_state.Transaction, line) : ExecuteStatement(line);
 
                 switch (statementResponse)
                 {
@@ -116,91 +127,26 @@ namespace SimpleDatabase.CLI
             }
         }
 
-        private void PrintPrompt()
-        {
-            _output.Write("db > ");
-        }
-
-        private string ReadInput()
-        {
-            return _input.ReadLine();
-        }
-
-        private MetaCommandResponse HandleMetaCommand(string input)
-        {
-            if (input == ".exit")
-            {
-                return new MetaCommandResponse.Exit(ExitCode.Success);
-            }
-
-            if (input == ".begin")
-            {
-                _output.WriteLine("Beginning transaction");
-
-                _tx = _txm.Begin();
-                return new MetaCommandResponse.Success();
-            }
-            if (input == ".commit")
-            {
-                if (_tx == null)
-                {
-                    return new MetaCommandResponse.Invalid("Cannot commit transaction, there isn't one started");
-                }
-                
-                _output.WriteLine("Committing transaction");
-
-                _tx.Commit();
-                _tx = null;
-                return new MetaCommandResponse.Success();
-            }
-            if (input == ".abort")
-            {
-                if (_tx == null)
-                {
-                    return new MetaCommandResponse.Invalid("Cannot abort transaction, there isn't one started");
-                }
-                
-                _output.WriteLine("Aborting transaction");
-
-                _tx.Rollback();
-                _tx = null;
-                return new MetaCommandResponse.Success();
-            }
-            
-            if (input == ".btree")
-            {
-                var index = _table.Indices.FirstOrDefault();
-                if (index != null)
-                {
-                    MetaCommands.PrintBTree(_output, _pager, _table, index);
-                }
-
-                return new MetaCommandResponse.Success();
-            }
-
-            return new MetaCommandResponse.Unrecognised(input);
-        }
+        private void PrintPrompt() => _output.Write("db > ");
+        private string ReadInput() => _input.ReadLine() ?? string.Empty;
 
         private ExecuteStatementResponse ExecuteStatement(string input)
         {
-            using (var tx = _txm.Begin())
+            using var transaction = _state.TransactionManager.Begin();
+            
+            var result = ExecuteStatement(transaction, input);
+            if (result is ExecuteStatementResponse.Success _)
             {
-                var result = ExecuteStatement(tx, input);
-
-                if (result is ExecuteStatementResponse.Success _)
-                {
-                    tx.Commit();
-                }
-
-                return result;
+                transaction.Commit();
             }
+
+            return result;
         }
 
-        private ExecuteStatementResponse ExecuteStatement(ITransaction tx, string input)
+        private ExecuteStatementResponse ExecuteStatement(ITransaction transaction, string input)
         {
-            var parser = new Parser();
-            var planner = new Planner(_database);
-            var planCompiler = new PlanCompiler(_database);
+            var planner = new Planner(_state.Database);
+            var planCompiler = new PlanCompiler(_state.Database);
 
             IReadOnlyCollection<Statement> statements;
             try
@@ -217,7 +163,7 @@ namespace SimpleDatabase.CLI
 
             foreach (var program in programs)
             {
-                var executor = new ProgramExecutor(program, _pager, _txm);
+                var executor = new ProgramExecutor(program, _state.Pager, _state.TransactionManager);
 
                 foreach (var result in executor.Execute())
                 {
@@ -232,8 +178,8 @@ namespace SimpleDatabase.CLI
 
         public void Dispose()
         {
-            _tx?.Dispose();
-            _pager?.Dispose();
+            _state.Transaction?.Dispose();
+            _state.Pager.Dispose();
         }
     }
 }

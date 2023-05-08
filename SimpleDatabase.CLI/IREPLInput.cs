@@ -2,6 +2,6 @@
 {
     public interface IREPLInput
     {
-        string ReadLine();
+        string? ReadLine();
     }
 }

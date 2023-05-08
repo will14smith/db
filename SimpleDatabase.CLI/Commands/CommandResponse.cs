@@ -1,8 +1,8 @@
-﻿namespace SimpleDatabase.CLI
+﻿namespace SimpleDatabase.CLI.Commands
 {
-    public abstract class MetaCommandResponse
+    public abstract class CommandResponse
     {
-        public class Exit : MetaCommandResponse
+        public class Exit : CommandResponse
         {
             public ExitCode Code { get; }
 
@@ -12,11 +12,11 @@
             }
         }
 
-        public class Success : MetaCommandResponse
+        public class Success : CommandResponse
         {
         }
 
-        public class Unrecognised : MetaCommandResponse
+        public class Unrecognised : CommandResponse
         {
             public string Input { get; }
 
@@ -26,7 +26,7 @@
             }
         }
 
-        public class Invalid : MetaCommandResponse
+        public class Invalid : CommandResponse
         {
             public Invalid(string message)
             {
