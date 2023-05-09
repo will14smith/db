@@ -2,6 +2,7 @@
 using SimpleDatabase.Execution.Transactions;
 using SimpleDatabase.Execution.Values;
 using SimpleDatabase.Schemas;
+using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 
@@ -9,15 +10,13 @@ namespace SimpleDatabase.Execution.Tables
 {
     public class TableDeleter
     {
-        private readonly IPager _pager;
+        private readonly TableManager _tableManager;
         private readonly ITransactionManager _txm;
-        private readonly Table _table;
 
-        public TableDeleter(IPager pager, ITransactionManager txm, Table table)
+        public TableDeleter(TableManager tableManager, ITransactionManager txm)
         {
-            _pager = pager;
+            _tableManager = tableManager;
             _txm = txm;
-            _table = table;
         }
 
         public DeleteResult Delete(HeapCursor cursor)
@@ -25,9 +24,9 @@ namespace SimpleDatabase.Execution.Tables
             // TODO check cursor.Table == _table
 
             DeleteResult result;
-            foreach (var index in _table.Indexes)
+            foreach (var index in _tableManager.Table.Indexes)
             {
-                var treeDeleter = new TreeDeleter(new SourcePager(_pager, new PageSource.Index(_table.Name, index.Name)), index);
+                var treeDeleter = new TreeDeleter(_tableManager, index);
 
                 var key = GetKey(index, cursor);
 
@@ -35,7 +34,7 @@ namespace SimpleDatabase.Execution.Tables
                 // TODO check result, abort if failed....
             }
 
-            var heapDeleter = new HeapDeleter(new SourcePager(_pager, new PageSource.Heap(_table.Name)), _txm);
+            var heapDeleter = new HeapDeleter(_tableManager.Pager, _txm);
             result = heapDeleter.Delete(cursor);
             // TODO check result, abort if failed....
 
@@ -45,7 +44,7 @@ namespace SimpleDatabase.Execution.Tables
         private IndexKey GetKey(TableIndex index, ICursor cursor)
         {
             var key = index.Structure.Keys
-                .Select(col => _table.IndexOf(col.Item1) ?? -1)
+                .Select(col => _tableManager.Table.IndexOf(col.Item1) ?? -1)
                 .Select(cursor.Column)
                 .ToList();
 

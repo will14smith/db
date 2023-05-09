@@ -98,6 +98,8 @@ namespace SimpleDatabase.CLI.UnitTests
             var fakeOutput = new FakeREPLOutput();
             var fakeInput = new FakeREPLInput(commands);
 
+            Seed.EnsureExists(_folder);
+            
             ExitCode code;
             using (var repl = new REPL(fakeInput, fakeOutput, _folder))
             {

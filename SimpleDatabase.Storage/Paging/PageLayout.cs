@@ -4,7 +4,7 @@
     {
         public const int PageSize = 4096;
 
-        public static readonly int PageTypeSize = sizeof(PageType);
-        public static readonly int PageTypeOffset = 0;
+        public const int PageTypeSize = sizeof(PageType);
+        public const int PageTypeOffset = 0;
     }
 }

@@ -5,6 +5,7 @@
         private readonly IPager _pager;
 
         public PageSource Source { get; }
+        public int PageCount => _pager.PageCount(Source);
 
         public SourcePager(IPager pager, PageSource source)
         {

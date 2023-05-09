@@ -22,7 +22,7 @@ namespace SimpleDatabase.Storage.Serialization
 
         public ColumnValue ReadColumn(Span<byte> columnStart)
         {
-            var value = columnStart.Slice(0, _type.Length + 1).ReadString();
+            var value = columnStart.Slice(0, _type.Length + 1).ReadCString();
 
             return new ColumnValue(value);
         }
@@ -36,7 +36,7 @@ namespace SimpleDatabase.Storage.Serialization
                 throw new ArgumentOutOfRangeException($"String was longer than max length. {strLength} > {_type.Length}", nameof(value));
             }
 
-            columnStart.WriteString(str);
+            columnStart.WriteCString(str);
         }
     }
 }

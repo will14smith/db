@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using SimpleDatabase.Schemas;
+using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Tree;
 
@@ -19,28 +20,35 @@ public class BTreeCommand : ICommand
     
     public CommandResponse Handle(string[] args)
     {
-        var table = _state.Table;
+        var table = _state.Database.Tables.FirstOrDefault();
+        if (table is null)
+        {
+            return new CommandResponse.Invalid("no tables defined");
+        }
+
+        var tableManager = _state.DatabaseManager.GetTableManagerFor(table);
         
         var index = table.Indexes.FirstOrDefault();
-        if (index != null)
+        if (index == null)
         {
-            PrintBTree(table, index);
+            return new CommandResponse.Invalid("no indexes defined");
         }
+        
+        PrintBTree(tableManager, index);
 
         return new CommandResponse.Success();
     }
     
-    private void PrintBTree(Table table, TableIndex index)
+    private void PrintBTree(TableManager tableManager, TableIndex index)
     {
         _output.WriteLine("Tree:");
 
-        var sourcePager = new SourcePager(_state.Pager, new PageSource.Index(table.Name, index.Name));
-        PrintNode(sourcePager, table, index.RootPage, 0);
+        PrintNode(tableManager.Pager, tableManager.GetIndexRootPageId(index), 0);
     }
 
-    private void PrintNode(ISourcePager pager, Table table, int pageNumber, int level)
+    private void PrintNode(ISourcePager pager, PageId pageId, int level)
     {
-        var page = pager.Get(pageNumber);
+        var page = pager.Get(pageId);
         // TODO
         var node = Node.Read(page, null);
 
@@ -63,13 +71,13 @@ public class BTreeCommand : ICommand
 
                 for (var i = 0; i < internalNode.KeyCount; i++)
                 {
-                    PrintNode(pager, table, internalNode.GetChild(i), level + 1);
+                    PrintNode(pager, new PageId(pageId.Source, internalNode.GetChild(i)), level + 1);
 
                     _output.Indent(level);
                     _output.WriteLine("- key {0}", internalNode.GetKey(i));
                 }
 
-                PrintNode(pager, table, internalNode.RightChild, level + 1);
+                PrintNode(pager, new PageId(pageId.Source, internalNode.RightChild), level + 1);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();

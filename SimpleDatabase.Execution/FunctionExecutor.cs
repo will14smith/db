@@ -11,6 +11,7 @@ using SimpleDatabase.Execution.OperationExecutors.Sorting;
 using SimpleDatabase.Execution.Operations;
 using SimpleDatabase.Execution.Transactions;
 using SimpleDatabase.Execution.Values;
+using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Paging;
 
 namespace SimpleDatabase.Execution
@@ -19,7 +20,7 @@ namespace SimpleDatabase.Execution
     {
         private static readonly IReadOnlyDictionary<string, Func<FunctionExecutor, FunctionState, IOperation, (FunctionState, OperationResult)>> OperationExecutors = CreateOperationExecutors();
 
-        private readonly IPager _pager;
+        private readonly DatabaseManager _databaseManager;
         private readonly ITransactionManager _txm;
 
         private readonly Program _program;
@@ -28,9 +29,9 @@ namespace SimpleDatabase.Execution
 
         private readonly IReadOnlyDictionary<ProgramLabel, int> _labelAddresses;
 
-        public FunctionExecutor(IPager pager, ITransactionManager txm, Program program, Function function, IReadOnlyList<Value> arguments)
+        public FunctionExecutor(DatabaseManager databaseManager, ITransactionManager txm, Program program, Function function, IReadOnlyList<Value> arguments)
         {
-            _pager = pager;
+            _databaseManager = databaseManager;
             _txm = txm;
 
             _program = program;
@@ -153,12 +154,12 @@ namespace SimpleDatabase.Execution
             AddExecutor(executors, _ => new DeleteOperationExecutor());
             AddExecutor(executors, fexec => new InsertOperationExecutor(fexec._txm));
             AddExecutor(executors, _ => new NextOperationExecutor());
-            AddExecutor(executors, fexec => new OpenReadIndexOperationExecutor(fexec._pager, fexec._txm));
-            AddExecutor(executors, fexec => new OpenReadTableOperationExecutor(fexec._pager, fexec._txm));
-            AddExecutor(executors, fexec => new OpenWriteOperationExecutor(fexec._pager, fexec._txm));
+            AddExecutor(executors, fexec => new OpenReadIndexOperationExecutor(fexec._databaseManager, fexec._txm));
+            AddExecutor(executors, fexec => new OpenReadTableOperationExecutor(fexec._databaseManager, fexec._txm));
+            AddExecutor(executors, fexec => new OpenWriteOperationExecutor(fexec._databaseManager, fexec._txm));
 
             // functions
-            AddExecutor(executors, fexec => new CallCoroutineOperationExecutor(fexec._pager, fexec._txm, fexec._program));
+            AddExecutor(executors, fexec => new CallCoroutineOperationExecutor(fexec._databaseManager, fexec._txm, fexec._program));
             AddExecutor(executors, _ => new ReturnOperationExecutor());
             AddExecutor(executors, fexec => new SetupCoroutineOperationExecutor(fexec._program.Functions));
 

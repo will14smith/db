@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using System.IO.Abstractions;
+using System.IO.Abstractions.TestingHelpers;
 using System.Linq;
 using SimpleDatabase.Execution.Operations;
 using SimpleDatabase.Execution.Operations.Columns;
@@ -19,29 +20,25 @@ using Xunit;
 
 namespace SimpleDatabase.Execution.UnitTests
 {
-    public class SimpleProgramTest : IDisposable
+    public class SimpleProgramTest
     {
+        private const string Folder = "test";
+
+        private readonly IFileSystem _fileSystem;
+
         public SimpleProgramTest()
         {
-            var folderName = "_test" + DateTime.Now.Ticks;
-            _folder = Path.Combine(Path.GetTempPath(), folderName);
-            Directory.CreateDirectory(_folder);
+            _fileSystem = new MockFileSystem();
+            _fileSystem.Directory.CreateDirectory(Folder);
         }
-
-        public void Dispose()
-        {
-            Directory.Delete(_folder, true);
-        }
-
-        private readonly string _folder;
-
+        
         private static readonly Table Table =
             new Table("table", new[]
             {
                 new Column("id", new ColumnType.Integer()),
                 new Column("name", new ColumnType.String(63)),
                 new Column("email", new ColumnType.String(255)),
-            }, new TableIndex[0]);
+            }, Array.Empty<TableIndex>());
 
         private static readonly FunctionLabel MainLabel = FunctionLabel.Create();
         private static readonly ProgramLabel Loop = ProgramLabel.Create();
@@ -100,24 +97,26 @@ namespace SimpleDatabase.Execution.UnitTests
         [Fact]
         public void RunProgram()
         {
-            var pageStorageFactory = new FolderPageSourceFactory(_folder);
+            var pageStorageFactory = new FolderPageSourceFactory(_fileSystem, Folder);
             var txm = new TransactionManager();
 
-            using (var pager = new Pager(pageStorageFactory))
-            using (var tx = txm.Begin())
-            {
+            using var pager = new Pager(pageStorageFactory);
+            
+            var databaseManager = new DatabaseManager(pager);
+            databaseManager.EnsureInitialised();
+            var tableManager = databaseManager.GetTableManagerFor(Table);
+            tableManager.EnsureInitialised();
+            
+            using var tx = txm.Begin();
 
-                new TableCreator(pager).Create(Table);
+            // Insert some data
+            new TableInserter(tableManager).Insert(new Row(new[] { new ColumnValue(1), new ColumnValue("a"), new ColumnValue("a@a.a") }, tx.Id, TransactionId.None()));
+            new TableInserter(tableManager).Insert(new Row(new[] { new ColumnValue(2), new ColumnValue("b"), new ColumnValue("b@b.b") }, tx.Id, TransactionId.None()));
 
-                // Insert some data
-                new TableInserter(pager, Table).Insert(new Row(new[] { new ColumnValue(1), new ColumnValue("a"), new ColumnValue("a@a.a") }, tx.Id, TransactionId.None()));
-                new TableInserter(pager, Table).Insert(new Row(new[] { new ColumnValue(2), new ColumnValue("b"), new ColumnValue("b@b.b") }, tx.Id, TransactionId.None()));
+            var result = new ProgramExecutor(Program, databaseManager, txm).Execute().ToList();
 
-                var result = new ProgramExecutor(Program, pager, txm).Execute().ToList();
-
-                var resultItem = Assert.Single(result);
-                Assert.Equal("a", ((ObjectValue)resultItem.Skip(1).First()).Value);
-            }
+            var resultItem = Assert.Single(result);
+            Assert.Equal("a", ((ObjectValue)resultItem.Skip(1).First()).Value);
         }
     }
 }

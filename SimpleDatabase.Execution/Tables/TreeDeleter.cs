@@ -1,6 +1,7 @@
 ﻿using System;
 using SimpleDatabase.Execution.Trees;
 using SimpleDatabase.Schemas;
+using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 using SimpleDatabase.Storage.Tree;
@@ -9,22 +10,21 @@ namespace SimpleDatabase.Execution.Tables
 {
     public class TreeDeleter
     {
-        private readonly ISourcePager _pager;
+
+        private readonly TableManager _tableManager;
+        private readonly TableIndex _index;
         private readonly IIndexSerializer _serializer;
 
-        private readonly TableIndex _index;
-
-        public TreeDeleter(ISourcePager pager, TableIndex index)
+        public TreeDeleter(TableManager tableManager, TableIndex index)
         {
-            _pager = pager;
-            _serializer = index.CreateSerializer();
-
+            _tableManager = tableManager;
             _index = index;
+            _serializer = index.CreateSerializer();
         }
 
         public DeleteResult Delete(IndexKey key)
         {
-            var page = _pager.Get(_index.RootPage);
+            var page = _tableManager.Pager.Get(_tableManager.GetIndexRootPageId(_index));
             var node = Node.Read(page, _serializer);
 
             Result result;
@@ -68,11 +68,13 @@ namespace SimpleDatabase.Execution.Tables
                 throw new InvalidOperationException("There isn't a single child to promote.");
             }
 
+            var pager = _tableManager.Pager;
+
             var childPageNumber = underflowNode.GetChild(0);
-            var childPage = _pager.Get(childPageNumber);
+            var childPage = pager.Get(childPageNumber);
 
             Array.Copy(childPage.Data, page.Data, PageLayout.PageSize);
-            _pager.Free(childPageNumber);
+            pager.Free(childPageNumber);
         }
 
         private Result LeafDelete(LeafNode node, IndexKey key)
@@ -112,7 +114,7 @@ namespace SimpleDatabase.Execution.Tables
         private Result InternalDelete(InternalNode internalNode, IndexKey key)
         {
             var childIndex = new TreeKeySearcher(key).FindCell(internalNode);
-            var childPage = _pager.Get(internalNode.GetChild(childIndex));
+            var childPage = _tableManager.Pager.Get(internalNode.GetChild(childIndex));
             var childNode = Node.Read(childPage, _serializer);
 
             Result childResult;
@@ -169,8 +171,10 @@ namespace SimpleDatabase.Execution.Tables
                 throw new InvalidOperationException("Cannot have a node with no siblings unless we are root (in which case this shouldn't have been called)");
             }
 
-            var prevNode = hasPrevSibling ? Node.Read(_pager.Get(internalNode.GetChild(childIndex - 1)), _serializer) : null;
-            var nextNode = hasNextSibling ? Node.Read(_pager.Get(internalNode.GetChild(childIndex + 1)), _serializer) : null;
+            var pager = _tableManager.Pager;
+            
+            var prevNode = hasPrevSibling ? Node.Read(pager.Get(internalNode.GetChild(childIndex - 1)), _serializer) : null;
+            var nextNode = hasNextSibling ? Node.Read(pager.Get(internalNode.GetChild(childIndex + 1)), _serializer) : null;
 
             if (hasPrevSibling && HasMoreThanMinimumChildren(prevNode!))
             {
@@ -190,13 +194,13 @@ namespace SimpleDatabase.Execution.Tables
             {
                 Merge(prevNode!, childNode);
                 InternalDeleteNoUnderflow(internalNode, childIndex);
-                _pager.Free(childNode.PageId.Index);
+                pager.Free(childNode.PageId.Index);
             }
             else
             {
                 Merge(childNode, nextNode!);
                 InternalDeleteNoUnderflow(internalNode, childIndex + 1);
-                _pager.Free(nextNode!.PageId.Index);
+                pager.Free(nextNode!.PageId.Index);
             }
 
             var isValidInternalNode = (internalNode.IsRoot && internalNode.KeyCount > 0) || internalNode.KeyCount >= internalNode.Layout.InternalNodeMinCells;

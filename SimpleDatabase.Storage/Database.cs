@@ -13,6 +13,8 @@ namespace SimpleDatabase.Storage
             _tables = tables.ToDictionary(x => x.Name);
         }
 
+        public IEnumerable<Table> Tables => _tables.Values;
+
         public Table GetTable(string name) { return _tables[name]; }
     }
 }

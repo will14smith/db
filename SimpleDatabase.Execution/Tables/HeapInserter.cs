@@ -1,8 +1,11 @@
 ﻿using System;
 using SimpleDatabase.Schemas;
+using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Heap;
+using SimpleDatabase.Storage.MetaData;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
+using SimpleDatabase.Storage.TableMetaData;
 
 namespace SimpleDatabase.Execution.Tables
 {
@@ -12,17 +15,18 @@ namespace SimpleDatabase.Execution.Tables
 
         private readonly IHeapSerializer _rowSerializer;
 
-        public HeapInserter(ISourcePager pager, Table table)
+        public HeapInserter(TableManager tableManager)
         {
-            _pager = pager;
+            _pager = tableManager.Pager;
 
-            _rowSerializer = new HeapSerializer(table.Columns, new ColumnTypeSerializerFactory());
+            _rowSerializer = new HeapSerializer(tableManager.Table.Columns, new ColumnTypeSerializerFactory());
         }
 
         public int Insert(Row row)
         {
             // find the last page
-            var page = HeapPage.Read(_pager.Get(0));
+            var metaDataPage = TableMetaDataPage.Read(_pager.Get(0)); 
+            var page = HeapPage.Read(_pager.Get(metaDataPage.RootHeapPageIndex));
             while (page.NextPageIndex != 0)
             {
                 page = HeapPage.Read(_pager.Get(page.NextPageIndex));

@@ -10,15 +10,15 @@ namespace SimpleDatabase.Storage.UnitTests.Paging
         [Fact]
         public void Get_DifferentSource_ShouldThrow()
         {
-            var pager = Mock.Of<ISourcePager>(x => x.Source == new PageSource.Heap("a"));
+            var pager = Mock.Of<ISourcePager>(x => x.Source == new PageSource.Table("a"));
 
-            Assert.ThrowsAny<Exception>(() => pager.Get(new PageId(new PageSource.Heap("b"), 1)));
+            Assert.ThrowsAny<Exception>(() => pager.Get(new PageId(new PageSource.Table("b"), 1)));
         }
 
         [Fact]
         public void Get_ShouldPassIndex()
         {
-            var source = new PageSource.Heap("a");
+            var source = new PageSource.Table("a");
             var index = 1;
             var pager = Mock.Of<ISourcePager>(x => x.Source == source);
 
@@ -30,15 +30,15 @@ namespace SimpleDatabase.Storage.UnitTests.Paging
         [Fact]
         public void Flush_DifferentSource_ShouldThrow()
         {
-            var pager = Mock.Of<ISourcePager>(x => x.Source == new PageSource.Heap("a"));
+            var pager = Mock.Of<ISourcePager>(x => x.Source == new PageSource.Table("a"));
 
-            Assert.ThrowsAny<Exception>(() => pager.Flush(new PageId(new PageSource.Heap("b"), 1)));
+            Assert.ThrowsAny<Exception>(() => pager.Flush(new PageId(new PageSource.Table("b"), 1)));
         }
 
         [Fact]
         public void Flush_ShouldPassIndex()
         {
-            var source = new PageSource.Heap("a");
+            var source = new PageSource.Table("a");
             var index = 1;
             var pager = Mock.Of<ISourcePager>(x => x.Source == source);
 
@@ -50,15 +50,15 @@ namespace SimpleDatabase.Storage.UnitTests.Paging
         [Fact]
         public void Free_DifferentSource_ShouldThrow()
         {
-            var pager = Mock.Of<ISourcePager>(x => x.Source == new PageSource.Heap("a"));
+            var pager = Mock.Of<ISourcePager>(x => x.Source == new PageSource.Table("a"));
 
-            Assert.ThrowsAny<Exception>(() => pager.Free(new PageId(new PageSource.Heap("b"), 1)));
+            Assert.ThrowsAny<Exception>(() => pager.Free(new PageId(new PageSource.Table("b"), 1)));
         }
 
         [Fact]
         public void Free_ShouldPassIndex()
         {
-            var source = new PageSource.Heap("a");
+            var source = new PageSource.Table("a");
             var index = 1;
             var pager = Mock.Of<ISourcePager>(x => x.Source == source);
 

@@ -1,7 +1,9 @@
 ﻿using SimpleDatabase.Execution.Transactions;
 using SimpleDatabase.Storage.Heap;
+using SimpleDatabase.Storage.MetaData;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
+using SimpleDatabase.Storage.TableMetaData;
 
 namespace SimpleDatabase.Execution.Tables
 {
@@ -18,8 +20,10 @@ namespace SimpleDatabase.Execution.Tables
 
         public Cursor StartCursor()
         {
-            var pageId = new PageId(_pager.Source, 0);
-            var page = HeapPage.Read(_pager.Get(0));
+            var metaDataPage = TableMetaDataPage.Read(_pager.Get(0)); 
+
+            var pageId = new PageId(_pager.Source, metaDataPage.RootHeapPageIndex);
+            var page = HeapPage.Read(_pager.Get(pageId));
 
             var tableIsEmpty = page.ItemCount == 0;
 

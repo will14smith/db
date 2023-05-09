@@ -2,6 +2,7 @@
 using SimpleDatabase.Execution.Tables;
 using SimpleDatabase.Execution.Transactions;
 using SimpleDatabase.Schemas;
+using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Heap;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
@@ -13,28 +14,24 @@ namespace SimpleDatabase.Execution.Values
     {
         public Option<Cursor> Cursor { get; }
 
-        private readonly IPager _pager;
+        private readonly TableManager _tableManager;
         private readonly ITransactionManager _txm;
 
-        private readonly ISourcePager _sourcePager;
         private readonly IHeapSerializer _heapSerializer;
 
-        public Table Table { get; }
         public bool Writable { get; }
 
-        public HeapCursor(IPager pager, ITransactionManager txm, Table table, bool writable)
+        public HeapCursor(TableManager tableManager, ITransactionManager txm, bool writable)
         {
-            _pager = pager;
+            _tableManager = tableManager;
             _txm = txm;
 
-            _sourcePager = new SourcePager(_pager, new PageSource.Heap(table.Name));
-            _heapSerializer = new HeapSerializer(table.Columns, new ColumnTypeSerializerFactory());
+            _heapSerializer = new HeapSerializer(_tableManager.Table.Columns, new ColumnTypeSerializerFactory());
 
-            Table = table;
             Writable = writable;
         }
         public HeapCursor(Cursor cursor, HeapCursor heapCursor)
-            : this(heapCursor._pager, heapCursor._txm, heapCursor.Table, heapCursor.Writable)
+            : this(heapCursor._tableManager, heapCursor._txm, heapCursor.Writable)
         {
             Cursor = Option.Some(cursor);
         }
@@ -43,7 +40,7 @@ namespace SimpleDatabase.Execution.Values
 
         public ICursor First()
         {
-            var traverser = new HeapTraverser(_sourcePager, _txm);
+            var traverser = new HeapTraverser(_tableManager.Pager, _txm);
             var cursor = traverser.StartCursor();
 
             return new HeapCursor(cursor, this);
@@ -56,7 +53,7 @@ namespace SimpleDatabase.Execution.Values
                 throw new InvalidOperationException("Attempting to advance without a cursor");
             }
             
-            var traverser = new HeapTraverser(_sourcePager, _txm);
+            var traverser = new HeapTraverser(_tableManager.Pager, _txm);
             var cursor = traverser.AdvanceCursor(Cursor.Value!);
 
             return new HeapCursor(cursor, this);
@@ -72,7 +69,7 @@ namespace SimpleDatabase.Execution.Values
             if(!Cursor.HasValue) throw new InvalidOperationException("Cannot read column without a cursor");
             var cursor = Cursor.Value!;
 
-            var page = HeapPage.Read(_sourcePager.Get(cursor.Page.Index));
+            var page = HeapPage.Read(_tableManager.Pager.Get(cursor.Page));
             var cell = page.GetItem(cursor.CellNumber);
 
             return _heapSerializer.ReadColumn(cell, index);
@@ -80,7 +77,7 @@ namespace SimpleDatabase.Execution.Values
 
         public InsertTargetResult Insert(Row row)
         {
-            var inserter = new TableInserter(_pager, Table);
+            var inserter = new TableInserter(_tableManager);
             var result = inserter.Insert(row);
 
             switch (result)
@@ -98,7 +95,7 @@ namespace SimpleDatabase.Execution.Values
 
         public DeleteTargetResult Delete()
         {
-            var deleter = new TableDeleter(_pager, _txm, Table);
+            var deleter = new TableDeleter(_tableManager, _txm);
             var result = deleter.Delete(this);
 
             switch (result)
@@ -114,21 +111,21 @@ namespace SimpleDatabase.Execution.Values
             }
         }
 
-        public static HeapCursor FromLocation(IPager pager, ITransactionManager txm, Table table, bool writable, int heapLocation)
+        public static HeapCursor FromLocation(TableManager tableManager, ITransactionManager txm, bool writable, int heapLocation)
         {
             var pageIndex = heapLocation >> 8;
             var itemIndex = heapLocation & 0xff;
 
-            var pageId = new PageId(new PageSource.Heap(table.Name), pageIndex);
+            var pageId = new PageId(tableManager.Pager.Source, pageIndex);
 
-            var heapPage = pager.Get(pageId);
+            var heapPage = tableManager.Pager.Get(pageId);
             var heap = HeapPage.Read(heapPage);
 
             var endOfTable = itemIndex + 1 == heap.ItemCount && heap.NextPageIndex == 0;
 
             return new HeapCursor(
                 new Cursor(pageId, itemIndex, endOfTable), 
-                new HeapCursor(pager, txm, table, writable)
+                new HeapCursor(tableManager, txm, writable)
             );
         }
     }

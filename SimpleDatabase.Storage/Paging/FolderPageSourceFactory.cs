@@ -1,14 +1,16 @@
 ﻿using System;
-using System.IO;
+using System.IO.Abstractions;
 
 namespace SimpleDatabase.Storage.Paging
 {
     public class FolderPageSourceFactory : IPageStorageFactory
     {
+        private readonly IFileSystem _fileSystem;
         private readonly string _path;
 
-        public FolderPageSourceFactory(string path)
+        public FolderPageSourceFactory(IFileSystem fileSystem, string path)
         {
+            _fileSystem = fileSystem;
             _path = path;
         }
 
@@ -16,16 +18,16 @@ namespace SimpleDatabase.Storage.Paging
         {
             var filePath = FilePathToSource(source);
 
-            return new FilePageStorage(source, filePath);
+            return new FilePageStorage(_fileSystem, source, filePath);
         }
 
         public string FilePathToSource(PageSource source)
         {
             switch (source)
             {
-                case PageSource.Heap heap: return Path.Combine(_path, heap.TableName + ".tbh");
-                case PageSource.Index index: return Path.Combine(_path, index.TableName + "_" + index.IndexName + ".idx");
-
+                case PageSource.Database: return _fileSystem.Path.Combine(_path, "database");
+                case PageSource.Table table: return _fileSystem.Path.Combine(_path, $"{table.TableName}.tbl");
+                
                 default: throw new ArgumentOutOfRangeException(nameof(source));
             }
         }

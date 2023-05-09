@@ -1,18 +1,19 @@
 ﻿using SimpleDatabase.Execution.Operations.Cursors;
 using SimpleDatabase.Execution.Transactions;
 using SimpleDatabase.Execution.Values;
+using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Paging;
 
 namespace SimpleDatabase.Execution.OperationExecutors.Cursors
 {
     public class OpenReadIndexOperationExecutor : IOperationExecutor<OpenReadIndexOperation>
     {
-        private readonly IPager _pager;
+        private readonly DatabaseManager _databaseManager;
         private readonly ITransactionManager _txm;
 
-        public OpenReadIndexOperationExecutor(IPager pager, ITransactionManager txm)
+        public OpenReadIndexOperationExecutor(DatabaseManager databaseManager, ITransactionManager txm)
         {
-            _pager = pager;
+            _databaseManager = databaseManager;
             _txm = txm;
         }
 
@@ -20,8 +21,11 @@ namespace SimpleDatabase.Execution.OperationExecutors.Cursors
         {
             // TODO aquire read lock
             var table = operation.Table;
+            var tableManager = _databaseManager.GetTableManagerFor(table);
+            
             var index = operation.Index;
-            var tableCursor = new IndexCursor(_pager, _txm, table, index, false);
+            
+            var tableCursor = new IndexCursor(tableManager, _txm, index, false);
 
             var cursor = new CursorValue(false);
             cursor = cursor.SetNextCursor(tableCursor);

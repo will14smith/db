@@ -9,7 +9,7 @@ namespace SimpleDatabase.Storage.UnitTests.Paging
         [Fact]
         public void Source_ShouldBeSameAsConstructor()
         {
-            var source = new PageSource.Heap("a");
+            var source = new PageSource.Table("a");
             var pager = new SourcePager(Mock.Of<IPager>(), source);
 
             Assert.Equal(source, pager.Source);
@@ -18,7 +18,7 @@ namespace SimpleDatabase.Storage.UnitTests.Paging
         [Fact]
         public void Get_ShouldPassSourceAndIndex()
         {
-            var source = new PageSource.Heap("a");
+            var source = new PageSource.Table("a");
             var index = 0;
             var pager = Mock.Of<IPager>();
             var sourcePager = new SourcePager(pager, source);
@@ -31,7 +31,7 @@ namespace SimpleDatabase.Storage.UnitTests.Paging
         [Fact]
         public void Flush_ShouldPassSourceAndIndex()
         {
-            var source = new PageSource.Heap("a");
+            var source = new PageSource.Table("a");
             var index = 0;
             var pager = Mock.Of<IPager>();
             var sourcePager = new SourcePager(pager, source);
@@ -44,7 +44,7 @@ namespace SimpleDatabase.Storage.UnitTests.Paging
         [Fact]
         public void Alloc_ShouldPassSource()
         {
-            var source = new PageSource.Heap("a");
+            var source = new PageSource.Table("a");
             var pager = Mock.Of<IPager>();
             var sourcePager = new SourcePager(pager, source);
 
@@ -56,7 +56,7 @@ namespace SimpleDatabase.Storage.UnitTests.Paging
         [Fact]
         public void Free_ShouldPassSourceAndIndex()
         {
-            var source = new PageSource.Heap("a");
+            var source = new PageSource.Table("a");
             var index = 0;
             var pager = Mock.Of<IPager>();
             var sourcePager = new SourcePager(pager, source);

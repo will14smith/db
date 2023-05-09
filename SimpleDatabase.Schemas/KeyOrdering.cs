@@ -2,7 +2,7 @@
 {
     public enum KeyOrdering
     {
-        Ascending,
-        Descending
+        Ascending = 0,
+        Descending = 1,
     }
 }

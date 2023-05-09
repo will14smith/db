@@ -15,6 +15,13 @@ namespace SimpleDatabase.Storage.Paging
             _storageFactory = storageFactory;
         }
 
+        public int PageCount(PageSource source)
+        {
+            var storage = GetStorage(source);
+
+            return storage.PageCount;
+        }
+
         public Page Get(PageId id)
         {
             var storage = GetStorage(id.Source);

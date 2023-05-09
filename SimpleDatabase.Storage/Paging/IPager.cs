@@ -4,6 +4,8 @@ namespace SimpleDatabase.Storage.Paging
 {
     public interface IPager : IDisposable
     {
+        int PageCount(PageSource source);
+        
         Page Get(PageId id);
         void Flush(PageId id);
 

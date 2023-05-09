@@ -3,6 +3,7 @@ using System.Linq;
 using SimpleDatabase.Execution.Tables;
 using SimpleDatabase.Execution.Transactions;
 using SimpleDatabase.Schemas;
+using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Heap;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
@@ -14,30 +15,28 @@ namespace SimpleDatabase.Execution.Values
     public class IndexCursor : ICursor, IInsertTarget, IDeleteTarget
     {
         private readonly Option<Cursor> _cursor;
-        private readonly IPager _pager;
+        private readonly TableManager _tableManager;
         private readonly ITransactionManager _txm;
 
         private readonly TreeTraverser _treeTraverser;
         private readonly IIndexSerializer _treeSerializer;
 
-        public Table Table { get; }
         public TableIndex Index { get; }
         public bool Writable { get; }
 
-        public IndexCursor(IPager pager, ITransactionManager txm, Table table, TableIndex index, bool writable)
+        public IndexCursor(TableManager tableManager, ITransactionManager txm, TableIndex index, bool writable)
         {
-            _pager = pager;
+            _tableManager = tableManager;
             _txm = txm;
 
-            _treeTraverser = new TreeTraverser(pager, txm, table, index);
+            _treeTraverser = new TreeTraverser(tableManager, txm, index);
             _treeSerializer = index.CreateSerializer();
 
-            Table = table;
             Index = index;
             Writable = writable;
         }
         public IndexCursor(Cursor cursor, IndexCursor indexCursor)
-            : this(indexCursor._pager, indexCursor._txm, indexCursor.Table, indexCursor.Index, indexCursor.Writable)
+            : this(indexCursor._tableManager, indexCursor._txm, indexCursor.Index, indexCursor.Writable)
         {
             _cursor = Option.Some(cursor);
         }
@@ -74,7 +73,7 @@ namespace SimpleDatabase.Execution.Values
 
         public InsertTargetResult Insert(Row row)
         {
-            var inserter = new TableInserter(_pager, Table);
+            var inserter = new TableInserter(_tableManager);
             var result = inserter.Insert(row);
 
             switch (result)
@@ -92,7 +91,7 @@ namespace SimpleDatabase.Execution.Values
 
         public DeleteTargetResult Delete()
         {
-            var deleter = new TableDeleter(_pager, _txm, Table);
+            var deleter = new TableDeleter(_tableManager, _txm);
             var result = deleter.Delete(GetHeap());
 
             switch (result)
@@ -113,13 +112,13 @@ namespace SimpleDatabase.Execution.Values
             if(!_cursor.HasValue) throw new InvalidOperationException("Attempting to get heap without a cursor");
             var cursor = _cursor.Value!;
             
-            var page = _pager.Get(cursor.Page);
+            var page = _tableManager.Pager.Get(cursor.Page);
             var leaf = LeafNode.Read(page, _treeSerializer);
 
             // (pageIndex << 8) | itemIndex
-            var heapLocation = (int?)leaf.GetCellValue(cursor.CellNumber).Values.First().Value ?? 0;
+            var heapLocation = (int?)leaf.GetCellValue(cursor.CellNumber).Values.First().Value ?? throw new Exception("???");
 
-            return HeapCursor.FromLocation(_pager, _txm, Table, Writable, heapLocation);
+            return HeapCursor.FromLocation(_tableManager, _txm, Writable, heapLocation);
         }
     }
 }

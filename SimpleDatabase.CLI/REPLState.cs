@@ -7,18 +7,18 @@ namespace SimpleDatabase.CLI;
 
 public class REPLState
 {
-    public REPLState(Pager pager, Table table, Database database, TransactionManager transactionManager)
+    public REPLState(Pager pager, DatabaseManager databaseManager, TransactionManager transactionManager)
     {
         Pager = pager;
-        Table = table;
-        Database = database;
+        DatabaseManager = databaseManager;
         TransactionManager = transactionManager;
     }
 
     public Pager Pager { get; }
-    public Table Table { get; }
-    public Database Database { get; }
+    public DatabaseManager DatabaseManager { get; }
     public TransactionManager TransactionManager { get; }
 
     public ITransaction? Transaction { get; set; }
+
+    public Database Database => new(DatabaseManager.GetAllTables());
 }

@@ -2,6 +2,7 @@
 using SimpleDatabase.Execution.Transactions;
 using SimpleDatabase.Execution.Trees;
 using SimpleDatabase.Schemas;
+using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Heap;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
@@ -12,18 +13,16 @@ namespace SimpleDatabase.Execution.Tables
 {
     public class TreeTraverser
     {
-        private readonly ISourcePager _treePager;
-        private readonly ISourcePager _heapPager;
+        private readonly TableManager _tableManager;
         private readonly ITransactionManager _txm;
 
         private readonly IIndexSerializer _treeSerializer;
         
         private readonly TableIndex _index;
         
-        public TreeTraverser(IPager pager, ITransactionManager txm, Table table, TableIndex index)
+        public TreeTraverser(TableManager tableManager, ITransactionManager txm, TableIndex index)
         {
-            _treePager = new SourcePager(pager, new PageSource.Index(table.Name, index.Name));
-            _heapPager = new SourcePager(pager, new PageSource.Heap(table.Name));
+            _tableManager = tableManager;
             _txm = txm;
 
             _index = index;
@@ -34,9 +33,9 @@ namespace SimpleDatabase.Execution.Tables
         public Cursor StartCursor()
         {
             var strategy = new TreeStartSearcher();
-            var seacher = new TreeSearcher(_treePager, strategy, _index);
+            var seacher = new TreeSearcher(_tableManager.Pager, strategy, _index);
 
-            var cursor = seacher.FindCursor(_index.RootPage);
+            var cursor = seacher.FindCursor(_tableManager.GetIndexRootPageId(_index));
 
             return AdvanceUntilVisible(cursor);
         }
@@ -65,7 +64,7 @@ namespace SimpleDatabase.Execution.Tables
                 throw new InvalidOperationException("End of table - cannot advance");
             }
 
-            var page = _treePager.Get(cursor.Page.Index);
+            var page = _tableManager.Pager.Get(cursor.Page.Index);
             var node = LeafNode.Read(page, _treeSerializer);
 
             var cellNumber = cursor.CellNumber + 1;
@@ -93,7 +92,7 @@ namespace SimpleDatabase.Execution.Tables
             }
 
             return new Cursor(
-                new PageId(_treePager.Source, nextPageNumber), 
+                new PageId(_tableManager.Pager.Source, nextPageNumber), 
                 0,
                 false
             );
@@ -101,7 +100,7 @@ namespace SimpleDatabase.Execution.Tables
         
         private bool IsVisible(Cursor cursor)
         {
-            var leaf = LeafNode.Read(_treePager.Get(cursor.Page.Index), _treeSerializer);
+            var leaf = LeafNode.Read(_tableManager.Pager.Get(cursor.Page), _treeSerializer);
             var cell = leaf.GetCellValueOffset(cursor.CellNumber);
 
             // TODO wrap in an accessor class
@@ -109,7 +108,7 @@ namespace SimpleDatabase.Execution.Tables
             var heapPage = heapKey >> 8;
             var heapCell = heapKey & 0xff;
 
-            var page = HeapPage.Read(_heapPager.Get(heapPage));
+            var page = HeapPage.Read(_tableManager.Pager.Get(heapPage));
             var rowStart = page.GetItem(heapCell);
 
             var (min, maxopt) = HeapSerializer.ReadXid(rowStart);

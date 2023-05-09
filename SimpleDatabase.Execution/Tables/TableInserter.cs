@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using SimpleDatabase.Schemas;
+using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 
@@ -8,25 +9,23 @@ namespace SimpleDatabase.Execution.Tables
 {
     public class TableInserter
     {
-        private readonly IPager _pager;
-        private readonly Table _table;
+        private readonly TableManager _tableManager;
 
-        public TableInserter(IPager pager, Table table)
+        public TableInserter(TableManager tableManager)
         {
-            _pager = pager;
-            _table = table;
+            _tableManager = tableManager;
         }
 
         public InsertResult Insert(Row row)
         {
-            var heapInserter = new HeapInserter(new SourcePager(_pager, new PageSource.Heap(_table.Name)), _table);
+            var heapInserter = new HeapInserter(_tableManager);
             var heapKey = heapInserter.Insert(row);
             // TODO handle result of ^
 
             InsertResult result = new InsertResult.Success();
-            foreach (var index in _table.Indexes)
+            foreach (var index in _tableManager.Table.Indexes)
             {
-                var treeInserter = new TreeInserter(new SourcePager(_pager, new PageSource.Index(_table.Name, index.Name)), index);
+                var treeInserter = new TreeInserter(_tableManager, index);
 
                 var (key, data) = CreateIndexData(index, heapKey, row);
 
@@ -52,7 +51,7 @@ namespace SimpleDatabase.Execution.Tables
 
         private ColumnValue GetValue(Column col, Row row)
         {
-            var colIndex = _table.IndexOf(col) ?? -1;
+            var colIndex = _tableManager.Table.IndexOf(col) ?? -1;
 
             return row.Values[colIndex];
         }

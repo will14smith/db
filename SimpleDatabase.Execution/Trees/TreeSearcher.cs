@@ -19,7 +19,7 @@ namespace SimpleDatabase.Execution.Trees
             _serializer = index.CreateSerializer();
         }
 
-        public Cursor FindCursor(int pageIndex)
+        public Cursor FindCursor(PageId pageIndex)
         {
             var page = _pager.Get(pageIndex);
             var node = Node.Read(page, _serializer);
@@ -35,7 +35,7 @@ namespace SimpleDatabase.Execution.Trees
             }
         }
 
-        private Cursor LeafNodeFind(LeafNode node, int pageIndex)
+        private Cursor LeafNodeFind(LeafNode node, PageId pageIndex)
         {
             var cellNumber = _treeSearchStrategy.FindCell(node);
 
@@ -43,7 +43,7 @@ namespace SimpleDatabase.Execution.Trees
             var noNextLeaf = node.NextLeaf == 0;
 
             return new Cursor(
-                new PageId(_pager.Source, pageIndex),
+                pageIndex,
                 cellNumber,
                 lastCell && noNextLeaf
             );
@@ -55,7 +55,7 @@ namespace SimpleDatabase.Execution.Trees
 
             var childPageNumber = node.GetChild(minIndex);
 
-            return FindCursor(childPageNumber);
+            return FindCursor(new PageId(node.PageId.Source, childPageNumber));
         }
     }
 }

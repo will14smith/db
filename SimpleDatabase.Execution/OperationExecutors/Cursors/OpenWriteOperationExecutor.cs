@@ -1,18 +1,19 @@
 ﻿using SimpleDatabase.Execution.Operations.Cursors;
 using SimpleDatabase.Execution.Transactions;
 using SimpleDatabase.Execution.Values;
+using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Paging;
 
 namespace SimpleDatabase.Execution.OperationExecutors.Cursors
 {
     public class OpenWriteOperationExecutor : IOperationExecutor<OpenWriteOperation>
     {
-        private readonly IPager _pager;
+        private readonly DatabaseManager _databaseManager;
         private readonly ITransactionManager _txm;
 
-        public OpenWriteOperationExecutor(IPager pager, ITransactionManager txm)
+        public OpenWriteOperationExecutor(DatabaseManager databaseManager, ITransactionManager txm)
         {
-            _pager = pager;
+            _databaseManager = databaseManager;
             _txm = txm;
         }
 
@@ -20,7 +21,9 @@ namespace SimpleDatabase.Execution.OperationExecutors.Cursors
         {
             // TODO aquire write lock
             var table = operation.Table;
-            var heapCursor = new HeapCursor(_pager, _txm, table, true);
+            var tableManager = _databaseManager.GetTableManagerFor(table);
+            
+            var heapCursor = new HeapCursor(tableManager, _txm, true);
 
             var cursor = new CursorValue(true);
             cursor = cursor.SetNextCursor(heapCursor);

@@ -1,6 +1,7 @@
 ﻿using System;
 using SimpleDatabase.Execution.Trees;
 using SimpleDatabase.Schemas;
+using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Paging;
 using SimpleDatabase.Storage.Serialization;
 using SimpleDatabase.Storage.Tree;
@@ -9,22 +10,20 @@ namespace SimpleDatabase.Execution.Tables
 {
     public class TreeInserter
     {
-        private readonly ISourcePager _pager;
+        private readonly TableManager _tableManager;
+        private readonly TableIndex _index;
         private readonly IIndexSerializer _serializer;
 
-        private readonly TableIndex _index;
-
-        public TreeInserter(ISourcePager pager, TableIndex index)
+        public TreeInserter(TableManager tableManager, TableIndex index)
         {
-            _pager = pager;
-            _serializer = index.CreateSerializer();
-
+            _tableManager = tableManager;
             _index = index;
+            _serializer = index.CreateSerializer();
         }
 
         public InsertResult Insert(IndexKey key, IndexData data)
         {
-            var page = _pager.Get(_index.RootPage);
+            var page = _tableManager.Pager.Get(_tableManager.GetIndexRootPageId(_index));
             var node = Node.Read(page, _serializer);
 
             Result result;
@@ -58,14 +57,18 @@ namespace SimpleDatabase.Execution.Tables
 
         private void SplitRoot(Result.WasSplit split)
         {
-            if (_index.RootPage != split.Left)
+            var rootPageId = _tableManager.GetIndexRootPageId(_index);
+            
+            if (rootPageId.Index != split.Left)
             {
                 throw new InvalidOperationException("Uhm...?");
             }
 
-            var leftPage = _pager.Allocate();
-            var rightPage = _pager.Get(split.Right);
-            var rootPage = _pager.Get(split.Left);
+            var pager = _tableManager.Pager;
+            
+            var leftPage = pager.Allocate();
+            var rightPage = pager.Get(split.Right);
+            var rootPage = pager.Get(split.Left);
 
             Array.Copy(rootPage.Data, leftPage.Data, PageLayout.PageSize);
             var leftNode = Node.Read(leftPage, _serializer);
@@ -88,7 +91,7 @@ namespace SimpleDatabase.Execution.Tables
                 return LeafInsertNonFull(node, key, data, cellIndex);
             }
 
-            var newPage = _pager.Allocate();
+            var newPage = _tableManager.Pager.Allocate();
             var newNode = LeafNode.New(newPage, _serializer);
 
             newNode.NextLeaf = node.NextLeaf;
@@ -163,7 +166,7 @@ namespace SimpleDatabase.Execution.Tables
             // this split is pre-emptive as there might be space in the children
             // all the B+ tree invariants still hold though
 
-            var newPage = _pager.Allocate();
+            var newPage = _tableManager.Pager.Allocate();
             var newNode = InternalNode.New(newPage, _serializer);
 
             var threshold = newNode.Layout.InternalNodeLeftSplitCount;
@@ -190,7 +193,7 @@ namespace SimpleDatabase.Execution.Tables
             var cellIndex = new TreeKeySearcher(key).FindCell(node);
 
             var childPageNumber = node.GetChild(cellIndex);
-            var childPage = _pager.Get(childPageNumber);
+            var childPage = _tableManager.Pager.Get(childPageNumber);
             var childNode = Node.Read(childPage, _serializer);
 
             Result result;

@@ -1,32 +1,35 @@
 ﻿using SimpleDatabase.Execution.Operations.Cursors;
 using SimpleDatabase.Execution.Transactions;
 using SimpleDatabase.Execution.Values;
+using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Paging;
 
 namespace SimpleDatabase.Execution.OperationExecutors.Cursors
 {
     public class OpenReadTableOperationExecutor : IOperationExecutor<OpenReadTableOperation>
     {
-        private readonly IPager _pager;
+        private readonly DatabaseManager _databaseManager;
         private readonly ITransactionManager _txm;
 
-        public OpenReadTableOperationExecutor(IPager pager, ITransactionManager txm)
+        public OpenReadTableOperationExecutor(DatabaseManager databaseManager, ITransactionManager txm)
         {
-            _pager = pager;
+            _databaseManager = databaseManager;
             _txm = txm;
         }
 
         public (FunctionState, OperationResult) Execute(FunctionState state, OpenReadTableOperation operation)
         {
-                // TODO acquire read lock
-                var table = operation.Table;
-                var tableCursor = new HeapCursor(_pager, _txm, table, false);
+            // TODO acquire read lock
+            var table = operation.Table;
+            var tableManager = _databaseManager.GetTableManagerFor(table);
 
-                var cursor = new CursorValue(false);
-                cursor = cursor.SetNextCursor(tableCursor);
+            var tableCursor = new HeapCursor(tableManager, _txm, false);
 
-                state = state.PushValue(cursor);
-                return (state, new OperationResult.Next());
+            var cursor = new CursorValue(false);
+            cursor = cursor.SetNextCursor(tableCursor);
+
+            state = state.PushValue(cursor);
+            return (state, new OperationResult.Next());
         }
     }
 }

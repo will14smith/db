@@ -1,16 +1,17 @@
 using System;
 using System.IO;
+using System.IO.Abstractions;
 
 namespace SimpleDatabase.Storage.Paging
 {
     public class FilePageStorage : IPageStorage
     {
-        private FileStream? _file;
+        private FileSystemStream? _file;
 
-        public FilePageStorage(PageSource source, string path)
+        public FilePageStorage(IFileSystem fileSystem, PageSource source, string path)
         {
             Source = source;
-            _file = File.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+            _file = fileSystem.File.Open(path, FileMode.OpenOrCreate, FileAccess.ReadWrite);
             if (_file.Length % PageLayout.PageSize != 0)
             {
                 throw new InvalidOperationException("paged file isn't a whole number of pages long");

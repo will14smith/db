@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using System.IO.Abstractions;
 using System.Linq;
 using Antlr4.Runtime.Misc;
 using SimpleDatabase.CLI.Commands;
@@ -9,11 +9,8 @@ using SimpleDatabase.Execution.Transactions;
 using SimpleDatabase.Parsing;
 using SimpleDatabase.Parsing.Statements;
 using SimpleDatabase.Planning;
-using SimpleDatabase.Schemas;
-using SimpleDatabase.Schemas.Types;
 using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Paging;
-using Table = SimpleDatabase.Schemas.Table;
 
 namespace SimpleDatabase.CLI
 {
@@ -30,33 +27,13 @@ namespace SimpleDatabase.CLI
             _input = input;
             _output = output;
 
-            if (!Directory.Exists(folder))
-            {
-                Directory.CreateDirectory(folder);
-            }
-
-            var storage = new FolderPageSourceFactory(folder);
-            var pager = new Pager(storage);
-
-            var table = CreateTable(pager, "table", new[]
-            {
-                new Column("id", new ColumnType.Integer()),
-                new Column("name", new ColumnType.String(31)),
-                new Column("email", new ColumnType.String(255)),
-            }, new []
-            {
-                ("pk", new [] { ("id", KeyOrdering.Ascending) }),
-                ("k_email", new [] { ("email", KeyOrdering.Ascending) }),
-            });
-
-            var database = new Database(new[] { table });
-
+            var pager = new Pager(new FolderPageSourceFactory(new FileSystem(), folder));
+            var databaseManager = new DatabaseManager(pager);
             var txm = new TransactionManager();
 
             _state = new REPLState(
                 pager,
-                table,
-                database,
+                databaseManager,
                 txm
             );
             
@@ -67,18 +44,7 @@ namespace SimpleDatabase.CLI
             _commands.Register("abort", new AbortTransactionCommand(_state, _output));
             _commands.Register("btree", new BTreeCommand(_state, _output));
         }
-
-        private Table CreateTable(IPager pager, string name, IReadOnlyList<Column> columns, IEnumerable<(string, (string, KeyOrdering)[])> indexDefs)
-        {
-            var indices = indexDefs.Select(x => new TableIndex(x.Item1, new KeyStructure(x.Item2.Select(c => (columns.Single(v => v.Name == c.Item1), c.Item2)).ToList(), new Column[0]))).ToList();
-
-            var table = new Table(name, columns, indices);
-
-            new TableCreator(pager).Create(table);
-
-            return table;
-        }
-
+        
         public ExitCode Run()
         {
             while (true)
@@ -163,7 +129,7 @@ namespace SimpleDatabase.CLI
 
             foreach (var program in programs)
             {
-                var executor = new ProgramExecutor(program, _state.Pager, _state.TransactionManager);
+                var executor = new ProgramExecutor(program, _state.DatabaseManager, _state.TransactionManager);
 
                 foreach (var result in executor.Execute())
                 {
