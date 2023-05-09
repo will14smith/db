@@ -21,7 +21,7 @@ public class BTreeCommand : ICommand
     {
         var table = _state.Table;
         
-        var index = table.Indices.FirstOrDefault();
+        var index = table.Indexes.FirstOrDefault();
         if (index != null)
         {
             PrintBTree(table, index);

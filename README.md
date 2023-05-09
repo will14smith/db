@@ -20,6 +20,12 @@ Safe to say: don't use this in production!
 - EXPLAIN
 - MVCC (multi-version concurrency control, initial start for ACID)
 
+### TODO
+
+- Store schema in the heap
+- Merge index into the heap (one file per table)
+- Support joins
+
 ### Unsupported
 
 - DDL (table schemas are defined through code)

@@ -6,7 +6,8 @@ namespace SimpleDatabase.Utils
 {
     public static class PrimativeConverter
     {
-        public static T Read<T>(this Span<byte> span)
+        public static T Read<T>(this Span<byte> span) where T : struct => Read<T>((ReadOnlySpan<byte>)span);
+        public static T Read<T>(this ReadOnlySpan<byte> span)
             where T : struct
         {
             if (!BitConverter.IsLittleEndian)
@@ -27,7 +28,8 @@ namespace SimpleDatabase.Utils
             MemoryMarshal.Cast<byte, T>(span)[0] = value;
         }
 
-        public static string ReadString(this Span<byte> span)
+        public static string ReadString(this Span<byte> span) => ReadString((ReadOnlySpan<byte>)span);
+        public static string ReadString(this ReadOnlySpan<byte> span)
         {
             var len = 0;
             while (len < span.Length && span[len] != 0)

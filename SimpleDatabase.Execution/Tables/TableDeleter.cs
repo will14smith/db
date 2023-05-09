@@ -25,7 +25,7 @@ namespace SimpleDatabase.Execution.Tables
             // TODO check cursor.Table == _table
 
             DeleteResult result;
-            foreach (var index in _table.Indices)
+            foreach (var index in _table.Indexes)
             {
                 var treeDeleter = new TreeDeleter(new SourcePager(_pager, new PageSource.Index(_table.Name, index.Name)), index);
 

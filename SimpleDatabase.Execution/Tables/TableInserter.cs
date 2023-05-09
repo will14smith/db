@@ -24,7 +24,7 @@ namespace SimpleDatabase.Execution.Tables
             // TODO handle result of ^
 
             InsertResult result = new InsertResult.Success();
-            foreach (var index in _table.Indices)
+            foreach (var index in _table.Indexes)
             {
                 var treeInserter = new TreeInserter(new SourcePager(_pager, new PageSource.Index(_table.Name, index.Name)), index);
 

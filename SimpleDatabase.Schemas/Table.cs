@@ -7,13 +7,13 @@ namespace SimpleDatabase.Schemas
     {
         public string Name { get; }
         public IReadOnlyList<Column> Columns { get; }
-        public IReadOnlyList<TableIndex> Indices { get; }
+        public IReadOnlyList<TableIndex> Indexes { get; }
 
-        public Table(string name, IReadOnlyList<Column> columns, IReadOnlyList<TableIndex> indices)
+        public Table(string name, IReadOnlyList<Column> columns, IReadOnlyList<TableIndex> indexes)
         {
             Name = name;
             Columns = columns;
-            Indices = indices;
+            Indexes = indexes;
         }
     }
 

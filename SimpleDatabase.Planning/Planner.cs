@@ -95,7 +95,7 @@ namespace SimpleDatabase.Planning
             var tableName = ((Table.TableName)selectTable).Name;
             var table = _database.GetTable(tableName);
 
-            foreach (var index in table.Indices)
+            foreach (var index in table.Indexes)
             {
                 if (IndexMatch(index, ordering))
                 {
