@@ -6,8 +6,6 @@ namespace SimpleDatabase.Execution
 {
     public struct ProgramLabel : IOperation, IEquatable<ProgramLabel>
     {
-        private static int _counter;
-
         private readonly int _id;
         private readonly string _name;
 
@@ -16,12 +14,7 @@ namespace SimpleDatabase.Execution
             _id = id;
             _name = name?.Replace(" ", "_") ?? "";
         }
-
-        public static ProgramLabel Create(string? name = null)
-        {
-            return new ProgramLabel(Interlocked.Increment(ref _counter), name);
-        }
-
+        
         public override string ToString()
         {
             if (_name == "")

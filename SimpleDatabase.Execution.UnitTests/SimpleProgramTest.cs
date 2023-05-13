@@ -33,7 +33,7 @@ namespace SimpleDatabase.Execution.UnitTests
         }
         
         private static readonly Table Table =
-            new Table("table", new[]
+            new("table", new[]
             {
                 new Column("id", new ColumnType.Integer()),
                 new Column("name", new ColumnType.String(63)),
@@ -41,9 +41,9 @@ namespace SimpleDatabase.Execution.UnitTests
             }, Array.Empty<TableIndex>());
 
         private static readonly FunctionLabel MainLabel = FunctionLabel.Create();
-        private static readonly ProgramLabel Loop = ProgramLabel.Create();
-        private static readonly ProgramLabel Finish = ProgramLabel.Create();
-        private static readonly SlotLabel Cursor = SlotLabel.Create();
+        private static readonly ProgramLabel Loop = new(1, "Loop");
+        private static readonly ProgramLabel Finish = new(2, "Finish");
+        private static readonly SlotLabel Cursor = new(1, "Cursor");
 
         private static readonly Function Main = new Function(new List<IOperation>
             {

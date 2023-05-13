@@ -10,9 +10,12 @@ namespace SimpleDatabase.Planning
 
         private readonly ProgramGenerator _programGenerator;
 
-        private readonly Dictionary<SlotLabel, SlotDefinition> _slots = new Dictionary<SlotLabel, SlotDefinition>();
-        private readonly List<IOperation> _operations = new List<IOperation>();
+        private readonly Dictionary<SlotLabel, SlotDefinition> _slots = new();
+        private readonly List<IOperation> _operations = new();
 
+        private int _slotCounter;
+        private int _labelCounter;
+        
         public OperationGenerator(ProgramGenerator programGenerator, FunctionLabel label)
         {
             Label = label;
@@ -26,7 +29,7 @@ namespace SimpleDatabase.Planning
 
         public SlotLabel NewSlot(SlotDefinition definition)
         {
-            var slot = SlotLabel.Create(definition.Name);
+            var slot = new SlotLabel(_slotCounter++, definition.Name);
             _slots.Add(slot, definition);
 
             return slot;
@@ -35,7 +38,7 @@ namespace SimpleDatabase.Planning
         public ProgramLabel NewLabel(string name)
         {
             // TODO track it
-            return ProgramLabel.Create(name);
+            return new ProgramLabel(_slotCounter++, name);
         }
 
         public void MarkLabel(ProgramLabel label)
