@@ -1,0 +1,38 @@
+﻿CREATE TABLE
+=== Plan ===                                                    
+insert (tbl)                   
+  constant (id, name) (1 rows) 
+                                                                
+=== Program ===                                                 
+[                                                               
+	item source handle                                             
+	item source current                                            
+	insert cursor                                                  
+] {                                                             
+	CO.SETUP C7 0                                                  
+	STORE S0_item_source_handle                                    
+	CUR.OPEN.W tbl                                                 
+	STORE S2_insert_cursor                                         
+L3_loop_start:                                                  
+	LOAD S0_item_source_handle                                     
+	CO.CALL L4_loop_done                                           
+	STORE S1_item_source_current                                   
+	LOAD S1_item_source_current                                    
+	COL 0                                                          
+	LOAD S1_item_source_current                                    
+	COL 1                                                          
+	MK.ROW 2                                                       
+	LOAD S2_insert_cursor                                          
+	INSERT                                                         
+	J L3_loop_start                                                
+L4_loop_done:                                                   
+	FINISH                                                         
+}                                                               
+func C7:                                                        
+[                                                               
+] {                                                             
+	CONST.I 1                                                      
+	CONST.S a                                                      
+	MK.ROW 2                                                       
+	RET                                                            
+}                                                               

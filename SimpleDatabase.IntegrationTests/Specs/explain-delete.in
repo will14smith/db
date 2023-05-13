@@ -1,0 +1,2 @@
+﻿CREATE TABLE tbl (id int, name char(31));
+EXPLAIN DELETE FROM tbl WHERE id = 1;

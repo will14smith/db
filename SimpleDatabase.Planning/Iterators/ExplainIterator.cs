@@ -57,6 +57,17 @@ public class ExplainIterator : IIterator
                 YieldNode(filterNode.Input, $"{indent}  ");
                 break;
             
+            case DeleteNode deleteNode:
+                Yield($"{indent}delete");
+                YieldNode(deleteNode.Input, $"{indent}  ");
+                break;
+
+            case InsertNode insertNode:
+                Yield($"{indent}insert ({insertNode.TableName})");
+                YieldNode(insertNode.Input, $"{indent}  ");
+                break;
+
+            
             case ScanTableNode scanNode:
                 Yield($"{indent}scan ({scanNode.TableName})");
                 break;
