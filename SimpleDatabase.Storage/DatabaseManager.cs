@@ -6,6 +6,7 @@ using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage.DatabaseMetaData;
 using SimpleDatabase.Storage.MetaData;
 using SimpleDatabase.Storage.Paging;
+using SimpleDatabase.Utils;
 
 namespace SimpleDatabase.Storage;
 
@@ -40,6 +41,19 @@ public class DatabaseManager : IDisposable
             .Select(schemaPageId => _schemaReader.Read(schemaPageId))
             .ToList();
 
+    public Option<Table> TryGetTableSchema(string tableName)
+    {
+        var metaDataTable = _databaseMetaDataReader.ReadTables()
+            .FirstOrDefault(metaDataTable => metaDataTable.Name == tableName);
+        if (metaDataTable == null)
+        {
+            return Option.None();
+        }
+
+        var table = _schemaReader.Read(metaDataTable.CurrentSchemaPageId);
+        return Option.Some(table);
+    }
+    
     public void SetTableSchema(Table table)
     {
         var schemaPage = _schemaWriter.Write(table);
@@ -49,7 +63,9 @@ public class DatabaseManager : IDisposable
 
     public TableManager GetTableManagerFor(string tableName)
     {
-        throw new System.NotImplementedException();
+        var table = GetAllTables().First(x => x.Name == tableName);
+
+        return GetTableManagerFor(table);
     }
     public TableManager GetTableManagerFor(Table table)
     {

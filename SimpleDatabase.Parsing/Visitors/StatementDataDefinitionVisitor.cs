@@ -11,11 +11,21 @@ namespace SimpleDatabase.Parsing.Visitors
         {
             var tableName = context.Table.IDENTIFIER().GetText();
             var existsCheck = context.K_EXISTS() != null;
-            var columns = context.column_definition_list()._Columns.Select(HandleColumnDefinition).ToList();
+            var columns = context._Columns.Select(HandleColumnDefinition).ToList();
             
             return new CreateTableStatement(tableName, existsCheck, columns);
         }
 
+        public override StatementDataDefinition VisitStatement_ddl_create_index(SQLParser.Statement_ddl_create_indexContext context)
+        {
+            var indexName = context.Table.IDENTIFIER().GetText();
+            var tableName = context.Table.IDENTIFIER().GetText();
+            var existsCheck = context.K_EXISTS() != null;
+            var columns = context._Columns.Select(HandleIndexColumnDefinition).ToList();
+            
+            return new CreateIndexStatement(indexName, tableName, existsCheck, columns);
+        }
+        
         private static ColumnDefinition HandleColumnDefinition(SQLParser.Column_definitionContext context)
         {
             var name = context.column_name().IDENTIFIER().GetText();
@@ -33,6 +43,14 @@ namespace SimpleDatabase.Parsing.Visitors
 
                 _ => throw new ArgumentOutOfRangeException()
             };
+        }
+        
+        private static IndexColumnDefinition HandleIndexColumnDefinition(SQLParser.Index_columnContext context)
+        {
+            var name = context.column_name().IDENTIFIER().GetText();
+            var order = context.K_DESC() == null ? Order.Ascending : Order.Descending;
+
+            return new IndexColumnDefinition(name, order);
         }
     }
 }

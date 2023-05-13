@@ -6,20 +6,13 @@ namespace SimpleDatabase.Execution
 {
     public struct FunctionLabel : IOperation, IEquatable<FunctionLabel>
     {
-        private static int _counter;
-
         private readonly int _id;
 
         public FunctionLabel(int id) : this()
         {
             _id = id;
         }
-
-        public static FunctionLabel Create()
-        {
-            return new FunctionLabel(Interlocked.Increment(ref _counter));
-        }
-
+        
         public override string ToString()
         {
             return $"C{_id}";

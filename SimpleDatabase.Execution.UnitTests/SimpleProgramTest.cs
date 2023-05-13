@@ -40,7 +40,7 @@ namespace SimpleDatabase.Execution.UnitTests
                 new Column("email", new ColumnType.String(255)),
             }, Array.Empty<TableIndex>());
 
-        private static readonly FunctionLabel MainLabel = FunctionLabel.Create();
+        private static readonly FunctionLabel MainLabel = new(1);
         private static readonly ProgramLabel Loop = new(1, "Loop");
         private static readonly ProgramLabel Finish = new(2, "Finish");
         private static readonly SlotLabel Cursor = new(1, "Cursor");

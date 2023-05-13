@@ -1,4 +1,5 @@
 ﻿CREATE TABLE
+CREATE INDEX
 === Plan ===                                                    
 insert (tbl)                   
   constant (id, name) (1 rows) 

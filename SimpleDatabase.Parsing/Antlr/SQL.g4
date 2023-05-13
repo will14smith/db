@@ -20,8 +20,11 @@ statement_dml_delete: K_DELETE K_FROM Table=table_name (K_WHERE Where=expression
 // ddl statements
 statement_ddl: 
     ( statement_ddl_create_table
+    | statement_ddl_create_index
     );
-statement_ddl_create_table: K_CREATE K_TABLE (K_IF K_NOT K_EXISTS)? Table=table_name '(' column_definition_list ')';
+    
+statement_ddl_create_table: K_CREATE K_TABLE (K_IF K_NOT K_EXISTS)? Table=table_name '(' Columns+=column_definition (',' Columns+=column_definition)* ')';
+statement_ddl_create_index: K_CREATE K_INDEX (K_IF K_NOT K_EXISTS)? Index=index_name K_ON Table=table_name '(' Columns+=index_column (',' Columns+=index_column)* ')';
 
 // columns
 result_column
@@ -34,7 +37,6 @@ column_name: IDENTIFIER;
 
 ordering_term: expression (K_ASC | K_DESC)?;
 
-column_definition_list: Columns+=column_definition (',' Columns+=column_definition)*;
 column_definition: column_name column_type;
 column_type
     : IDENTIFIER # column_type_no_args
@@ -43,6 +45,8 @@ column_type
 
 // tables
 table_name: IDENTIFIER;
+index_name: IDENTIFIER;
+index_column: column_name (K_ASC | K_DESC)?;
 
 // expressions
 expression
@@ -67,9 +71,11 @@ K_EXISTS: E X I S T S;
 K_EXPLAIN: E X P L A I N;
 K_FROM: F R O M;
 K_IF: I F;
+K_INDEX: I N D E X;
 K_INSERT: I N S E R T;
 K_INTO: I N T O;
 K_NOT: N O T;
+K_ON: O N;
 K_ORDER: O R D E R;
 K_SELECT: S E L E C T;
 K_TABLE: T A B L E;

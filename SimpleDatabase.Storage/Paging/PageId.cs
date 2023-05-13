@@ -1,6 +1,8 @@
+using System;
+
 namespace SimpleDatabase.Storage.Paging
 {
-    public class PageId
+    public class PageId : IEquatable<PageId>
     {
         public PageId(PageSource source, int index)
         {
@@ -11,12 +13,12 @@ namespace SimpleDatabase.Storage.Paging
         public PageSource Source { get; }
         public int Index { get; }
 
-        protected bool Equals(PageId other)
+        public bool Equals(PageId other)
         {
             return Source.Equals(other.Source) && Index == other.Index;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
@@ -29,6 +31,16 @@ namespace SimpleDatabase.Storage.Paging
             {
                 return (Source.GetHashCode() * 397) ^ Index;
             }
+        }
+
+        public static bool operator ==(PageId? left, PageId? right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(PageId? left, PageId? right)
+        {
+            return !Equals(left, right);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿CREATE TABLE tbl (id int, name char(31));
+CREATE INDEX pk_tbl ON tbl (id);
 INSERT INTO tbl (id, name) VALUES (1, 'a');
 INSERT INTO tbl (id, name) VALUES (2, 'b');
 INSERT INTO tbl (id, name) VALUES (3, 'c');

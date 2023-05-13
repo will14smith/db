@@ -9,7 +9,7 @@ using SimpleDatabase.Storage.Tree;
 
 namespace SimpleDatabase.Storage;
 
-public class TableManager : IDisposable
+public partial class TableManager : IDisposable
 {
     private readonly DatabaseManager _databaseManager;
     private readonly IReadOnlyDictionary<string, int> _indexNameToOffset;
@@ -24,34 +24,6 @@ public class TableManager : IDisposable
         Table = table;
         
         _indexNameToOffset = Table.Indexes.Select((x, i) => (x, i)).ToDictionary(x => x.x.Name, x => x.i);
-    }
-
-    public void EnsureInitialised()
-    {
-        _databaseManager.SetTableSchema(Table);
-
-        if (Pager.PageCount != 0)
-        {
-            // ensure the root is a metadata page
-            TableMetaDataPage.Read(Pager.Get(0));
-            
-            // TODO check heap and index are valid
-            
-            return;
-        }
-
-        var metaDataPage = TableMetaDataPage.New(Pager.Allocate());
-
-        var heapPage = CreateHeap();
-        metaDataPage.RootHeapPageIndex = heapPage.PageId.Index;
-
-        for (var i = 0; i < Table.Indexes.Count; i++)
-        {
-            var indexPage = CreateIndex(Table.Indexes[i]);
-            metaDataPage[i] = indexPage.PageId.Index;
-        }
-
-        Pager.Flush(metaDataPage.PageId);
     }
     
     private HeapPage CreateHeap()
