@@ -26,7 +26,8 @@ public class Runner
         foreach (var test in files.GroupBy(Path.GetFileNameWithoutExtension))
         {
             var input = File.ReadAllText(Path.Combine(path, $"{test.Key}.in"));
-            var output = File.ReadAllText(Path.Combine(path, $"{test.Key}.out"));
+            var outPath = Path.Combine(path, $"{test.Key}.out");
+            var output = File.Exists(outPath) ? File.ReadAllText(outPath) : null;
 
             yield return new object[] { new TestCase(test.Key!, input, output) };
         }
@@ -62,7 +63,14 @@ public class Runner
             }
         }
 
-        AssertEqualWithDiff(testCase.Output, output.ToString());
+        if (testCase.Output == null)
+        {
+            Assert.False(true, output.ToString());
+        }
+        else
+        {
+            AssertEqualWithDiff(testCase.Output, output.ToString());
+        }
 
         void RunDdlStatement(StatementDataDefinition statement)
         {
@@ -174,9 +182,9 @@ public class TestCase
 {
     public string Name { get; }
     public string Input { get; }
-    public string Output { get; }
+    public string? Output { get; }
 
-    public TestCase(string name, string input, string output)
+    public TestCase(string name, string input, string? output)
     {
         Name = name;
         Input = input;

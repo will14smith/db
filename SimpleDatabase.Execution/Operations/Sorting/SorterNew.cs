@@ -1,4 +1,5 @@
-﻿using SimpleDatabase.Schemas;
+﻿using System.Linq;
+using SimpleDatabase.Schemas;
 
 namespace SimpleDatabase.Execution.Operations.Sorting
 {
@@ -18,7 +19,7 @@ namespace SimpleDatabase.Execution.Operations.Sorting
 
         public override string ToString()
         {
-            return $"SORTER.NEW {Key}";
+            return $"SORTER.NEW {string.Join("; ", Key.Keys.Select(x => $"{(x.Item2 == KeyOrdering.Ascending ? '+' : '-')}{x.Item1.Name}"))}";
         }
     }
 }

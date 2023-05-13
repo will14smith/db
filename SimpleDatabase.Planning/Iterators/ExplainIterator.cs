@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Linq;
 using SimpleDatabase.Execution;
 using SimpleDatabase.Execution.Operations;
 using SimpleDatabase.Execution.Operations.Constants;
 using SimpleDatabase.Execution.Operations.Jumps;
+using SimpleDatabase.Parsing.Statements;
 using SimpleDatabase.Planning.Nodes;
+using SimpleDatabase.Schemas;
 
 namespace SimpleDatabase.Planning.Iterators;
 
@@ -66,10 +69,18 @@ public class ExplainIterator : IIterator
                 Yield($"{indent}insert ({insertNode.TableName})");
                 YieldNode(insertNode.Input, $"{indent}  ");
                 break;
-
             
             case ScanTableNode scanNode:
                 Yield($"{indent}scan ({scanNode.TableName})");
+                break;
+            
+            case ScanIndexNode scanNode:
+                Yield($"{indent}scan index ({scanNode.TableName}.{scanNode.IndexName})");
+                break;
+            
+            case SortNode sortNode:
+                Yield($"{indent}sort ({string.Join("; ", sortNode.Orderings.Select(x => $"{(x.Order == Order.Ascending ? '+' : '-')}{x.Expression}"))})");
+                YieldNode(sortNode.Input, $"{indent}  ");
                 break;
 
             default: 
