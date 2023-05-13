@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleDatabase.Storage", "S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleDatabase.Storage.UnitTests", "SimpleDatabase.Storage.UnitTests\SimpleDatabase.Storage.UnitTests.csproj", "{9DD9F0ED-D379-44A7-BAA8-100D78F506CA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleDatabase.IntegrationTests", "SimpleDatabase.IntegrationTests\SimpleDatabase.IntegrationTests.csproj", "{4A0024D5-AFA3-4279-B0D4-92949B7CE56B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +83,10 @@ Global
 		{9DD9F0ED-D379-44A7-BAA8-100D78F506CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9DD9F0ED-D379-44A7-BAA8-100D78F506CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9DD9F0ED-D379-44A7-BAA8-100D78F506CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A0024D5-AFA3-4279-B0D4-92949B7CE56B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A0024D5-AFA3-4279-B0D4-92949B7CE56B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A0024D5-AFA3-4279-B0D4-92949B7CE56B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A0024D5-AFA3-4279-B0D4-92949B7CE56B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

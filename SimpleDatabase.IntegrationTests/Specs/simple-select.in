@@ -1,0 +1,5 @@
+﻿CREATE TABLE tbl (id int, name char(31));
+INSERT INTO tbl (id, name) VALUES (1, 'a');
+INSERT INTO tbl (id, name) VALUES (2, 'b');
+INSERT INTO tbl (id, name) VALUES (3, 'c');
+SELECT * FROM tbl;
