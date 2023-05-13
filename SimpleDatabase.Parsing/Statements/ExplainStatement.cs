@@ -1,19 +1,18 @@
 using System;
 
-namespace SimpleDatabase.Parsing.Statements
+namespace SimpleDatabase.Parsing.Statements;
+
+public class ExplainStatement : StatementDataManipulation
 {
-    public class ExplainStatement : Statement
+    public StatementDataManipulation Statement { get; }
+
+    public ExplainStatement(StatementDataManipulation statement)
     {
-        public Statement Statement { get; }
-
-        public ExplainStatement(Statement statement)
+        if (statement is ExplainStatement)
         {
-            if (statement is ExplainStatement)
-            {
-                throw new InvalidOperationException("Cannot EXPLAIN the EXPLAINation...");
-            }
-
-            Statement = statement;
+            throw new InvalidOperationException("Cannot EXPLAIN the EXPLAINation...");
         }
+
+        Statement = statement;
     }
 }

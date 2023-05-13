@@ -7,16 +7,15 @@ statement: statement_dml | statement_ddl;
 
 // dml statements
 statement_dml: (K_EXPLAIN)? 
-	( statement_select
-	| statement_insert
-	| statement_delete
+	( statement_dml_select
+	| statement_dml_insert
+	| statement_dml_delete
 	);
 
-
-statement_select: K_SELECT Columns+=result_column (',' Columns+=result_column)* K_FROM Table=table_name (K_WHERE Where=expression)? (K_ORDER K_BY Ordering+=ordering_term (',' Ordering+=ordering_term)*)?;
-statement_insert: K_INSERT K_INTO Table=table_name ('(' Columns+=column_name (',' Columns+=column_name)* ')')? K_VALUES Values+=statement_insert_value (',' Values+=statement_insert_value)*;
-statement_insert_value: '(' Values+=expression (',' Values+=expression)* ')';
-statement_delete: K_DELETE K_FROM Table=table_name (K_WHERE Where=expression)?;
+statement_dml_select: K_SELECT Columns+=result_column (',' Columns+=result_column)* K_FROM Table=table_name (K_WHERE Where=expression)? (K_ORDER K_BY Ordering+=ordering_term (',' Ordering+=ordering_term)*)?;
+statement_dml_insert: K_INSERT K_INTO Table=table_name ('(' Columns+=column_name (',' Columns+=column_name)* ')')? K_VALUES Values+=statement_dml_insert_value (',' Values+=statement_dml_insert_value)*;
+statement_dml_insert_value: '(' Values+=expression (',' Values+=expression)* ')';
+statement_dml_delete: K_DELETE K_FROM Table=table_name (K_WHERE Where=expression)?;
 
 // ddl statements
 statement_ddl: 
