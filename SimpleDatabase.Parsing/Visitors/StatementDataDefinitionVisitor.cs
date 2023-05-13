@@ -20,7 +20,7 @@ namespace SimpleDatabase.Parsing.Visitors
 
         public override StatementDataDefinition VisitStatement_ddl_create_index(SQLParser.Statement_ddl_create_indexContext context)
         {
-            var indexName = context.Table.IDENTIFIER().GetText();
+            var indexName = context.Index.IDENTIFIER().GetText();
             var tableName = context.Table.IDENTIFIER().GetText();
             var existsCheck = context.K_EXISTS() != null;
             var keys = context._Columns.Select(HandleIndexColumnDefinition).ToList();
