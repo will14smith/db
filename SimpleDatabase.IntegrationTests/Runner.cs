@@ -95,19 +95,54 @@ public class Runner
             var transaction = transactionManager.Begin();
 
             var executor = new ProgramExecutor(program, databaseManager, transactionManager);
-            foreach (var result in executor.Execute())
+            var results = executor.Execute().ToList();
+            var resultsAsString = results.Select(row => (IReadOnlyList<string>)row.Select(col => col.ToString() ?? string.Empty).ToList()).ToList();
+            var columnSizes = FindColumnSizes(resultsAsString);
+            
+            foreach (var row in resultsAsString)
             {
-                output.AppendLine("(" + string.Join(", ", result) + ")");
+                for (var i = 0; i < row.Count; i++)
+                {
+                    output.Append(" " + row[i].PadRight(columnSizes[i]) + " ");
+                    if (i + 1 < row.Count)
+                    {
+                        output.Append('|');
+                    }
+                }
+
+                output.AppendLine();
             }
             
             transaction.Commit();
         }
     }
-    
+
+    private static IReadOnlyList<int> FindColumnSizes(IEnumerable<IReadOnlyList<string>> rows)
+    {
+        List<int>? sizes = null;
+
+        foreach (var row in rows)
+        {
+            if (sizes == null)
+            {
+                sizes = row.Select(x => x.Length).ToList();
+            }
+            else
+            {
+                for (var i = 0; i < row.Count; i++)
+                {
+                    sizes[i] = Math.Max(sizes[i], row[i].Length);
+                }
+            }
+        }
+        
+        return (IReadOnlyList<int>?)sizes ?? Array.Empty<int>();
+    }
+
     private void AssertEqualWithDiff(string expected, string actual)
     {
         var diffBuilder = new InlineDiffBuilder(new Differ());
-        var diff = diffBuilder.BuildDiffModel(expected, actual);
+        var diff = diffBuilder.BuildDiffModel(actual, expected);
 
         var output = new StringBuilder();
 

@@ -42,6 +42,11 @@ public abstract class ResultColumn
         {
             return !Equals(left, right);
         }
+
+        public override string ToString()
+        {
+            return "*";
+        }
     }
 
     public class Expression : ResultColumn, IEquatable<Expression>
@@ -83,6 +88,11 @@ public abstract class ResultColumn
         public static bool operator !=(Expression? left, Expression? right)
         {
             return !Equals(left, right);
+        }
+
+        public override string ToString()
+        {
+            return Alias ?? "<unnamed>";
         }
     }
 }

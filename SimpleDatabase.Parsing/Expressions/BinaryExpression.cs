@@ -16,6 +16,18 @@ namespace SimpleDatabase.Parsing.Expressions
             Right = right;
         }
 
+        public override string ToString()
+        {
+            var op = Operator switch
+            {
+                BinaryOperator.Equal => "==",
+                BinaryOperator.NotEqual => "!=",
+                _ => Operator.ToString(),
+            };
+            
+            return $"{Left} {op} {Right}";
+        }
+
         public bool Equals(BinaryExpression other)
         {
             if (ReferenceEquals(null, other)) return false;

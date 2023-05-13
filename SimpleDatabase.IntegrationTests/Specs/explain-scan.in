@@ -1,0 +1,2 @@
+﻿CREATE TABLE tbl (id int, name char(31));
+EXPLAIN SELECT * FROM tbl;

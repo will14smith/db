@@ -3,6 +3,7 @@ using System.Linq;
 using SimpleDatabase.Execution;
 using SimpleDatabase.Execution.Operations;
 using SimpleDatabase.Execution.Operations.Jumps;
+using SimpleDatabase.Parsing.Statements;
 using SimpleDatabase.Planning.Iterators;
 using SimpleDatabase.Planning.Nodes;
 using SimpleDatabase.Storage;
@@ -63,7 +64,8 @@ namespace SimpleDatabase.Planning
                 case InsertNode insert: return new InsertIterator(generator, Compile(insert.Input, generator, writable), _database.GetTable(insert.TableName));
                 case DeleteNode delete: return new DeleteIterator(generator, Compile(delete.Input, generator, true));
                 case SortNode sort: return new SortIterator(generator, Compile(sort.Input, generator, writable), sort.Orderings);
-
+                case ExplainNode explain: return new ExplainIterator(generator, explain.Node, new PlanCompiler(_database).Compile(new Plan(explain.Node)));
+                
                 default: throw new ArgumentOutOfRangeException(nameof(node), $"Unhandled type: {node.GetType().FullName}");
             }
         }

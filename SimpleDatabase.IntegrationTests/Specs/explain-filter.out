@@ -1,0 +1,31 @@
+﻿CREATE TABLE
+=== Plan ===
+projection (*)            
+  filter (name == 'a')    
+    scan (tbl)            
+
+=== Program ===
+[
+	cursor
+] {
+	CUR.OPEN.RT tbl
+	CUR.FIRST
+	STORE S1_cursor
+L1_loop_start:
+	LOAD S1_cursor
+	CUR.NEXT L2_loop_done
+	STORE S1_cursor
+	LOAD S1_cursor
+	COL 1
+	CONST.S a
+	J.NOTEQUAL L1_loop_start
+	LOAD S1_cursor
+	COL 0
+	LOAD S1_cursor
+	COL 1
+	MK.ROW 2
+	YIELD
+	J L1_loop_start
+L2_loop_done:
+	FINISH
+}

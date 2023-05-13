@@ -80,6 +80,14 @@ namespace SimpleDatabase.Planning
                         return new Plan(root);
                     }
 
+                case ExplainStatement explain:
+                {
+                    var innerPlanNode = Plan(explain.Statement).RootNode;
+                    
+                    var root = new ExplainNode(innerPlanNode);
+                    return new Plan(root);
+                }
+                
                 default: throw new ArgumentOutOfRangeException(nameof(statement), $"Unhandled type: {statement.GetType().FullName}");
             }
         }

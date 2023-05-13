@@ -22,13 +22,13 @@ namespace SimpleDatabase.Execution
 
             var sb = new StringBuilder();
 
-            sb.AppendLine(entryFunction.ToString());
+            sb.Append(entryFunction);
 
             foreach (var kvp in otherFunctions)
             {
                 sb.AppendLine();
                 sb.AppendLine("func " + kvp.Key + ":");
-                sb.AppendLine(kvp.Value.ToString());
+                sb.Append(kvp.Value);
             }
 
             return sb.ToString();

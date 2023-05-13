@@ -23,7 +23,7 @@ namespace SimpleDatabase.Execution
 
             foreach (var kvp in Slots)
             {
-                sb.AppendLine("\t" + kvp.Key + ": " + kvp.Value);
+                sb.AppendLine("\t" + kvp.Value);
             }
 
             sb.AppendLine("] {");
@@ -40,7 +40,7 @@ namespace SimpleDatabase.Execution
                 }
             }
 
-            sb.AppendLine("}");
+            sb.Append("}");
 
             return sb.ToString();
         }

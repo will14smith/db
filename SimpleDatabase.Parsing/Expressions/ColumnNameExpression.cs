@@ -11,6 +11,11 @@ namespace SimpleDatabase.Parsing.Expressions
             Name = name;
         }
 
+        public override string ToString()
+        {
+            return Name;
+        }
+
         public bool Equals(ColumnNameExpression other)
         {
             if (ReferenceEquals(null, other)) return false;

@@ -15,6 +15,11 @@ namespace SimpleDatabase.Parsing.Expressions
             Value = value;
         }
 
+        public override string ToString()
+        {
+            return Value.ToString();
+        }
+
         public bool Equals(NumberLiteralExpression other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -50,6 +55,11 @@ namespace SimpleDatabase.Parsing.Expressions
         public StringLiteralExpression(string value)
         {
             Value = value;
+        }
+        
+        public override string ToString()
+        {
+            return $"'{Value}'";
         }
 
         public bool Equals(StringLiteralExpression other)
