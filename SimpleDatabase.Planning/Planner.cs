@@ -7,7 +7,6 @@ using SimpleDatabase.Planning.Nodes;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Storage;
 using SimpleDatabase.Utils;
-using Table = SimpleDatabase.Parsing.Statements.Table;
 
 namespace SimpleDatabase.Planning
 {
@@ -20,7 +19,7 @@ namespace SimpleDatabase.Planning
             _database = database;
         }
 
-        public Plan Plan(Statement statement)
+        public Plan Plan(StatementDataManipulation statement)
         {
             switch (statement)
             {
@@ -31,11 +30,11 @@ namespace SimpleDatabase.Planning
                         var index = TryFindIndex(select.Table, select.Ordering);
                         if (index.HasValue)
                         {
-                            root = new ScanIndexNode(((Table.TableName)select.Table).Name, index.Value!.Name);
+                            root = new ScanIndexNode(((TableRef.TableName)select.Table).Name, index.Value!.Name);
                         }
                         else
                         {
-                            root = new ScanTableNode(((Table.TableName)select.Table).Name);
+                            root = new ScanTableNode(((TableRef.TableName)select.Table).Name);
                         }
 
                         root = select.Where.Map(
@@ -85,14 +84,14 @@ namespace SimpleDatabase.Planning
             }
         }
 
-        private Option<TableIndex> TryFindIndex(Table selectTable, IReadOnlyList<OrderExpression> ordering)
+        private Option<TableIndex> TryFindIndex(TableRef selectTable, IReadOnlyList<OrderExpression> ordering)
         {
             if (!ordering.Any())
             {
                 return Option.None<TableIndex>();
             }
 
-            var tableName = ((Table.TableName)selectTable).Name;
+            var tableName = ((TableRef.TableName)selectTable).Name;
             var table = _database.GetTable(tableName);
 
             foreach (var index in table.Indexes)

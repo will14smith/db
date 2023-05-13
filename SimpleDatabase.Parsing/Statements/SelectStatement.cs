@@ -8,11 +8,11 @@ namespace SimpleDatabase.Parsing.Statements;
 public class SelectStatement : StatementDataManipulation
 {
     public IReadOnlyList<ResultColumn> Columns { get; }
-    public Table Table { get; }
+    public TableRef Table { get; }
     public Option<Expression> Where { get; }
     public IReadOnlyList<OrderExpression> Ordering { get; }
 
-    public SelectStatement(IReadOnlyList<ResultColumn> columns, Table table, Option<Expression> where, IReadOnlyList<OrderExpression> ordering)
+    public SelectStatement(IReadOnlyList<ResultColumn> columns, TableRef table, Option<Expression> where, IReadOnlyList<OrderExpression> ordering)
     {
         Columns = columns;
         Table = table;

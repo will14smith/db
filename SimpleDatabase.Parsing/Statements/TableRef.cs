@@ -2,12 +2,12 @@ using System;
 
 namespace SimpleDatabase.Parsing.Statements;
 
-public abstract class Table
+public abstract class TableRef
 {
     public abstract override bool Equals(object obj);
     public abstract override int GetHashCode();
 
-    public class TableName : Table, IEquatable<TableName>
+    public class TableName : TableRef, IEquatable<TableName>
     {
         public string Name { get; }
 

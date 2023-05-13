@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO.Abstractions;
-using System.Linq;
 using Antlr4.Runtime.Misc;
 using SimpleDatabase.CLI.Commands;
 using SimpleDatabase.Execution;
+using SimpleDatabase.Execution.Definitions;
 using SimpleDatabase.Execution.Transactions;
 using SimpleDatabase.Parsing;
 using SimpleDatabase.Parsing.Statements;
@@ -111,9 +111,6 @@ namespace SimpleDatabase.CLI
 
         private ExecuteStatementResponse ExecuteStatement(ITransaction transaction, string input)
         {
-            var planner = new Planner(_state.Database);
-            var planCompiler = new PlanCompiler(_state.Database);
-
             IReadOnlyCollection<Statement> statements;
             try
             {
@@ -123,23 +120,43 @@ namespace SimpleDatabase.CLI
             {
                 return new ExecuteStatementResponse.SyntaxError(ex.Message);
             }
-
-            var plans = statements.Select(planner.Plan);
-            var programs = plans.Select(planCompiler.Compile);
-
-            foreach (var program in programs)
+            
+            foreach (var statement in statements)
             {
-                var executor = new ProgramExecutor(program, _state.DatabaseManager, _state.TransactionManager);
-
-                foreach (var result in executor.Execute())
+                switch (statement)
                 {
-                    _output.WriteLine("(" + string.Join(", ", result) + ")");
+                    case StatementDataDefinition ddl: RunDdlStatement(ddl); break;
+                    case StatementDataManipulation dml: RunDmlStatement(dml); break;
+                
+                    default: throw new ArgumentOutOfRangeException(nameof(statement));
                 }
             }
 
             _output.WriteLine("Executed.");
 
             return new ExecuteStatementResponse.Success();
+            
+            void RunDdlStatement(StatementDataDefinition statement)
+            {
+                var executor = new DefinitionExecutor(_state.DatabaseManager);
+            
+                executor.Execute(statement);
+            }
+
+            void RunDmlStatement(StatementDataManipulation statement)
+            {
+                var planner = new Planner(_state.Database);
+                var plan = planner.Plan(statement);
+
+                var compiler = new PlanCompiler(_state.Database);
+                var program = compiler.Compile(plan);
+
+                var executor = new ProgramExecutor(program, _state.DatabaseManager, _state.TransactionManager);
+                foreach (var result in executor.Execute())
+                {
+                    _output.WriteLine("(" + string.Join(", ", result) + ")");
+                }
+            }
         }
 
         public void Dispose()

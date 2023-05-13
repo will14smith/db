@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\SimpleDatabase.Parsing\SimpleDatabase.Parsing.csproj" />
     <ProjectReference Include="..\SimpleDatabase.Schemas\SimpleDatabase.Schemas.csproj" />
     <ProjectReference Include="..\SimpleDatabase.Storage\SimpleDatabase.Storage.csproj" />
   </ItemGroup>
