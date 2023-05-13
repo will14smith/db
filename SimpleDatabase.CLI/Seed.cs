@@ -24,7 +24,7 @@ public class Seed
         using var databaseManager = new DatabaseManager(pager);
         databaseManager.EnsureInitialised();
         
-        var table = CreateTable(pager, "table", new[]
+        var table = CreateTable(pager, "tbl", new[]
         {
             new Column("id", new ColumnType.Integer()),
             new Column("name", new ColumnType.String(31)),

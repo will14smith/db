@@ -11,11 +11,11 @@ namespace SimpleDatabase.Parsing.UnitTests
         [Fact]
         public void SelectStarFromTable()
         {
-            var statement = ParseSelectStatement("SELECT * FROM table");
+            var statement = ParseSelectStatement("SELECT * FROM tbl");
 
             statement.Should()
                 .HaveColumns(new [] { new ResultColumn.Star(null) })
-                .And.HaveTable(new Table.TableName("table"))
+                .And.HaveTable(new Table.TableName("tbl"))
                 .And.NotHaveWhere()
                 .And.NotHaveOrdering();
         }   
@@ -23,7 +23,7 @@ namespace SimpleDatabase.Parsing.UnitTests
         [Fact]
         public void SelectColumn()
         {
-            var statement = ParseSelectStatement("SELECT abc FROM table");
+            var statement = ParseSelectStatement("SELECT abc FROM tbl");
 
             statement.Should()
                 .HaveColumns(new [] { new ResultColumn.Expression(new ColumnNameExpression("abc"), null),  });
@@ -32,7 +32,7 @@ namespace SimpleDatabase.Parsing.UnitTests
         [Fact]
         public void SelectMultipleColumns()
         {
-            var statement = ParseSelectStatement("SELECT abc, def FROM table");
+            var statement = ParseSelectStatement("SELECT abc, def FROM tbl");
 
             statement.Should()
                 .HaveColumns(new []
@@ -45,7 +45,7 @@ namespace SimpleDatabase.Parsing.UnitTests
         [Fact]
         public void SelectColumnWithAlias()
         {
-            var statement = ParseSelectStatement("SELECT abc as def, ghi FROM table");
+            var statement = ParseSelectStatement("SELECT abc as def, ghi FROM tbl");
 
             statement.Should()
                 .HaveColumns(new []
@@ -58,7 +58,7 @@ namespace SimpleDatabase.Parsing.UnitTests
         [Fact]
         public void WhereColumn()
         {
-            var statement = ParseSelectStatement("SELECT * FROM table WHERE abc");
+            var statement = ParseSelectStatement("SELECT * FROM tbl WHERE abc");
 
             statement.Should()
                 .HaveWhere(new ColumnNameExpression("abc"));
@@ -67,7 +67,7 @@ namespace SimpleDatabase.Parsing.UnitTests
         [Fact]
         public void WhereExpression()
         {
-            var statement = ParseSelectStatement("SELECT * FROM table WHERE abc = 1");
+            var statement = ParseSelectStatement("SELECT * FROM tbl WHERE abc = 1");
 
             statement.Should()
                 .HaveWhere(new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("abc"), new NumberLiteralExpression(1)));
@@ -76,7 +76,7 @@ namespace SimpleDatabase.Parsing.UnitTests
         [Fact]
         public void OrderByColumn()
         {
-            var statement = ParseSelectStatement("SELECT * FROM table ORDER BY abc");
+            var statement = ParseSelectStatement("SELECT * FROM tbl ORDER BY abc");
 
             statement.Should()
                 .HaveOrdering(new []
@@ -88,7 +88,7 @@ namespace SimpleDatabase.Parsing.UnitTests
         [Fact]
         public void OrderByDescending()
         {
-            var statement = ParseSelectStatement("SELECT * FROM table ORDER BY abc DESC");
+            var statement = ParseSelectStatement("SELECT * FROM tbl ORDER BY abc DESC");
 
             statement.Should()
                 .HaveOrdering(new []
@@ -99,7 +99,7 @@ namespace SimpleDatabase.Parsing.UnitTests
         [Fact]
         public void OrderByMultiple()
         {
-            var statement = ParseSelectStatement("SELECT * FROM table ORDER BY abc DESC, def");
+            var statement = ParseSelectStatement("SELECT * FROM tbl ORDER BY abc DESC, def");
 
             statement.Should()
                 .HaveOrdering(new []

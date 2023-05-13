@@ -14,7 +14,7 @@ namespace SimpleDatabase.Parsing
             var lexer = new SQLLexer(inputStream);
             var parser = new SQLParser(new CommonTokenStream(lexer))
             {
-                ErrorHandler = new BailErrorStrategy()
+                ErrorHandler = new BailErrorStrategy(),
             };
 
             var context = parser.program();

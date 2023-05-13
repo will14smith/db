@@ -45,8 +45,8 @@ namespace SimpleDatabase.CLI.UnitTests
         }, 0, ExitCode.Success)]
         [InlineData(new[]
         {
-            "INSERT INTO table VALUES(0, 'a', 'b')",
-            "SELECT * FROM table",
+            "INSERT INTO tbl VALUES(0, 'a', 'b')",
+            "SELECT * FROM tbl",
             ".exit"
         }, new[]
         {
@@ -66,10 +66,10 @@ namespace SimpleDatabase.CLI.UnitTests
         }, 0, ExitCode.Success)]
         [InlineData(new[]
         {
-            "INSERT INTO table VALUES(3, 'a', 'b3')",
-            "INSERT INTO table VALUES(1, 'a', 'b1')",
-            "INSERT INTO table VALUES(2, 'a', 'b2')",
-            "SELECT * FROM table ORDER BY id",
+            "INSERT INTO tbl VALUES(3, 'a', 'b3')",
+            "INSERT INTO tbl VALUES(1, 'a', 'b1')",
+            "INSERT INTO tbl VALUES(2, 'a', 'b2')",
+            "SELECT * FROM tbl ORDER BY id",
             ".exit"
         }, new[]
         {
@@ -81,9 +81,9 @@ namespace SimpleDatabase.CLI.UnitTests
         }, 3, ExitCode.Success)]
         [InlineData(new[]
         {
-            "INSERT INTO table VALUES(1, 'a', 'b')",
-            "INSERT INTO table VALUES(1, 'a', 'b')",
-            "SELECT * FROM table",
+            "INSERT INTO tbl VALUES(1, 'a', 'b')",
+            "INSERT INTO tbl VALUES(1, 'a', 'b')",
+            "SELECT * FROM tbl",
             ".exit"
         }, new[]
         {
@@ -148,10 +148,10 @@ namespace SimpleDatabase.CLI.UnitTests
             {
                 var x = 47 - i;
 
-                commands[i] = $"INSERT INTO table VALUES ({x}, 'user{x}', 'person{x}@example.com')";
+                commands[i] = $"INSERT INTO tbl VALUES ({x}, 'user{x}', 'person{x}@example.com')";
                 outputs.Add((i == 0 ? "db > " : "") + $"({x}, user{x}, person{x}@example.com)");
             }
-            commands[48] = "SELECT * FROM table";
+            commands[48] = "SELECT * FROM tbl";
             commands[49] = ".exit";
             outputs.Add("Executed.");
             outputs.Add("db >");
@@ -166,10 +166,10 @@ namespace SimpleDatabase.CLI.UnitTests
             var outputs = new List<string>();
             for (var i = 0; i < 6998; i++)
             {
-                commands[i] = $"INSERT INTO table VALUES({i}, 'user{i}', 'person{i}@example.com')";
+                commands[i] = $"INSERT INTO tbl VALUES({i}, 'user{i}', 'person{i}@example.com')";
                 outputs.Add((i == 0 ? "db > " : "") + $"({i}, user{i}, person{i}@example.com)");
             }
-            commands[6998] = "SELECT * FROM table";
+            commands[6998] = "SELECT * FROM tbl";
             commands[6999] = ".exit";
             outputs.Add("Executed.");
             outputs.Add("db >");
@@ -181,8 +181,8 @@ namespace SimpleDatabase.CLI.UnitTests
         public void DeleteAllItems()
         {
             var commands = new string[4];
-            commands[0] = "INSERT INTO table VALUES(0, 'user0', 'person0@example.com')";
-            commands[1] = "DELETE FROM table";
+            commands[0] = "INSERT INTO tbl VALUES(0, 'user0', 'person0@example.com')";
+            commands[1] = "DELETE FROM tbl";
             commands[2] = ".btree";
             commands[3] = ".exit";
 
@@ -202,12 +202,12 @@ namespace SimpleDatabase.CLI.UnitTests
         {
             var commands = new List<string>
             {
-                "INSERT INTO table VALUES (1, 'c', 'c@c.c')",
-                "INSERT INTO table VALUES (2, 'a', 'a@a.a')",
-                "INSERT INTO table VALUES (3, 'b', 'b1@b.b')",
-                "INSERT INTO table VALUES (4, 'a', 'b2@b.b')",
+                "INSERT INTO tbl VALUES (1, 'c', 'c@c.c')",
+                "INSERT INTO tbl VALUES (2, 'a', 'a@a.a')",
+                "INSERT INTO tbl VALUES (3, 'b', 'b1@b.b')",
+                "INSERT INTO tbl VALUES (4, 'a', 'b2@b.b')",
 
-                "SELECT * FROM table ORDER BY name, email DESC",
+                "SELECT * FROM tbl ORDER BY name, email DESC",
 
                 ".exit"
             };
@@ -229,12 +229,12 @@ namespace SimpleDatabase.CLI.UnitTests
         {
             var commands = new List<string>
             {
-                "INSERT INTO table VALUES (1, 'c', 'c@c.c')",
-                "INSERT INTO table VALUES (2, 'a', 'a@a.a')",
-                "INSERT INTO table VALUES (3, 'b', 'b1@b.b')",
-                "INSERT INTO table VALUES (4, 'a', 'b2@b.b')",
+                "INSERT INTO tbl VALUES (1, 'c', 'c@c.c')",
+                "INSERT INTO tbl VALUES (2, 'a', 'a@a.a')",
+                "INSERT INTO tbl VALUES (3, 'b', 'b1@b.b')",
+                "INSERT INTO tbl VALUES (4, 'a', 'b2@b.b')",
 
-                "SELECT * FROM table ORDER BY email ASC",
+                "SELECT * FROM tbl ORDER BY email ASC",
 
                 ".exit"
             };
@@ -258,10 +258,10 @@ namespace SimpleDatabase.CLI.UnitTests
             var commands = new List<string>
             {
                 ".begin",
-                "INSERT INTO table VALUES (1, 'c', 'c@c.c')",
+                "INSERT INTO tbl VALUES (1, 'c', 'c@c.c')",
                 ".commit",
 
-                "SELECT * FROM table ORDER BY name, email DESC",
+                "SELECT * FROM tbl ORDER BY name, email DESC",
 
                 ".exit"
             };
@@ -284,8 +284,8 @@ namespace SimpleDatabase.CLI.UnitTests
             var commands = new List<string>
             {
                 ".begin",
-                "INSERT INTO table VALUES (1, 'c', 'c@c.c')",
-                "SELECT * FROM table ORDER BY name, email DESC",
+                "INSERT INTO tbl VALUES (1, 'c', 'c@c.c')",
+                "SELECT * FROM tbl ORDER BY name, email DESC",
                 ".abort",
 
                 ".exit"
@@ -309,10 +309,10 @@ namespace SimpleDatabase.CLI.UnitTests
             var commands = new List<string>
             {
                 ".begin",
-                "INSERT INTO table VALUES (1, 'c', 'c@c.c')",
+                "INSERT INTO tbl VALUES (1, 'c', 'c@c.c')",
                 ".abort",
 
-                "SELECT * FROM table ORDER BY name, email DESC",
+                "SELECT * FROM tbl ORDER BY name, email DESC",
 
                 ".exit"
             };
