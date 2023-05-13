@@ -20,8 +20,9 @@ public partial class DefinitionExecutor
         var tableManager = _databaseManager.GetTableManagerFor(statement.TableName);
         var currentTableSchema = tableManager.Table;
         
-        var keyColumns = statement.Columns.Select(ToKey).ToList();
-        var index = new TableIndex(statement.IndexName, new KeyStructure(keyColumns, Array.Empty<Column>()));
+        var keyColumns = statement.KeyColumns.Select(ToKey).ToList();
+        var dataColumns = statement.DataColumns.Select(ToColumn).ToList();
+        var index = new TableIndex(statement.IndexName, new KeyStructure(keyColumns, dataColumns));
         
         var newTableSchema = new Table(currentTableSchema.Name, currentTableSchema.Columns, currentTableSchema.Indexes.Append(index).ToList());
         tableManager = _databaseManager.GetTableManagerFor(newTableSchema);
@@ -29,7 +30,8 @@ public partial class DefinitionExecutor
 
         return new DefinitionResult.Success("CREATE INDEX");
         
-        (Column, KeyOrdering) ToKey(IndexColumnDefinition column) => (currentTableSchema.Columns.First(x => x.Name == column.Name), ToKeyOrder(column.Order));
+        (Column, KeyOrdering) ToKey(IndexColumnDefinition column) => (ToColumn(column.Name), ToKeyOrder(column.Order));
+        Column ToColumn(string columnName) => currentTableSchema.Columns.First(x => x.Name == columnName);
         KeyOrdering ToKeyOrder(Order order) => order == Order.Ascending ? KeyOrdering.Ascending : KeyOrdering.Descending;
     }
 }

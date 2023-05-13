@@ -24,7 +24,8 @@ statement_ddl:
     );
     
 statement_ddl_create_table: K_CREATE K_TABLE (K_IF K_NOT K_EXISTS)? Table=table_name '(' Columns+=column_definition (',' Columns+=column_definition)* ')';
-statement_ddl_create_index: K_CREATE K_INDEX (K_IF K_NOT K_EXISTS)? Index=index_name K_ON Table=table_name '(' Columns+=index_column (',' Columns+=index_column)* ')';
+statement_ddl_create_index: K_CREATE K_INDEX (K_IF K_NOT K_EXISTS)? Index=index_name K_ON Table=table_name '(' Columns+=index_column (',' Columns+=index_column)* ')' statement_ddl_create_index_including?;
+statement_ddl_create_index_including: K_INCLUDING '(' Columns+=column_name (',' Columns+=column_name)* ')';
 
 // columns
 result_column
@@ -73,6 +74,7 @@ K_EXISTS: E X I S T S;
 K_EXPLAIN: E X P L A I N;
 K_FROM: F R O M;
 K_IF: I F;
+K_INCLUDING: I N C L U D I N G;
 K_INDEX: I N D E X;
 K_INSERT: I N S E R T;
 K_INTO: I N T O;

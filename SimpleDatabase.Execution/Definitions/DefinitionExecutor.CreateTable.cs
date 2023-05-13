@@ -24,21 +24,19 @@ public partial class DefinitionExecutor
         tableManager.EnsureInitialised();
 
         return new DefinitionResult.Success("CREATE TABLE");
+        
+        static Table ToTable(CreateTableStatement statement) =>
+            new(
+                statement.TableName,
+                statement.Columns.Select(ToColumn).ToList(),
+                Array.Empty<TableIndex>()
+            );
+        static Column ToColumn(ColumnDefinition def) => new(def.Name, ToColumnType(def.Type));
+        static ColumnType ToColumnType(ColumnDefinitionType def) =>
+            def.Name.ToLowerInvariant() switch
+            {
+                "int" => new ColumnType.Integer(),
+                "char" => new ColumnType.String(def.Arguments[0])
+            };
     }
-
-    private static Table ToTable(CreateTableStatement statement) =>
-        new(
-            statement.TableName,
-            statement.Columns.Select(ToColumn).ToList(),
-            Array.Empty<TableIndex>()
-        );
-
-    private static Column ToColumn(ColumnDefinition def) => new(def.Name, ToColumnType(def.Type));
-
-    private static ColumnType ToColumnType(ColumnDefinitionType def) =>
-        def.Name.ToLowerInvariant() switch
-        {
-            "int" => new ColumnType.Integer(),
-            "char" => new ColumnType.String(def.Arguments[0])
-        };
 }

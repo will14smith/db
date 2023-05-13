@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using SimpleDatabase.Parsing.Antlr;
 using SimpleDatabase.Parsing.Statements;
+using SimpleDatabase.Utils;
 
 namespace SimpleDatabase.Parsing.Visitors
 {
@@ -21,9 +23,12 @@ namespace SimpleDatabase.Parsing.Visitors
             var indexName = context.Table.IDENTIFIER().GetText();
             var tableName = context.Table.IDENTIFIER().GetText();
             var existsCheck = context.K_EXISTS() != null;
-            var columns = context._Columns.Select(HandleIndexColumnDefinition).ToList();
+            var keys = context._Columns.Select(HandleIndexColumnDefinition).ToList();
             
-            return new CreateIndexStatement(indexName, tableName, existsCheck, columns);
+            var includingContext = context.statement_ddl_create_index_including();
+            IReadOnlyList<string> including = includingContext == null ? Array.Empty<string>() : includingContext._Columns.Select(x => x.IDENTIFIER().GetText()).ToList();
+            
+            return new CreateIndexStatement(indexName, tableName, existsCheck, keys, including);
         }
         
         private static ColumnDefinition HandleColumnDefinition(SQLParser.Column_definitionContext context)
