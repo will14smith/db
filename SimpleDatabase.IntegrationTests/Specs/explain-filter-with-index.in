@@ -1,3 +1,0 @@
-﻿CREATE TABLE tbl (id int, name char(31));
-CREATE INDEX pk_tbl ON tbl (id);
-EXPLAIN SELECT * FROM tbl WHERE id = 2;

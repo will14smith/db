@@ -2,7 +2,7 @@
 CREATE INDEX
 === Plan ===
 projection (*)            
-  filter (id == 2)    
+  filter (name == 'Will')    
     scan (tbl)            
 
 === Program ===
@@ -17,14 +17,16 @@ L1_loop_start:
 	CUR.NEXT L2_loop_done 
 	STORE S0_cursor       
 	LOAD S0_cursor
-	COL 0                    
-    CONST.I 2                
+	COL 1                    
+    CONST.S Will             
     J.NOTEQUAL L1_loop_start 
     LOAD S0_cursor          
 	COL 0                 
 	LOAD S0_cursor        
 	COL 1                 
-	MK.ROW 2              
+	LOAD S0_cursor        
+	COL 2                 
+	MK.ROW 3              
 	YIELD                 
 	J L1_loop_start       
 L2_loop_done:          

@@ -34,29 +34,54 @@ namespace SimpleDatabase.Planning.Iterators
         {
             _input.GenerateMoveNext(loopStart, loopEnd);
 
-            CompilePredicate(loopStart);
+            CompilePredicate(loopStart, _predicate);
         }
 
-        private void CompilePredicate(ProgramLabel falseTarget)
+        private void CompilePredicate(ProgramLabel falseTarget, Expression expression)
         {
             var innerOutput = (IteratorOutput.Row)_input.Output;
 
-            switch (_predicate)
+            switch (expression)
             {
                 case BinaryExpression binary:
-                    CompileExpr(innerOutput, binary.Left).Load(_generator);
-                    CompileExpr(innerOutput, binary.Right).Load(_generator);
-
                     switch (binary.Operator)
                     {
-                        case BinaryOperator.Equal: _generator.Emit(new ConditionalJumpOperation(Comparison.NotEqual, falseTarget)); break;
-                        case BinaryOperator.NotEqual: _generator.Emit(new ConditionalJumpOperation(Comparison.Equal, falseTarget)); break;
+                        case BinaryOperator.Equal: 
+                            CompileExpr(innerOutput, binary.Left).Load(_generator);
+                            CompileExpr(innerOutput, binary.Right).Load(_generator);
+                            _generator.Emit(new ConditionalJumpOperation(Comparison.NotEqual, falseTarget)); 
+                            break;
+                        case BinaryOperator.NotEqual: 
+                            CompileExpr(innerOutput, binary.Left).Load(_generator);
+                            CompileExpr(innerOutput, binary.Right).Load(_generator);
+                            _generator.Emit(new ConditionalJumpOperation(Comparison.Equal, falseTarget)); 
+                            break;
+                        
+                        case BinaryOperator.BooleanAnd:
+                            CompilePredicate(falseTarget, binary.Left);
+                            CompilePredicate(falseTarget, binary.Right);
+                            
+                            break;
+                        
+                        case BinaryOperator.BooleanOr:
+                            // TODO this could be more efficient by getting the left predicate to jump to the true label and falling through to the false
+                            var leftFalseTarget = _generator.NewLabel("or_lhs_false");
+                            var leftTrueTarget = _generator.NewLabel("or_lhs_true");
+                            CompilePredicate(leftFalseTarget, binary.Left);
+                            _generator.Emit(new JumpOperation(leftTrueTarget));
+                            
+                            _generator.MarkLabel(leftFalseTarget);
+                            CompilePredicate(falseTarget, binary.Right);
+
+                            _generator.MarkLabel(leftTrueTarget);
+                            break;
+                        
                         default: throw new ArgumentOutOfRangeException(nameof(binary.Operator), $"Unhandled type: {binary.Operator}");
                     }
 
                     break;
 
-                default: throw new ArgumentOutOfRangeException(nameof(_predicate), $"Unhandled type: {_predicate.GetType().FullName}");
+                default: throw new ArgumentOutOfRangeException(nameof(expression), $"Unhandled type: {expression.GetType().FullName}");
             }
         }
 
@@ -74,7 +99,7 @@ namespace SimpleDatabase.Planning.Iterators
 
                 case StringLiteralExpression str:
                     return new ConstItem(str.Value);
-
+                
                 default: throw new ArgumentOutOfRangeException(nameof(expr), $"Unhandled type: {expr.GetType().FullName}");
             }
         }

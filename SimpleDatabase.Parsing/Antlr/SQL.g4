@@ -1,6 +1,6 @@
 grammar SQL;
 
-program: statement (';' statement)* ';'?;
+program: statement (';' statement)* ';'? EOF;
 
 // statements
 statement: statement_dml | statement_ddl;
@@ -53,6 +53,7 @@ expression
 	: literal_value # expression_literal
 	| (table_name '.')? column_name # expression_column
 	| expression Operator=('=' | '==' | '!=') expression # expression_equality
+	| expression Operator=(K_AND | K_OR) expression # expression_boolean
 	;
 
 literal_value
@@ -61,6 +62,7 @@ literal_value
 	;
 
 // keywords
+K_AND: A N D;
 K_AS: A S;
 K_ASC: A S C;
 K_BY: B Y;
@@ -76,6 +78,7 @@ K_INSERT: I N S E R T;
 K_INTO: I N T O;
 K_NOT: N O T;
 K_ON: O N;
+K_OR: O R;
 K_ORDER: O R D E R;
 K_SELECT: S E L E C T;
 K_TABLE: T A B L E;

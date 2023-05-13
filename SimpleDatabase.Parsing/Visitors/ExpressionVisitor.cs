@@ -35,13 +35,23 @@ namespace SimpleDatabase.Parsing.Visitors
 
             return new ColumnNameExpression(name);
         }
-
+        
         public override Expression VisitExpression_equality(SQLParser.Expression_equalityContext context)
         {
             var left = context.expression(0).Accept(this);
             var right = context.expression(1).Accept(this);
 
             var op = context.Operator.Text != "!=" ? BinaryOperator.Equal : BinaryOperator.NotEqual;
+
+            return new BinaryExpression(op, left, right);
+        }
+        
+        public override Expression VisitExpression_boolean(SQLParser.Expression_booleanContext context)
+        {
+            var left = context.expression(0).Accept(this);
+            var right = context.expression(1).Accept(this);
+
+            var op = context.Operator.Type == SQLParser.K_AND ? BinaryOperator.BooleanAnd : BinaryOperator.BooleanOr;
 
             return new BinaryExpression(op, left, right);
         }

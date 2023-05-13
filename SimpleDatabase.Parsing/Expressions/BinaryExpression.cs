@@ -22,6 +22,8 @@ namespace SimpleDatabase.Parsing.Expressions
             {
                 BinaryOperator.Equal => "==",
                 BinaryOperator.NotEqual => "!=",
+                BinaryOperator.BooleanAnd => "AND",
+                BinaryOperator.BooleanOr => "OR",
                 _ => Operator.ToString(),
             };
             
@@ -65,6 +67,9 @@ namespace SimpleDatabase.Parsing.Expressions
     public enum BinaryOperator
     {
         Equal,
-        NotEqual
+        NotEqual,
+        
+        BooleanAnd,
+        BooleanOr,
     }
 }
