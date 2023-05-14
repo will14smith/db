@@ -11,13 +11,13 @@ namespace SimpleDatabase.Planning.Iterators
 
         public class Row : IteratorOutput
         {
-            public Row(Item cursor, IReadOnlyList<Named> columns)
+            public Row(Item? cursor, IReadOnlyList<Named> columns)
             {
                 Cursor = cursor;
                 Columns = columns;
             }
 
-            public Item Cursor { get; }
+            public Item? Cursor { get; }
             public IReadOnlyList<Named> Columns { get; }
 
             public override Item Load(IOperationGenerator generator)

@@ -24,6 +24,7 @@ namespace SimpleDatabase.Planning.UnitTests
         public static IReadOnlyCollection<object[]> Plans = new List<object[]>
         {
             new object[] {"Constant", new Plan(new ConstantNode(
+                "c0",
                 new [] { "a", "b", },
                 new []
                 {
@@ -31,15 +32,17 @@ namespace SimpleDatabase.Planning.UnitTests
                     new Expression[] { new NumberLiteralExpression(2), new StringLiteralExpression("b") },
                 }
             )) },
-            new object[] {"Scan table", new Plan(new ScanTableNode("table")) },
-            new object[] {"Scan index", new Plan(new ScanIndexNode("table", "k_email")) },
-            new object[] {"Project *", new Plan(new ProjectionNode(new ScanTableNode("table"), new []{ new ResultColumn.Star(null) })) },
-            new object[] {"Project column", new Plan(new ProjectionNode(new ScanTableNode("table"), new[]{ new ResultColumn.Expression(new ColumnNameExpression("name"), null) })) },
-            new object[] {"Filter name='a'", new Plan(new FilterNode(new ScanTableNode("table"), new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a")))) },
+            new object[] {"Scan table", new Plan(new ScanTableNode("t0", "table")) },
+            new object[] {"Scan index", new Plan(new ScanIndexNode("t0", "table", "k_email")) },
+            new object[] {"Project *", new Plan(new ProjectionNode("p1", new ScanTableNode("t0", "table"), new []{ new ResultColumn.Star(null) })) },
+            new object[] {"Project column", new Plan(new ProjectionNode("p1", new ScanTableNode("t0", "table"), new[]{ new ResultColumn.Expression(new ColumnNameExpression("name"), null) })) },
+            new object[] {"Filter name='a'", new Plan(new FilterNode("f1", new ScanTableNode("t0", "table"), new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a")))) },
             new object[] {"Project & Filter", new Plan(
                 new ProjectionNode(
+                    "p2",
                     new FilterNode(
-                        new ScanTableNode("table"),
+                        "f1",
+                        new ScanTableNode("t0", "table"),
                         new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a"))
                     ),
                     new[] { new ResultColumn.Expression(new ColumnNameExpression("name"), null) }
@@ -47,8 +50,10 @@ namespace SimpleDatabase.Planning.UnitTests
             },
             new object[] {"Filter & Project", new Plan(
                 new FilterNode(
+                    "f2",
                     new ProjectionNode(
-                        new ScanTableNode("table"),
+                        "p1",
+                        new ScanTableNode("t0", "table"),
                         new[] { new ResultColumn.Expression(new ColumnNameExpression("name"), null) }
                     ),
                     new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a"))
@@ -56,7 +61,9 @@ namespace SimpleDatabase.Planning.UnitTests
             },
             new object[] {"Filter constant", new Plan(
                 new FilterNode(
+                    "f1",
                     new ConstantNode(
+                        "c0",
                         new [] { "a", "b", },
                         new []
                         {
@@ -67,11 +74,11 @@ namespace SimpleDatabase.Planning.UnitTests
                     new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("b"), new StringLiteralExpression("a"))
                 ))
             },
-            new object[] {"Insert", new Plan(new InsertNode("table", new ScanTableNode("table"))) },
-            new object[] {"Delete", new Plan(new DeleteNode(new ScanTableNode("table"))) },
-            new object[] {"Delete & filter", new Plan(new DeleteNode(new FilterNode(new ScanTableNode("table"), new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a"))))) },
-            new object[] {"Sort", new Plan(new SortNode(new ScanTableNode("table"), new [] { new OrderExpression(new ColumnNameExpression("name"), Order.Ascending) })) },
-            new object[] {"Sort & filter", new Plan(new SortNode(new FilterNode(new ScanTableNode("table"), new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a"))), new [] { new OrderExpression(new ColumnNameExpression("name"), Order.Ascending) })) },
+            new object[] {"Insert", new Plan(new InsertNode("i1", "table", new ScanTableNode("t0", "table"))) },
+            new object[] {"Delete", new Plan(new DeleteNode("d1", new ScanTableNode("t0", "table"))) },
+            new object[] {"Delete & filter", new Plan(new DeleteNode("d2", new FilterNode("f1", new ScanTableNode("t0", "table"), new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a"))))) },
+            new object[] {"Sort", new Plan(new SortNode("s1", new ScanTableNode("t0", "table"), new [] { new OrderExpression(new ColumnNameExpression("name"), Order.Ascending) })) },
+            new object[] {"Sort & filter", new Plan(new SortNode("s2", new FilterNode("f1", new ScanTableNode("t0", "table"), new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a"))), new [] { new OrderExpression(new ColumnNameExpression("name"), Order.Ascending) })) },
         };
 
         [Theory]

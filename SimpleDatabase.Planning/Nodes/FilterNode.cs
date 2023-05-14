@@ -7,7 +7,7 @@ namespace SimpleDatabase.Planning.Nodes
         public Node Input { get; }
         public Expression Predicate { get; }
 
-        public FilterNode(Node input, Expression predicate)
+        public FilterNode(string alias, Node input, Expression predicate) : base(alias)
         {
             Input = input;
             Predicate = predicate;

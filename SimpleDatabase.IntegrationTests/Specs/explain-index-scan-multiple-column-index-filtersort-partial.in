@@ -1,3 +1,0 @@
-﻿CREATE TABLE tbl (id int, name char(31), country char(2));
-CREATE INDEX ix_tbl_name ON tbl (name);
-EXPLAIN SELECT * FROM tbl ORDER BY name, country;

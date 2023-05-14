@@ -1,30 +1,29 @@
 ﻿CREATE TABLE
 CREATE INDEX
 === Plan ===              
-projection (<unnamed>)    
-  filter (name == 'Will') 
-    scan (tbl)            
+seek index (tbl.ix_tbl_name) 
+  : predicate (name == 'Will')
                           
 === Program ===           
 [                         
-	cursor                   
+  cursor                   
 ] {                       
-	CUR.OPEN.RT tbl          
-	CUR.FIRST                
-	STORE S0_cursor          
+  CUR.OPEN.RT tbl          
+  CUR.FIRST                
+  STORE S0_cursor          
 L1_loop_start:            
-	LOAD S0_cursor           
-	CUR.NEXT L2_loop_done    
-	STORE S0_cursor          
-	LOAD S0_cursor           
-	COL 1                    
-	CONST.S Will             
-	J.NOTEQUAL L1_loop_start 
-	LOAD S0_cursor           
-	COL 0                    
-	MK.ROW 1                 
-	YIELD                    
-	J L1_loop_start          
+  LOAD S0_cursor           
+  CUR.NEXT L2_loop_done    
+  STORE S0_cursor          
+  LOAD S0_cursor           
+  COL 1                    
+  CONST.S Will             
+  J.NOTEQUAL L1_loop_start 
+  LOAD S0_cursor           
+  COL 0                    
+  MK.ROW 1                 
+  YIELD                    
+  J L1_loop_start          
 L2_loop_done:             
-	FINISH                   
+  FINISH                   
 }                         

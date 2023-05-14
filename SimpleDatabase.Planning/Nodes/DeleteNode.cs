@@ -4,7 +4,7 @@
     {
         public Node Input { get; }
 
-        public DeleteNode(Node input)
+        public DeleteNode(string alias, Node input) : base(alias)
         {
             Input = input;
         }

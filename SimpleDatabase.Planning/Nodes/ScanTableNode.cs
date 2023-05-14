@@ -4,7 +4,7 @@
     {
         public string TableName { get; }
 
-        public ScanTableNode(string tableName)
+        public ScanTableNode(string alias, string tableName) : base(alias)
         {
             TableName = tableName;
         }

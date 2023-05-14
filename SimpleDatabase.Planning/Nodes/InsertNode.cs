@@ -5,7 +5,7 @@
         public string TableName { get; }
         public Node Input { get; }
 
-        public InsertNode(string tableName, Node input)
+        public InsertNode(string alias, string tableName, Node input) : base(alias)
         {
             TableName = tableName;
             Input = input;

@@ -8,7 +8,7 @@ namespace SimpleDatabase.Planning.Nodes
         public Node Input { get; }
         public IReadOnlyList<OrderExpression> Orderings { get; }
 
-        public SortNode(Node input, IReadOnlyList<OrderExpression> orderings)
+        public SortNode(string alias, Node input, IReadOnlyList<OrderExpression> orderings) : base(alias)
         {
             Input = input;
             Orderings = orderings;

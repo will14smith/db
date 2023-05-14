@@ -66,9 +66,44 @@ namespace SimpleDatabase.Execution.Values
 
         public ColumnValue Column(int columnIndex)
         {
-            // TODO check if column is in Index key or data
+            if(!_cursor.HasValue) throw new InvalidOperationException("Attempting to get heap without a cursor");
+            var cursor = _cursor.Value!;
+            
+            var page = _tableManager.Pager.Get(cursor.Page);
+            var leaf = LeafNode.Read(page, _treeSerializer);
 
-            return GetHeap().Column(columnIndex);
+            if (columnIndex == 0)
+            {
+                var cellValue = leaf.GetCellValue(cursor.CellNumber);
+
+                throw new NotImplementedException("get rowid");
+            }
+
+            // shift to account for rowid
+            columnIndex -= 1;
+            
+            var keyCount = Index.Structure.Keys.Count;
+            if (columnIndex < keyCount)
+            {
+                var cellKey = leaf.GetCellKey(cursor.CellNumber);
+
+                return cellKey.Values[columnIndex];
+            }
+
+            // unshift since rowid is actually in the data
+            columnIndex += 1;
+            columnIndex -= keyCount;
+            
+            if (columnIndex < Index.Structure.Data.Count + 1)
+            {
+                var cellValue = leaf.GetCellValue(cursor.CellNumber);
+
+                return cellValue.Values[columnIndex];
+            }
+
+            columnIndex += keyCount;
+
+            throw new Exception($"invalid column index: {columnIndex} for {Index.Name}");
         }
 
         public InsertTargetResult Insert(Row row)

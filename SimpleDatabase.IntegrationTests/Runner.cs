@@ -11,6 +11,7 @@ using SimpleDatabase.Parsing.Statements;
 using SimpleDatabase.Planning;
 using SimpleDatabase.Storage;
 using SimpleDatabase.Storage.Paging;
+using Xunit.Abstractions;
 
 namespace SimpleDatabase.IntegrationTests;
 
@@ -111,10 +112,13 @@ public class Runner
             {
                 for (var i = 0; i < row.Count; i++)
                 {
-                    output.Append(" " + row[i].PadRight(columnSizes[i]) + " ");
                     if (i + 1 < row.Count)
                     {
-                        output.Append('|');
+                        output.Append(row[i].PadRight(columnSizes[i]) + " | ");
+                    }
+                    else
+                    {
+                        output.Append(row[i].PadRight(columnSizes[i]));
                     }
                 }
 
@@ -122,6 +126,11 @@ public class Runner
             }
             
             transaction.Commit();
+            
+            if (statement is ExplainStatement { Execute: true } explain)
+            {
+                RunDmlStatement(explain.Statement);
+            }
         }
     }
 
@@ -149,41 +158,115 @@ public class Runner
 
     private void AssertEqualWithDiff(string expected, string actual)
     {
-        var diffBuilder = new InlineDiffBuilder(new Differ());
-        var diff = diffBuilder.BuildDiffModel(actual, expected);
+        var diffBuilder = new SideBySideDiffBuilder(new Differ());
+        var diff = diffBuilder.BuildDiffModel(expected, actual);
 
-        var output = new StringBuilder();
+        var outputA = new StringBuilder();
+        var outputANoFormatting = new StringBuilder();
+        var outputB = new StringBuilder();
+        var outputBNoFormatting = new StringBuilder();
 
-        foreach (var line in diff.Lines)
+        outputA.AppendLine("expected\n--------");
+        outputANoFormatting.AppendLine("expected\n--------");
+        outputB.AppendLine("actual\n------");
+        outputBNoFormatting.AppendLine("actual\n------");
+        
+        if (diff.OldText.HasDifferences || diff.NewText.HasDifferences)
         {
-            switch (line.Type)
+            foreach (var oldTextLine in diff.OldText.Lines)
             {
-                case ChangeType.Inserted:
-                    output.Append("+ ");
-                    break;
-                case ChangeType.Deleted:
-                    output.Append("- ");
-                    break;
-                default:
-                    output.Append("  ");
-                    break;
+                if (outputA.Length > 0)
+                {
+                    outputA.AppendLine();
+                    outputANoFormatting.AppendLine();
+                }
+                
+                if (oldTextLine.SubPieces.Any())
+                {
+                    foreach (var piece in oldTextLine.SubPieces)
+                    {
+                        AddText(outputA, outputANoFormatting, piece);
+                    }
+                }
+                else
+                {
+                    AddText(outputA, outputANoFormatting, oldTextLine);
+                }
+            }
+            
+            foreach (var newTextLine in diff.NewText.Lines)
+            {
+                if (outputB.Length > 0)
+                {
+                    outputB.AppendLine();
+                    outputBNoFormatting.AppendLine();
+                }
+                
+                if (newTextLine.SubPieces.Any())
+                {
+                    foreach (var piece in newTextLine.SubPieces)
+                    {
+                        AddText(outputB, outputBNoFormatting, piece);
+                    }
+                }
+                else
+                {
+                    AddText(outputB, outputBNoFormatting, newTextLine);
+                }
             }
 
-            output.AppendLine(line.Text);
-        }
+            var outputALines = outputA.ToString().ReplaceLineEndings().Split(Environment.NewLine).Select(x => x.TrimEnd()).ToList();
+            var outputANoFormattingLines = outputANoFormatting.ToString().ReplaceLineEndings().Split(Environment.NewLine).Select(x => x.TrimEnd()).ToList();
 
-        if (diff.Lines.Any(x => x.Type != ChangeType.Unchanged))
-            Assert.True(false, output.ToString());
+            var outputBLines = outputB.ToString().ReplaceLineEndings().Split(Environment.NewLine).Select(x => x.TrimEnd()).ToList();
+
+            var outputAMaxLength = outputANoFormattingLines.Max(x => x.Length);
+            var outputLines = outputALines.Zip(outputANoFormattingLines).Zip(outputBLines, (a, b) => a.First.PadRight(outputAMaxLength + a.First.Length - a.Second.Length) + "\x001b[0m  |  " + b);
+            
+            Assert.Fail(Environment.NewLine + string.Join(Environment.NewLine, outputLines));
+        }
+        
+        // if (diff.Lines.Any(x => x.Type != ChangeType.Unchanged))
+        //     Assert.True(false, output.ToString());
     }
 
+    private void AddText(StringBuilder output, StringBuilder noFormatting, DiffPiece piece)
+    {
+        switch (piece.Type)
+        {
+            case ChangeType.Unchanged:
+                output.Append("\x001b[0m");
+                break;
+            case ChangeType.Deleted:
+                output.Append("\x001b[31m");
+                break;
+            case ChangeType.Inserted:
+                output.Append("\x001b[32m");
+                break;
+            case ChangeType.Imaginary:
+                output.Append("\x001b[90m");
+                break;
+            case ChangeType.Modified:
+                output.Append("\x001b[33m");
+                break;
+            default:
+                output.Append("? ");
+                break;
+        }
+
+        output.Append(piece.Text);
+        noFormatting.Append(piece.Text);
+    }
 }
 
-public class TestCase
+public class TestCase : IXunitSerializable
 {
-    public string Name { get; }
-    public string Input { get; }
-    public string? Output { get; }
+    public string Name { get; private set; }
+    public string Input { get; private set; }
+    public string? Output { get; private set; }
 
+    public TestCase() { }
+    
     public TestCase(string name, string input, string? output)
     {
         Name = name;
@@ -192,4 +275,11 @@ public class TestCase
     }
 
     public override string ToString() => Name;
+    
+    public void Serialize(IXunitSerializationInfo info)
+    {
+        info.AddValue(nameof(Name), Name);
+    }
+    
+    public void Deserialize(IXunitSerializationInfo info) { }
 }

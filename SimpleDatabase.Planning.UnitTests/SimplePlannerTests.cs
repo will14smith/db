@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using SimpleDatabase.Parsing.Expressions;
 using SimpleDatabase.Parsing.Statements;
 using SimpleDatabase.Planning.Nodes;
@@ -33,17 +34,15 @@ namespace SimpleDatabase.Planning.UnitTests
         {
             var statement = new SelectStatement(
                 new List<ResultColumn> { new ResultColumn.Star(null) },
-                new Parsing.Statements.TableRef.TableName("table"),
+                new TableRef.TableName("table"),
                 Option.None<Expression>(),
-                new OrderExpression[0]
+                Array.Empty<OrderExpression>()
             );
             var planner = new Planner(_database);
 
             var plan = planner.Plan(statement);
 
-            var project = Assert.IsType<ProjectionNode>(plan.RootNode);
-            Assert.Single(project.Columns, x => x is ResultColumn.Star);
-            var scan = Assert.IsType<ScanTableNode>(project.Input);
+            var scan = Assert.IsType<ScanTableNode>(plan.RootNode);
             Assert.Equal("table", scan.TableName);
         }
 
@@ -76,17 +75,15 @@ namespace SimpleDatabase.Planning.UnitTests
         {
             var statement = new SelectStatement(
                 new List<ResultColumn> { new ResultColumn.Star(null) },
-                new Parsing.Statements.TableRef.TableName("table"),
+                new TableRef.TableName("table"),
                 Option.Some<Expression>(new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a"))),
-                new OrderExpression[0]
+                Array.Empty<OrderExpression>()
             );
             var planner = new Planner(_database);
 
             var plan = planner.Plan(statement);
 
-            var project = Assert.IsType<ProjectionNode>(plan.RootNode);
-            Assert.Single(project.Columns, x => x is ResultColumn.Star);
-            var filter = Assert.IsType<FilterNode>(project.Input);
+            var filter = Assert.IsType<FilterNode>(plan.RootNode);
             Assert.IsType<BinaryExpression>(filter.Predicate);
             var scan = Assert.IsType<ScanTableNode>(filter.Input);
             Assert.Equal("table", scan.TableName);
@@ -97,7 +94,7 @@ namespace SimpleDatabase.Planning.UnitTests
         {
             var statement = new SelectStatement(
                 new List<ResultColumn> { new ResultColumn.Star(null) },
-                new Parsing.Statements.TableRef.TableName("table"),
+                new TableRef.TableName("table"),
                 Option.None<Expression>(),
                 new[] { new OrderExpression(new ColumnNameExpression("name"), Order.Ascending) }
             );
@@ -107,9 +104,7 @@ namespace SimpleDatabase.Planning.UnitTests
 
             var sort = Assert.IsType<SortNode>(plan.RootNode);
             Assert.Single(sort.Orderings, x => x.Expression is ColumnNameExpression);
-            var project = Assert.IsType<ProjectionNode>(sort.Input);
-            Assert.Single(project.Columns, x => x is ResultColumn.Star);
-            var scan = Assert.IsType<ScanTableNode>(project.Input);
+            var scan = Assert.IsType<ScanTableNode>(sort.Input);
             Assert.Equal("table", scan.TableName);
         }
 
@@ -118,7 +113,7 @@ namespace SimpleDatabase.Planning.UnitTests
         {
             var statement = new SelectStatement(
                 new List<ResultColumn> { new ResultColumn.Star(null) },
-                new Parsing.Statements.TableRef.TableName("table"),
+                new TableRef.TableName("table"),
                 Option.None<Expression>(),
                 new[] { new OrderExpression(new ColumnNameExpression("email"), Order.Ascending) }
             );
@@ -126,11 +121,15 @@ namespace SimpleDatabase.Planning.UnitTests
 
             var plan = planner.Plan(statement);
 
-            var project = Assert.IsType<ProjectionNode>(plan.RootNode);
-            Assert.Single(project.Columns, x => x is ResultColumn.Star);
-            var scan = Assert.IsType<ScanIndexNode>(project.Input);
+            var join = Assert.IsType<NestedLoopJoinNode>(plan.RootNode);
+            Assert.Null(join.Predicate);
+            var scan = Assert.IsType<ScanIndexNode>(join.Outer);
             Assert.Equal("table", scan.TableName);
             Assert.Equal("k_email", scan.IndexName);
+            var projection = Assert.IsType<ProjectionNode>(join.Inner);
+            Assert.Equal(2, projection.Columns.Count);
+            var rowLookup = Assert.IsType<RowIdLookupNode>(projection.Input);
+            Assert.Equal("table", rowLookup.TableName);
         }
 
         [Fact]

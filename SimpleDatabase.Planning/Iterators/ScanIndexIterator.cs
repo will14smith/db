@@ -23,7 +23,7 @@ namespace SimpleDatabase.Planning.Iterators
             _index = index;
             _writable = writable;
 
-            _cursor = new SlotItem(_generator.NewSlot(new SlotDefinition("cursor")));
+            _cursor = new SlotItem(_generator.NewSlot(new SlotDefinition($"cursor_index_scan_{index.Name}")));
 
             Output = ComputeOutput();
         }
@@ -52,12 +52,22 @@ namespace SimpleDatabase.Planning.Iterators
         private IteratorOutput ComputeOutput()
         {
             var columns = new List<IteratorOutput.Named>();
-
-            for (var index = 0; index < _table.Columns.Count; index++)
+        
+            // column 0 is the rowid
+            var columnIndex = 1;
+        
+            foreach (var column in _index.Structure.Keys)
             {
-                var column = _table.Columns[index];
+                var name = new IteratorOutputName.TableColumn(_table.Name, column.Item1.Name);
+                var value = new ColumnItem(_cursor, columnIndex++);
+
+                columns.Add(new IteratorOutput.Named(name, value));
+            }
+        
+            foreach (var column in _index.Structure.Data)
+            {
                 var name = new IteratorOutputName.TableColumn(_table.Name, column.Name);
-                var value = new ColumnItem(_cursor, index);
+                var value = new ColumnItem(_cursor, columnIndex++);
 
                 columns.Add(new IteratorOutput.Named(name, value));
             }

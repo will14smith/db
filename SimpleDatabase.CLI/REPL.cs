@@ -156,6 +156,11 @@ namespace SimpleDatabase.CLI
                 {
                     _output.WriteLine("(" + string.Join(", ", result) + ")");
                 }
+
+                if (statement is ExplainStatement { Execute: true } explain)
+                {
+                    RunDmlStatement(explain.Statement);
+                }
             }
         }
 

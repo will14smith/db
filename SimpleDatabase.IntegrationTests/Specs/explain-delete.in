@@ -1,2 +1,3 @@
-﻿CREATE TABLE tbl (id int, name char(31));
-EXPLAIN DELETE FROM tbl WHERE id = 1;
+﻿CREATE TABLE tbl (id int, name char(31), country char(2));
+INSERT INTO tbl VALUES (1, 'Alan', 'GB'), (2, 'Betty', 'FR'), (3, 'Charles', 'DE'), (4, 'Donna', 'GR'), (5, 'Emma', 'GB'), (6, 'Will', 'GB'), (7, 'Yvonne', 'AU'), (8, 'Zach', 'US');
+EXPLAIN EXECUTE DELETE FROM tbl WHERE id = 1;

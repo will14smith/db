@@ -1,37 +1,38 @@
 ﻿CREATE TABLE
- === Plan ===                                  
- projection (*)                                
-   filter (name == 'Will' AND country == 'GB') 
-     scan (tbl)                                
-                                               
- === Program ===                               
- [                                             
- 	cursor                                       
- ] {                                           
- 	CUR.OPEN.RT tbl                              
- 	CUR.FIRST                                    
- 	STORE S0_cursor                              
- L1_loop_start:                                
- 	LOAD S0_cursor                               
- 	CUR.NEXT L2_loop_done                        
- 	STORE S0_cursor                              
- 	LOAD S0_cursor                               
- 	COL 1                                        
- 	CONST.S Will                                 
- 	J.NOTEQUAL L1_loop_start                     
- 	LOAD S0_cursor                               
- 	COL 2                                        
- 	CONST.S GB                                   
- 	J.NOTEQUAL L1_loop_start                     
- 	LOAD S0_cursor                               
- 	COL 0                                        
- 	LOAD S0_cursor                               
- 	COL 1                                        
- 	LOAD S0_cursor                               
- 	COL 2                                        
- 	MK.ROW 3                                     
- 	YIELD                                        
- 	J L1_loop_start                              
- L2_loop_done:                                 
- 	FINISH                                       
- }                                             
+=== Plan ===                                  
+f1 = filter 
+  : predicate (name == 'Will' AND country == 'GB') 
+  t0 = scan (tbl)                                
+                                              
+=== Program ===                               
+[                                             
+  cursor                                       
+] {                                           
+  CUR.OPEN.RT tbl                              
+  CUR.FIRST                                    
+  STORE S0_cursor                              
+L0_loop_start:                                
+  LOAD S0_cursor                               
+  CUR.NEXT L1_loop_done                        
+  STORE S0_cursor                              
+  LOAD S0_cursor                               
+  COL 1                                        
+  CONST.S Will                                 
+  J.NOTEQUAL L0_loop_start                     
+  LOAD S0_cursor                               
+  COL 2                                        
+  CONST.S GB                                   
+  J.NOTEQUAL L0_loop_start                     
+  LOAD S0_cursor                               
+  COL 0                                        
+  LOAD S0_cursor                               
+  COL 1                                        
+  LOAD S0_cursor                               
+  COL 2                                        
+  MK.ROW 3                                     
+  YIELD                                        
+  J L0_loop_start                              
+L1_loop_done:                                 
+  FINISH                                       
+}                                             
+6 | Will    | GB

@@ -1,4 +1,5 @@
 using System;
+using SimpleDatabase.Parsing.Expressions;
 
 namespace SimpleDatabase.Parsing.Statements;
 
@@ -92,7 +93,17 @@ public abstract class ResultColumn
 
         public override string ToString()
         {
-            return Alias ?? "<unnamed>";
+            if (Alias != null)
+            {
+                return Alias;
+            }
+
+            if (Value is ColumnNameExpression columnName)
+            {
+                return columnName.Name;
+            }
+            
+            return "<unnamed>";
         }
     }
 }

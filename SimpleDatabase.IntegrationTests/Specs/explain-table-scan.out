@@ -1,26 +1,35 @@
 ﻿CREATE TABLE
 === Plan ===
-projection (*)         
-  scan (tbl)           
+t0 = scan (tbl)           
 
 === Program ===
 [                      
-	cursor                
+  cursor                
 ] {                    
-	CUR.OPEN.RT tbl       
-	CUR.FIRST             
-	STORE S0_cursor       
-L1_loop_start:         
-	LOAD S0_cursor        
-	CUR.NEXT L2_loop_done 
-	STORE S0_cursor       
-	LOAD S0_cursor        
-	COL 0                 
-	LOAD S0_cursor        
-	COL 1                 
-	MK.ROW 2              
-	YIELD                 
-	J L1_loop_start       
-L2_loop_done:          
-	FINISH                
+  CUR.OPEN.RT tbl       
+  CUR.FIRST             
+  STORE S0_cursor       
+L0_loop_start:         
+  LOAD S0_cursor        
+  CUR.NEXT L1_loop_done 
+  STORE S0_cursor       
+  LOAD S0_cursor        
+  COL 0                 
+  LOAD S0_cursor        
+  COL 1   
+  LOAD S0_cursor        
+  COL 2                 
+  MK.ROW 3            
+  YIELD                 
+  J L0_loop_start       
+L1_loop_done:          
+  FINISH                
 }
+1 | Alan    | GB
+2 | Betty   | FR
+3 | Charles | DE
+4 | Donna   | GR
+5 | Emma    | GB
+6 | Will    | GB
+7 | Yvonne  | AU
+8 | Zach    | US

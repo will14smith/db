@@ -6,24 +6,24 @@ projection (*)
                                                                      
 === Program ===                                                      
 [                                                                    
-	cursor                                                              
+  cursor                                                              
 ] {                                                                  
-	CUR.OPEN.RI tbl.ix_tbl_name                                                 
-	CUR.FIRST                                                           
-	STORE S0_cursor                                                     
+  CUR.OPEN.RI tbl.ix_tbl_name                                                 
+  CUR.FIRST                                                           
+  STORE S0_cursor                                                     
 L1_loop_start:                                                       
-	LOAD S0_cursor                                                      
-	CUR.NEXT L2_loop_done                                               
-	STORE S0_cursor                                                     
-	LOAD S0_cursor                                                      
-	COL 0                                                               
-	LOAD S0_cursor                                                      
-	COL 1                                                               
-	LOAD S0_cursor                                                      
-	COL 2                                                               
-	MK.ROW 3                                                            
-	YIELD                                                               
-	J L1_loop_start                                                     
+  LOAD S0_cursor                                                      
+  CUR.NEXT L2_loop_done                                               
+  STORE S0_cursor                                                     
+  LOAD S0_cursor                                                      
+  COL 0                                                               
+  LOAD S0_cursor                                                      
+  COL 1                                                               
+  LOAD S0_cursor                                                      
+  COL 2                                                               
+  MK.ROW 3                                                            
+  YIELD                                                               
+  J L1_loop_start                                                     
 L2_loop_done:                                                        
-	FINISH                                                              
+  FINISH                                                              
 }                                                                    

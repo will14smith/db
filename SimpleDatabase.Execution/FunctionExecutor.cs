@@ -127,7 +127,7 @@ namespace SimpleDatabase.Execution
 
             if (!OperationExecutors.TryGetValue(key, out var executor))
             {
-                throw new Exception($"No executor found for {key}");
+                throw new Exception($"No executor found for {key} - {operation}");
             }
 
             return executor(this, state, operation);
@@ -157,6 +157,7 @@ namespace SimpleDatabase.Execution
             AddExecutor(executors, fexec => new OpenReadIndexOperationExecutor(fexec._databaseManager, fexec._txm));
             AddExecutor(executors, fexec => new OpenReadTableOperationExecutor(fexec._databaseManager, fexec._txm));
             AddExecutor(executors, fexec => new OpenWriteOperationExecutor(fexec._databaseManager, fexec._txm));
+            AddExecutor(executors, fexec => new SeekRowIdOperationExecutor(fexec._databaseManager, fexec._txm));
 
             // functions
             AddExecutor(executors, fexec => new CallCoroutineOperationExecutor(fexec._databaseManager, fexec._txm, fexec._program));

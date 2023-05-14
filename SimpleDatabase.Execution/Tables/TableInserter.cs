@@ -40,11 +40,8 @@ namespace SimpleDatabase.Execution.Tables
         {
             var key = index.Structure.Keys.Select(col => GetValue(col.Item1, row)).ToList();
 
-            var data = new List<ColumnValue>
-            {
-                new ColumnValue(heapKey)
-            };
-            key.AddRange(index.Structure.Data.Select(col => GetValue(col, row)));
+            var data = new List<ColumnValue> { new (heapKey) };
+            data.AddRange(index.Structure.Data.Select(col => GetValue(col, row)));
 
             return (new IndexKey(key), new IndexData(data));
         }

@@ -5,8 +5,9 @@ namespace SimpleDatabase.Parsing.Statements;
 public class ExplainStatement : StatementDataManipulation
 {
     public StatementDataManipulation Statement { get; }
+    public bool Execute { get; }
 
-    public ExplainStatement(StatementDataManipulation statement)
+    public ExplainStatement(StatementDataManipulation statement, bool execute)
     {
         if (statement is ExplainStatement)
         {
@@ -14,5 +15,6 @@ public class ExplainStatement : StatementDataManipulation
         }
 
         Statement = statement;
+        Execute = execute;
     }
 }

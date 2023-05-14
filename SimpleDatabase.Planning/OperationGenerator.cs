@@ -38,7 +38,7 @@ namespace SimpleDatabase.Planning
         public ProgramLabel NewLabel(string name)
         {
             // TODO track it
-            return new ProgramLabel(_slotCounter++, name);
+            return new ProgramLabel(_labelCounter++, name);
         }
 
         public void MarkLabel(ProgramLabel label)
@@ -56,6 +56,26 @@ namespace SimpleDatabase.Planning
             }
 
             _operations.Add(operation);
+        }
+
+        public void EmitNotImplemented(string message)
+        {
+            _operations.Add(new NotImplementedOperation(message));
+        }
+
+        private class NotImplementedOperation : IOperation
+        {
+            public string Message { get; }
+
+            public NotImplementedOperation(string message)
+            {
+                Message = message;
+            }
+
+            public override string ToString()
+            {
+                return $"TODO - {Message}";
+            }
         }
 
         public Function CreateFunction()

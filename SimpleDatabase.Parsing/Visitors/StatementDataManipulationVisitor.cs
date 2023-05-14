@@ -16,7 +16,7 @@ namespace SimpleDatabase.Parsing.Visitors
         
             if (context.K_EXPLAIN() != null)
             {
-                return new ExplainStatement(statement);
+                return new ExplainStatement(statement, context.K_EXECUTE() != null);
             }
         
             return statement;

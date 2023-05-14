@@ -1,38 +1,39 @@
 ﻿CREATE TABLE
 === Plan ===                                                    
-insert (tbl)                   
-  constant (id, name) (1 rows) 
+i1 = insert (tbl)                   
+  c0 = constant (1 rows)
+    : columns (id, name) 
                                                                 
 === Program ===                                                 
 [                                                               
-	item source handle                                             
-	item source current                                            
-	insert cursor                                                  
+  item source handle                                             
+  item source current                                            
+  insert cursor                                                  
 ] {                                                             
-	CO.SETUP C1 0                                                  
-	STORE S0_item_source_handle                                    
-	CUR.OPEN.W tbl                                                 
-	STORE S2_insert_cursor                                         
-L3_loop_start:                                                  
-	LOAD S0_item_source_handle                                     
-	CO.CALL L4_loop_done                                           
-	STORE S1_item_source_current                                   
-	LOAD S1_item_source_current                                    
-	COL 0                                                          
-	LOAD S1_item_source_current                                    
-	COL 1                                                          
-	MK.ROW 2                                                       
-	LOAD S2_insert_cursor                                          
-	INSERT                                                         
-	J L3_loop_start                                                
-L4_loop_done:                                                   
-	FINISH                                                         
+  CO.SETUP C1 0                                                  
+  STORE S0_item_source_handle                                    
+  CUR.OPEN.W tbl                                                 
+  STORE S2_insert_cursor                                         
+L0_loop_start:                                                  
+  LOAD S0_item_source_handle                                     
+  CO.CALL L1_loop_done                                           
+  STORE S1_item_source_current                                   
+  LOAD S1_item_source_current                                    
+  COL 0                                                          
+  LOAD S1_item_source_current                                    
+  COL 1                                                          
+  MK.ROW 2                                                       
+  LOAD S2_insert_cursor                                          
+  INSERT                                                         
+  J L0_loop_start                                                
+L1_loop_done:                                                   
+  FINISH                                                         
 }                                                               
 func C1:                                                        
 [                                                               
 ] {                                                             
-	CONST.I 1                                                      
-	CONST.S a                                                      
-	MK.ROW 2                                                       
-	RET                                                            
+  CONST.I 1                                                      
+  CONST.S a                                                      
+  MK.ROW 2                                                       
+  RET                                                            
 }                                                               

@@ -14,5 +14,6 @@ namespace SimpleDatabase.Planning
         void MarkLabel(ProgramLabel label);
         
         void Emit(IOperation operation);
+        void EmitNotImplemented(string message);
     }
 }

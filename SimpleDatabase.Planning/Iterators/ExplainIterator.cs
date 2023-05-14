@@ -6,7 +6,6 @@ using SimpleDatabase.Execution.Operations.Constants;
 using SimpleDatabase.Execution.Operations.Jumps;
 using SimpleDatabase.Parsing.Statements;
 using SimpleDatabase.Planning.Nodes;
-using SimpleDatabase.Schemas;
 
 namespace SimpleDatabase.Planning.Iterators;
 
@@ -47,40 +46,63 @@ public class ExplainIterator : IIterator
         switch (node)
         {
             case ConstantNode constantNode:
-                Yield($"{indent}constant ({string.Join(", ", constantNode.Columns)}) ({constantNode.Values.Count} rows)");
+                Yield($"{indent}{node.Alias} = constant ({constantNode.Values.Count} rows)");
+                Yield($"{indent}  : columns ({string.Join(", ", constantNode.Columns)})");
                 break;
             
             case ProjectionNode projectionNode:
-                Yield($"{indent}projection ({string.Join(", ", projectionNode.Columns)})");
+                Yield($"{indent}{node.Alias} = projection");
+                Yield($"{indent}  : columns ({string.Join(", ", projectionNode.Columns)})");
                 YieldNode(projectionNode.Input, $"{indent}  ");
                 break;
             
             case FilterNode filterNode:
-                Yield($"{indent}filter ({filterNode.Predicate})");
+                Yield($"{indent}{node.Alias} = filter");
+                Yield($"{indent}  : predicate ({filterNode.Predicate})");
                 YieldNode(filterNode.Input, $"{indent}  ");
                 break;
             
             case DeleteNode deleteNode:
-                Yield($"{indent}delete");
+                Yield($"{indent}{node.Alias} = delete");
                 YieldNode(deleteNode.Input, $"{indent}  ");
                 break;
 
             case InsertNode insertNode:
-                Yield($"{indent}insert ({insertNode.TableName})");
+                Yield($"{indent}{node.Alias} = insert ({insertNode.TableName})");
                 YieldNode(insertNode.Input, $"{indent}  ");
                 break;
             
             case ScanTableNode scanNode:
-                Yield($"{indent}scan ({scanNode.TableName})");
+                Yield($"{indent}{node.Alias} = scan ({scanNode.TableName})");
                 break;
             
             case ScanIndexNode scanNode:
-                Yield($"{indent}scan index ({scanNode.TableName}.{scanNode.IndexName})");
+                Yield($"{indent}{node.Alias} = scan index ({scanNode.TableName}.{scanNode.IndexName})");
                 break;
             
+            case SeekIndexNode seekNode:
+                Yield($"{indent}{node.Alias} = seek index ({seekNode.TableName}.{seekNode.IndexName})");
+                Yield($"{indent}  : predicate ({seekNode.SeekPredicate})");
+                break;
+
             case SortNode sortNode:
-                Yield($"{indent}sort ({string.Join("; ", sortNode.Orderings.Select(x => $"{(x.Order == Order.Ascending ? '+' : '-')}{x.Expression}"))})");
+                Yield($"{indent}{node.Alias} = sort ({string.Join("; ", sortNode.Orderings.Select(x => $"{(x.Order == Order.Ascending ? '+' : '-')}{x.Expression}"))})");
                 YieldNode(sortNode.Input, $"{indent}  ");
+                break;
+            
+            case NestedLoopJoinNode join:
+                Yield($"{indent}{node.Alias} = nested loop join");
+                if (join.Predicate != null)
+                {
+                    Yield($"{indent} : predicate ({join.Predicate})");
+                }
+                YieldNode(join.Outer, $"{indent}  ");
+                YieldNode(join.Inner, $"{indent}  ");
+                break;
+
+            case RowIdLookupNode lookup:
+                Yield($"{indent}{node.Alias} = rowid lookup ({lookup.TableName})");
+                Yield($"{indent}  : rowid ({lookup.RowId})");
                 break;
 
             default: 

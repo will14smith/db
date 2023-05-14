@@ -4,7 +4,7 @@ public class ExplainNode : Node
 {
     public Node Node { get; }
 
-    public ExplainNode(Node node)
+    public ExplainNode(string alias, Node node) : base(alias)
     {
         Node = node;
     }

@@ -6,7 +6,7 @@ program: statement (';' statement)* ';'? EOF;
 statement: statement_dml | statement_ddl;
 
 // dml statements
-statement_dml: (K_EXPLAIN)? 
+statement_dml: (K_EXPLAIN K_EXECUTE?)? 
 	( statement_dml_select
 	| statement_dml_insert
 	| statement_dml_delete
@@ -70,6 +70,7 @@ K_BY: B Y;
 K_CREATE: C R E A T E;
 K_DELETE: D E L E T E;
 K_DESC: D E S C;
+K_EXECUTE: E X E C U T E;
 K_EXISTS: E X I S T S;
 K_EXPLAIN: E X P L A I N;
 K_FROM: F R O M;

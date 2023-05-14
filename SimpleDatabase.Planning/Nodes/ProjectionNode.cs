@@ -8,7 +8,7 @@ namespace SimpleDatabase.Planning.Nodes
         public Node Input { get; }
         public IReadOnlyList<ResultColumn> Columns { get; }
 
-        public ProjectionNode(Node input, IReadOnlyList<ResultColumn> columns)
+        public ProjectionNode(string alias, Node input, IReadOnlyList<ResultColumn> columns) : base(alias)
         {
             Input = input;
             Columns = columns;
