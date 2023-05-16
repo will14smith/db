@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using SimpleDatabase.Execution;
+using SimpleDatabase.Execution.Operations.Columns;
+using SimpleDatabase.Execution.Operations.Constants;
 using SimpleDatabase.Execution.Operations.Cursors;
+using SimpleDatabase.Execution.Operations.Jumps;
 using SimpleDatabase.Parsing.Expressions;
 using SimpleDatabase.Planning.Items;
 using SimpleDatabase.Schemas;
@@ -39,18 +42,63 @@ public class SeekIndexIterator : IIterator
         {
             throw new NotImplementedException();
         }
-
+        
+        if (_predicate is not BinaryExpression { Operator: BinaryOperator.Equal, Left: ColumnNameExpression equalityColumn, Right: LiteralExpression equalityValue })
+        {
+            throw new NotImplementedException("TODO handle more complex seeks");
+        }
+        
+        if (_index.Structure.Keys[0].Item1.Name != equalityColumn.Name)
+        {
+            throw new NotImplementedException("assumption: equalityColumn is the left column of the index");
+        }
+        
+        _generator.Emit(equalityValue switch
+        {
+            NumberLiteralExpression value => new ConstIntOperation(value.Value),
+            StringLiteralExpression value => new ConstStringOperation(value.Value),
+            
+            _ => throw new NotImplementedException("TODO handle more complex seeks"),
+        });
+        
         _generator.Emit(new OpenReadIndexOperation(_table, _index));
-        _generator.EmitNotImplemented("seek to predicate start");
+        _generator.Emit(new SeekEqualOperation());
         _cursor.Store(_generator);
     }
-
+    
     public void GenerateMoveNext(ProgramLabel loopStart, ProgramLabel loopEnd)
     {
         _cursor.Load(_generator);
         _generator.Emit(new NextOperation(loopEnd));
-        _generator.EmitNotImplemented("check for predicate end");
         _cursor.Store(_generator);
+
+        CheckEnd(loopEnd);
+    }
+    
+    private void CheckEnd(ProgramLabel loopEnd)
+    {
+        if (_predicate is not BinaryExpression { Operator: BinaryOperator.Equal, Left: ColumnNameExpression equalityColumn, Right: LiteralExpression equalityValue })
+        {
+            throw new NotImplementedException("TODO handle more complex seeks");
+        }
+        
+        if (_index.Structure.Keys[0].Item1.Name != equalityColumn.Name)
+        {
+            throw new NotImplementedException("assumption: equalityColumn is the left column of the index");
+        }
+
+        _cursor.Load(_generator);
+        _generator.Emit(new ColumnOperation(1));
+        
+        _generator.Emit(equalityValue switch
+        {
+            NumberLiteralExpression value => new ConstIntOperation(value.Value),
+            StringLiteralExpression value => new ConstStringOperation(value.Value),
+            
+            _ => throw new NotImplementedException("TODO handle more complex seeks"),
+        });
+
+        _generator.Emit(new ConditionalJumpOperation(Comparison.NotEqual, loopEnd));
     }
 
     private IteratorOutput ComputeOutput()

@@ -1,24 +1,34 @@
 ﻿CREATE TABLE
 CREATE INDEX
 === Plan ===
-i0 = scan index (tbl.ix_tbl_name)
+p1 = projection
+  : columns (id)
+  i0 = scan index (tbl.ix_tbl_name)
 
 === Program ===
 [
-  cursor
+  cursor_index_scan_ix_tbl_name
 ] {
   CUR.OPEN.RI tbl.ix_tbl_name
   CUR.FIRST
-  STORE S0_cursor
-L1_loop_start:
-  LOAD S0_cursor
-  CUR.NEXT L2_loop_done
-  STORE S0_cursor
-  LOAD S0_cursor
-  COL 0
+  STORE S0_cursor_index_scan_ix_tbl_name
+L0_loop_start:
+  LOAD S0_cursor_index_scan_ix_tbl_name
+  CUR.NEXT L1_loop_done
+  STORE S0_cursor_index_scan_ix_tbl_name
+  LOAD S0_cursor_index_scan_ix_tbl_name
+  COL 2
   MK.ROW 1
   YIELD
-  J L1_loop_start
-L2_loop_done:
+  J L0_loop_start
+L1_loop_done:
   FINISH
 }
+1
+2
+3
+4
+5
+6
+7
+8

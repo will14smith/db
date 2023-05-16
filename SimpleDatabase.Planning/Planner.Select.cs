@@ -57,6 +57,11 @@ public class PlanBuilder
                     node = new SortNode($"s{aliasCounter++}", node, remainingOrdering);
                 }
 
+                if (columns is not [ResultColumn.Star { Table: null }])
+                {
+                    node = new ProjectionNode($"p{aliasCounter++}", node, columns);
+                }
+
                 yield return new Plan(node);
             }
         }
@@ -96,6 +101,11 @@ public class PlanBuilder
                         node = new FilterNode($"f{aliasCounter++}", node, remainingPredicate);
                     }
                     
+                    if (columns is not [ResultColumn.Star { Table: null }])
+                    {
+                        node = new ProjectionNode($"p{aliasCounter++}", node, columns);
+                    }
+
                     yield return new Plan(node);
                 }
             }

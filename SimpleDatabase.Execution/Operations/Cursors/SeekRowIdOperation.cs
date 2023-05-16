@@ -9,6 +9,6 @@ public class SeekRowIdOperation : IOperation
 {
     public override string ToString()
     {
-        return "SEEK.ROWID";
+        return "CUR.SEEK.ROWID";
     }
 }

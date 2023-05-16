@@ -157,6 +157,7 @@ namespace SimpleDatabase.Execution
             AddExecutor(executors, fexec => new OpenReadIndexOperationExecutor(fexec._databaseManager, fexec._txm));
             AddExecutor(executors, fexec => new OpenReadTableOperationExecutor(fexec._databaseManager, fexec._txm));
             AddExecutor(executors, fexec => new OpenWriteOperationExecutor(fexec._databaseManager, fexec._txm));
+            AddExecutor(executors, _ => new SeekEqualOperationExecutor());
             AddExecutor(executors, fexec => new SeekRowIdOperationExecutor(fexec._databaseManager, fexec._txm));
 
             // functions

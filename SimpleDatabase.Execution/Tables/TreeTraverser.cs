@@ -39,6 +39,16 @@ namespace SimpleDatabase.Execution.Tables
 
             return AdvanceUntilVisible(cursor);
         }
+        
+        public Cursor SearchCursor(IndexKey key)
+        {
+            var strategy = new TreeKeySearcher(key);
+            var seacher = new TreeSearcher(_tableManager.Pager, strategy, _index);
+
+            var cursor = seacher.FindCursor(_tableManager.GetIndexRootPageId(_index));
+
+            return AdvanceUntilVisible(cursor);
+        }
 
         public Cursor AdvanceCursor(Cursor cursor)
         {

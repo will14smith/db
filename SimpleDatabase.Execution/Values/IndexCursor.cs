@@ -50,6 +50,13 @@ namespace SimpleDatabase.Execution.Values
             return new IndexCursor(cursor, this);
         }
 
+        public ICursor Search(IndexKey key)
+        {
+            var cursor = _treeTraverser.SearchCursor(key);
+
+            return new IndexCursor(cursor, this);
+        }
+        
         public ICursor Next()
         {
             if(!_cursor.HasValue) throw new InvalidOperationException("Attempting to advance without a cursor");
