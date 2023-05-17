@@ -1,29 +1,29 @@
 ﻿CREATE TABLE
 === Plan ===
-t0 = scan (tbl)           
+t0 = scan (tbl)
 
 === Program ===
-[                      
-  cursor                
-] {                    
-  CUR.OPEN.RT tbl       
-  CUR.FIRST             
-  STORE S0_cursor       
-L0_loop_start:         
-  LOAD S0_cursor        
-  CUR.NEXT L1_loop_done 
-  STORE S0_cursor       
-  LOAD S0_cursor        
-  COL 0                 
-  LOAD S0_cursor        
-  COL 1   
-  LOAD S0_cursor        
-  COL 2                 
-  MK.ROW 3            
-  YIELD                 
-  J L0_loop_start       
-L1_loop_done:          
-  FINISH                
+[
+  cursor_table_scan_tbl
+] {
+  CUR.OPEN.RT tbl
+  CUR.FIRST
+  STORE S0_cursor_table_scan_tbl
+L0_loop_start:
+  LOAD S0_cursor_table_scan_tbl
+  CUR.NEXT L1_loop_done
+  STORE S0_cursor_table_scan_tbl
+  LOAD S0_cursor_table_scan_tbl
+  COL 0
+  LOAD S0_cursor_table_scan_tbl
+  COL 1
+  LOAD S0_cursor_table_scan_tbl
+  COL 2
+  MK.ROW 3
+  YIELD
+  J L0_loop_start
+L1_loop_done:
+  FINISH
 }
 1 | Alan    | GB
 2 | Betty   | FR

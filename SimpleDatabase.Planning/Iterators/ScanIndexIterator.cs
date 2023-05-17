@@ -53,9 +53,14 @@ namespace SimpleDatabase.Planning.Iterators
         {
             var columns = new List<IteratorOutput.Named>();
         
-            // column 0 is the rowid
-            var columnIndex = 1;
-        
+            var columnIndex = 0;
+            {
+                var name = new IteratorOutputName.TableColumn(_table.Name, "__rowid");
+                var value = new ColumnItem(_cursor, columnIndex++);
+
+                columns.Add(new IteratorOutput.Named(name, value));
+            }
+            
             foreach (var column in _index.Structure.Keys)
             {
                 var name = new IteratorOutputName.TableColumn(_table.Name, column.Item1.Name);

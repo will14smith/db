@@ -110,6 +110,8 @@ namespace SimpleDatabase.Execution.Values
                     throw new NotImplementedException($"Unsupported type: {result.GetType().Name}");
             }
         }
+        
+        public HeapCursor MoveToLocation(int heapLocation) => FromLocation(_tableManager, _txm, Writable, heapLocation);
 
         public static HeapCursor FromLocation(TableManager tableManager, ITransactionManager txm, bool writable, int heapLocation)
         {

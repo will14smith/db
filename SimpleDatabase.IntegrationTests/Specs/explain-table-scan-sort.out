@@ -1,58 +1,58 @@
 CREATE TABLE
-=== Plan ===     
-s1 = sort (-name)                   
-  t0 = scan (tbl)       
-          
-=== Program ===                                               
-[                                                             
-  cursor                                                       
-  sorter cursor                                                
-  sorter                                                       
-] {                                                           
-  SORTER.NEW -key0               
-  STORE S2_sorter                                              
-  CUR.OPEN.RT tbl                                              
-  CUR.FIRST                                                    
-  STORE S0_cursor                                              
-L2_sorter_insert_start:                                       
-  LOAD S0_cursor                                               
-  CUR.NEXT L3_sorter_insert_end                                
-  STORE S0_cursor                                              
-  LOAD S0_cursor                                               
-  COL 1                                                        
-  LOAD S0_cursor                                               
-  COL 0                                                        
-  LOAD S0_cursor                                               
-  COL 1                                                        
-  LOAD S0_cursor                                               
-  COL 2                                                        
-  MK.ROW 4                                                     
-  LOAD S2_sorter                                               
-  INSERT                                                       
-  J L2_sorter_insert_start                                     
-L3_sorter_insert_end:                                         
-  LOAD S2_sorter                                               
-  SORTER.SORT                                                  
-  LOAD S2_sorter                                               
-  SORTER.CUR                                                   
-  CUR.FIRST                                                    
-  STORE S1_sorter_cursor                                       
-L0_loop_start:                                                
-  LOAD S1_sorter_cursor                                        
-  CUR.NEXT L1_loop_done                                        
-  STORE S1_sorter_cursor                                       
-  LOAD S1_sorter_cursor                                        
-  COL 1                                                        
-  LOAD S1_sorter_cursor                                        
-  COL 2                                                        
-  LOAD S1_sorter_cursor                                        
-  COL 3                                                        
-  MK.ROW 3                                                     
-  YIELD                                                        
-  J L0_loop_start                                              
-L1_loop_done:                                                 
-  FINISH                                                       
-}                                                             
+=== Plan ===
+s1 = sort (-name)
+  t0 = scan (tbl)
+
+=== Program ===
+[
+  cursor_table_scan_tbl
+  sorter cursor
+  sorter
+] {
+  SORTER.NEW -key0
+  STORE S2_sorter
+  CUR.OPEN.RT tbl
+  CUR.FIRST
+  STORE S0_cursor_table_scan_tbl
+L2_sorter_insert_start:
+  LOAD S0_cursor_table_scan_tbl
+  CUR.NEXT L3_sorter_insert_end
+  STORE S0_cursor_table_scan_tbl
+  LOAD S0_cursor_table_scan_tbl
+  COL 1
+  LOAD S0_cursor_table_scan_tbl
+  COL 0
+  LOAD S0_cursor_table_scan_tbl
+  COL 1
+  LOAD S0_cursor_table_scan_tbl
+  COL 2
+  MK.ROW 4
+  LOAD S2_sorter
+  INSERT
+  J L2_sorter_insert_start
+L3_sorter_insert_end:
+  LOAD S2_sorter
+  SORTER.SORT
+  LOAD S2_sorter
+  SORTER.CUR
+  CUR.FIRST
+  STORE S1_sorter_cursor
+L0_loop_start:
+  LOAD S1_sorter_cursor
+  CUR.NEXT L1_loop_done
+  STORE S1_sorter_cursor
+  LOAD S1_sorter_cursor
+  COL 1
+  LOAD S1_sorter_cursor
+  COL 2
+  LOAD S1_sorter_cursor
+  COL 3
+  MK.ROW 3
+  YIELD
+  J L0_loop_start
+L1_loop_done:
+  FINISH
+}
 8 | Zach    | US
 7 | Yvonne  | AU
 6 | Will    | GB

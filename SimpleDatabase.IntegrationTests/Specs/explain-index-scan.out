@@ -1,36 +1,59 @@
 ﻿CREATE TABLE
 CREATE INDEX
 === Plan ===
-nested loop join
-  seek index (tbl.ix_tbl_name) 
-    : predicate (name == 'Will')
-  row lookup (tbl)
-    : predicate rowid(outer)
+p4 = projection
+  : columns (id, name, country)
+  j3 = nested loop join
+    i0 = seek index (tbl.ix_tbl_name)
+      : predicate (name == 'Will')
+    p2 = projection
+      : columns (id, country)
+      t1 = rowid lookup (tbl)
+        : rowid (i0[0])
 
 === Program ===
-[                      
-  cursor                
-] {                    
-  CUR.OPEN.RT tbl       
-  CUR.FIRST             
-  STORE S0_cursor       
-L1_loop_start:         
-  LOAD S0_cursor        
-  CUR.NEXT L2_loop_done 
-  STORE S0_cursor       
-  LOAD S0_cursor
-  COL 1                    
-    CONST.S Will             
-    J.NOTEQUAL L1_loop_start 
-    LOAD S0_cursor          
-  COL 0                 
-  LOAD S0_cursor        
-  COL 1                 
-  LOAD S0_cursor        
-  COL 2                 
-  MK.ROW 3              
-  YIELD                 
-  J L1_loop_start       
-L2_loop_done:          
-  FINISH                
+[
+  cursor_index_seek_ix_tbl_name
+  cursor_row_id_tbl
+  once_row_id_tbl
+] {
+  CONST.S Will
+  CUR.OPEN.RI tbl.ix_tbl_name
+  CUR.SEEK.EQ
+  STORE S0_cursor_index_seek_ix_tbl_name
+L0_loop_start:
+  LOAD S0_cursor_index_seek_ix_tbl_name
+  CUR.NEXT L1_loop_done
+  STORE S0_cursor_index_seek_ix_tbl_name
+  LOAD S0_cursor_index_seek_ix_tbl_name
+  COL 1
+  CONST.S Will
+  J.NOTEQUAL L1_loop_done
+  CONST.I 0
+  STORE S2_once_row_id_tbl
+  LOAD S0_cursor_index_seek_ix_tbl_name
+  COL 0
+  CUR.OPEN.RT tbl
+  CUR.SEEK.ROWID
+  STORE S1_cursor_row_id_tbl
+  CONST.I 1
+  LOAD S2_once_row_id_tbl
+  J.EQUAL L1_loop_done
+  CONST.I 1
+  STORE S2_once_row_id_tbl
+  LOAD S1_cursor_row_id_tbl
+  CUR.NEXT L1_loop_done
+  STORE S1_cursor_row_id_tbl
+  LOAD S1_cursor_row_id_tbl
+  COL 0
+  LOAD S0_cursor_index_seek_ix_tbl_name
+  COL 1
+  LOAD S1_cursor_row_id_tbl
+  COL 2
+  MK.ROW 3
+  YIELD
+  J L0_loop_start
+L1_loop_done:
+  FINISH
 }
+6 | Will | GB

@@ -21,7 +21,7 @@ namespace SimpleDatabase.Planning.Iterators
             _table = table;
             _writable = writable;
 
-            _cursor = new SlotItem(_generator.NewSlot(new SlotDefinition("cursor")));
+            _cursor = new SlotItem(_generator.NewSlot(new SlotDefinition($"cursor_table_scan_{table.Name}")));
 
             Output = ComputeOutput();
         }

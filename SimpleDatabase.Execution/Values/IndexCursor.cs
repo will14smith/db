@@ -83,7 +83,7 @@ namespace SimpleDatabase.Execution.Values
             {
                 var cellValue = leaf.GetCellValue(cursor.CellNumber);
 
-                throw new NotImplementedException("get rowid");
+                return cellValue.Values[0];
             }
 
             // shift to account for rowid

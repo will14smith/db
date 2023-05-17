@@ -25,7 +25,8 @@ namespace SimpleDatabase.Planning
 
             var generator = program.NewFunction();
 
-            var iter = Compile(plan.RootNode, generator, false);
+            var scope = Scope.Initial;
+            var iter = Compile(plan.RootNode, generator, scope, false);
 
             var start = generator.NewLabel("loop start");
             var done = generator.NewLabel("loop done");
@@ -52,7 +53,7 @@ namespace SimpleDatabase.Planning
             generator.Emit(new YieldOperation());
         }
 
-        private IIterator Compile(Node node, IOperationGenerator generator, bool writable)
+        private IIterator Compile(Node node, IOperationGenerator generator, Scope scope, bool writable)
         {
             switch (node)
             {
@@ -60,15 +61,25 @@ namespace SimpleDatabase.Planning
                 case ScanTableNode scan: return new ScanTableIterator(generator, _database.GetTable(scan.TableName), writable);
                 case ScanIndexNode scan: { var table = _database.GetTable(scan.TableName); return new ScanIndexIterator(generator, table, table.Indexes.Single(x => x.Name == scan.IndexName), writable); }
                 case SeekIndexNode seek: return new SeekIndexIterator(generator, _database.GetTable(seek.TableName), seek.Index, seek.SeekPredicate, writable);
-                case ProjectionNode projection: return new ProjectionIterator(Compile(projection.Input, generator, writable), projection.Columns);
-                case FilterNode filter: return new FilterIterator(generator, Compile(filter.Input, generator, writable), filter.Predicate);
-                case InsertNode insert: return new InsertIterator(generator, Compile(insert.Input, generator, writable), _database.GetTable(insert.TableName));
-                case DeleteNode delete: return new DeleteIterator(generator, Compile(delete.Input, generator, true));
-                case SortNode sort: return new SortIterator(generator, Compile(sort.Input, generator, writable), sort.Orderings);
+                case ProjectionNode projection: return new ProjectionIterator(Compile(projection.Input, generator, scope, writable), projection.Columns);
+                case FilterNode filter: return new FilterIterator(generator, Compile(filter.Input, generator, scope, writable), filter.Predicate);
+                case InsertNode insert: return new InsertIterator(generator, Compile(insert.Input, generator, scope, writable), _database.GetTable(insert.TableName));
+                case DeleteNode delete: return new DeleteIterator(generator, Compile(delete.Input, generator, scope, true));
+                case SortNode sort: return new SortIterator(generator, Compile(sort.Input, generator, scope, writable), sort.Orderings);
                 case ExplainNode explain: return new ExplainIterator(generator, explain.Node, new PlanCompiler(_database).Compile(new Plan(explain.Node)));
 
-                case NestedLoopJoinNode join: return new NestedLoopJoinIterator(generator, Compile(join.Outer, generator, writable), Compile(join.Inner, generator, writable), join.Predicate);
-                case RowIdLookupNode lookup: return new RowIdLookupIterator(generator, _database.GetTable(lookup.TableName), lookup.RowId);
+                case NestedLoopJoinNode join:
+                {
+                    var outerIterator = Compile(join.Outer, generator, scope, writable);
+
+                    var innerScope = scope.Push();
+                    innerScope.Set(new ScopeVariable.Named(join.Outer.Alias), outerIterator.Output);
+                    
+                    var innerIterator = Compile(join.Inner, generator, innerScope, writable);
+                    
+                    return new NestedLoopJoinIterator(generator, outerIterator, innerIterator, join.Predicate);
+                }
+                case RowIdLookupNode lookup: return new RowIdLookupIterator(generator, scope, _database.GetTable(lookup.TableName), lookup.RowId);
                 
                 default: throw new ArgumentOutOfRangeException(nameof(node), $"Unhandled type: {node.GetType().FullName}");
             }

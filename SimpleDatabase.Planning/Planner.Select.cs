@@ -13,6 +13,7 @@ public class PlanBuilder
     public static IEnumerable<Plan> EnumeratePlans(Table table, IReadOnlyList<ResultColumn> columns, Expression? predicate, IReadOnlyList<OrderExpression> ordering)
     {
         var terms = predicate == null? new List<Expression>() : PredicateToTerms(predicate);
+        var projectionFields = ProjectionFields(table, columns).ToHashSet();
         var fields = RequiredFields(table, columns, predicate, ordering).ToHashSet();
         
         foreach (var tableIndex in table.Indexes)
@@ -57,11 +58,8 @@ public class PlanBuilder
                     node = new SortNode($"s{aliasCounter++}", node, remainingOrdering);
                 }
 
-                if (columns is not [ResultColumn.Star { Table: null }])
-                {
-                    node = new ProjectionNode($"p{aliasCounter++}", node, columns);
-                }
-
+                node = new ProjectionNode($"p{aliasCounter++}", node, projectionFields.Select(x => new ResultColumn.Expression(new ColumnNameExpression(x), x)).ToList());
+                
                 yield return new Plan(node);
             }
         }
@@ -101,10 +99,7 @@ public class PlanBuilder
                         node = new FilterNode($"f{aliasCounter++}", node, remainingPredicate);
                     }
                     
-                    if (columns is not [ResultColumn.Star { Table: null }])
-                    {
-                        node = new ProjectionNode($"p{aliasCounter++}", node, columns);
-                    }
+                    node = new ProjectionNode($"p{aliasCounter++}", node, projectionFields.Select(x => new ResultColumn.Expression(new ColumnNameExpression(x), x)).ToList());
 
                     yield return new Plan(node);
                 }
@@ -162,24 +157,7 @@ public class PlanBuilder
     
     private static IEnumerable<string> RequiredFields(Table table, IEnumerable<ResultColumn> columns, Expression? predicate, IReadOnlyCollection<OrderExpression> ordering)
     {
-        var fields = new HashSet<string>();
-
-        foreach (var column in columns)
-        {
-            switch (column)
-            {
-                case ResultColumn.Expression expression:
-                    fields.UnionWith(RequiredFields(expression.Value));
-                    break;
-                    
-                case ResultColumn.Star:
-                    fields.UnionWith(table.Columns.Select(x => x.Name));
-                    break;
-                
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(column));
-            }
-        }
+        var fields = ProjectionFields(table, columns).ToHashSet();
 
         if (predicate != null)
         {
@@ -191,6 +169,30 @@ public class PlanBuilder
             fields.UnionWith(RequiredFields(order.Expression));
         }
         
+        return fields;
+    }
+
+    private static IEnumerable<string> ProjectionFields(Table table, IEnumerable<ResultColumn> columns)
+    {
+        var fields = new HashSet<string>();
+
+        foreach (var column in columns)
+        {
+            switch (column)
+            {
+                case ResultColumn.Expression expression:
+                    fields.UnionWith(RequiredFields(expression.Value));
+                    break;
+
+                case ResultColumn.Star:
+                    fields.UnionWith(table.Columns.Select(x => x.Name));
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(column));
+            }
+        }
+
         return fields;
     }
 
