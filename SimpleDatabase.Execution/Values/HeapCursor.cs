@@ -95,13 +95,16 @@ namespace SimpleDatabase.Execution.Values
 
         public DeleteTargetResult Delete()
         {
+            // find next cursor
+            var next = Next();
+
             var deleter = new TableDeleter(_tableManager, _txm);
             var result = deleter.Delete(this);
 
             switch (result)
             {
                 case DeleteResult.Success _:
-                    throw new NotImplementedException("Figure out next key");
+                    return new DeleteTargetResult.Success(next);
                     
                 case DeleteResult.KeyNotFound _:
                     throw new NotImplementedException("TODO error handling!");
