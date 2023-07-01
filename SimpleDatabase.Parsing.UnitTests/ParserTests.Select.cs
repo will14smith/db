@@ -15,7 +15,7 @@ namespace SimpleDatabase.Parsing.UnitTests
 
             statement.Should()
                 .HaveColumns(new [] { new ResultColumn.Star(null) })
-                .And.HaveTable(new TableRef.TableName("tbl"))
+                .And.HaveTable(new TableAlias("tbl"))
                 .And.NotHaveWhere()
                 .And.NotHaveOrdering();
         }   

@@ -233,7 +233,7 @@ public partial class Planner
 {
     private Plan PlanSelect(SelectStatement select)
     {
-        var tableName = ((TableRef.TableName)select.Table).Name;
+        var tableName = select.Table.Name;
         var table = _database.GetTable(tableName);
 
         return PlanBuilder.EnumeratePlans(table, select.Columns, select.Where.Value, select.Ordering).First();

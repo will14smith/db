@@ -1,4 +1,5 @@
-﻿using SimpleDatabase.Parsing.Antlr;
+﻿using System;
+using SimpleDatabase.Parsing.Antlr;
 using SimpleDatabase.Parsing.Expressions;
 
 namespace SimpleDatabase.Parsing.Visitors
@@ -31,9 +32,10 @@ namespace SimpleDatabase.Parsing.Visitors
 
         public override Expression VisitExpression_column(SQLParser.Expression_columnContext context)
         {
+            var table = context.table_name()?.GetText();
             var name = context.column_name().GetText();
 
-            return new ColumnNameExpression(name);
+            return new ColumnNameExpression(table, name);
         }
         
         public override Expression VisitExpression_equality(SQLParser.Expression_equalityContext context)

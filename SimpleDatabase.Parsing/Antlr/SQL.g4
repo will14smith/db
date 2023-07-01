@@ -12,7 +12,7 @@ statement_dml: (K_EXPLAIN K_EXECUTE?)?
 	| statement_dml_delete
 	);
 
-statement_dml_select: K_SELECT Columns+=result_column (',' Columns+=result_column)* K_FROM Table=table_name (K_WHERE Where=expression)? (K_ORDER K_BY Ordering+=ordering_term (',' Ordering+=ordering_term)*)?;
+statement_dml_select: K_SELECT Columns+=result_column (',' Columns+=result_column)* K_FROM Table=table_from (K_WHERE Where=expression)? (K_ORDER K_BY Ordering+=ordering_term (',' Ordering+=ordering_term)*)?;
 statement_dml_insert: K_INSERT K_INTO Table=table_name ('(' Columns+=column_name (',' Columns+=column_name)* ')')? K_VALUES Values+=statement_dml_insert_value (',' Values+=statement_dml_insert_value)*;
 statement_dml_insert_value: '(' Values+=expression (',' Values+=expression)* ')';
 statement_dml_delete: K_DELETE K_FROM Table=table_name (K_WHERE Where=expression)?;
@@ -45,6 +45,8 @@ column_type
     ;
 
 // tables
+table_from: table=table_name K_AS? alias=table_name?; 
+
 table_name: IDENTIFIER;
 index_name: IDENTIFIER;
 index_column: column_name (K_ASC | K_DESC)?;

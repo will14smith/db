@@ -90,9 +90,12 @@ namespace SimpleDatabase.Parsing.Visitors
             }
         }
         
-        private static TableRef HandleTable(SQLParser.Table_nameContext context)
+        private static TableAlias HandleTable(SQLParser.Table_fromContext context)
         {
-            return new TableRef.TableName(context.IDENTIFIER().GetText());
+            var name = context.table.IDENTIFIER().GetText();
+            var alias = context.alias?.IDENTIFIER().GetText() ?? name;
+
+            return new TableAlias(name, alias);
         }
     }
 }

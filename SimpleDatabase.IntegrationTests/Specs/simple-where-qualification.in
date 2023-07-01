@@ -3,4 +3,4 @@ CREATE INDEX pk_tbl ON tbl (id);
 INSERT INTO tbl (id, name) VALUES (1, 'a');
 INSERT INTO tbl (id, name) VALUES (2, 'b');
 INSERT INTO tbl (id, name) VALUES (3, 'c');
-SELECT * FROM tbl t WHERE t.id = 2;
+SELECT * FROM tbl AS t WHERE t.id = 2;

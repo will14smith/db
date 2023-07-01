@@ -4,15 +4,19 @@ namespace SimpleDatabase.Parsing.Expressions
 {
     public class ColumnNameExpression : Expression, IEquatable<ColumnNameExpression>
     {
+        public string? Table { get; }
         public string Name { get; }
 
-        public ColumnNameExpression(string name)
+        public ColumnNameExpression(string name) : this(null, name) { }
+        public ColumnNameExpression(string? table, string name)
         {
+            Table = table;
             Name = name;
         }
 
         public override string ToString()
         {
+            if (Table != null) return $"{Table}.{Name}";
             return Name;
         }
 
@@ -20,7 +24,8 @@ namespace SimpleDatabase.Parsing.Expressions
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return string.Equals(Name, other.Name, StringComparison.OrdinalIgnoreCase);
+            return string.Equals(Table, other.Table, StringComparison.OrdinalIgnoreCase) &&
+                   string.Equals(Name, other.Name, StringComparison.OrdinalIgnoreCase);
         }
 
         public override bool Equals(object obj)
@@ -30,7 +35,7 @@ namespace SimpleDatabase.Parsing.Expressions
 
         public override int GetHashCode()
         {
-            return Name != null ? StringComparer.OrdinalIgnoreCase.GetHashCode(Name) : 0;
+            return HashCode.Combine(Table, Name);
         }
 
         public static bool operator ==(ColumnNameExpression left, ColumnNameExpression right)

@@ -20,7 +20,7 @@ namespace SimpleDatabase.Parsing.UnitTests
             return new AndConstraint<SelectStatementAssertions>(this);
         }
 
-        public AndConstraint<SelectStatementAssertions> HaveTable(TableRef expected, string because = "", params object[] becauseArgs)
+        public AndConstraint<SelectStatementAssertions> HaveTable(TableAlias expected, string because = "", params object[] becauseArgs)
         {
             Subject.Table.Should().Be(expected, because, becauseArgs);
             
