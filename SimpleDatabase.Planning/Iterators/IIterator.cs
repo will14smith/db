@@ -28,5 +28,9 @@ namespace SimpleDatabase.Planning.Iterators
         /// If there are more items it should jump to the label
         /// </summary>
         void GenerateMoveNext(ProgramLabel loopStart, ProgramLabel loopEnd);
+        /// <summary>
+        /// Moves the iterator back the initial state
+        /// </summary>
+        void Reset();
     }
 }

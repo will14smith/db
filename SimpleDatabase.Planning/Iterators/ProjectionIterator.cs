@@ -24,15 +24,9 @@ namespace SimpleDatabase.Planning.Iterators
 
         public IteratorOutput Output { get; }
 
-        public void GenerateInit()
-        {
-            _input.GenerateInit();
-        }
-
-        public void GenerateMoveNext(ProgramLabel loopStart, ProgramLabel loopEnd)
-        {
-            _input.GenerateMoveNext(loopStart, loopEnd);
-        }
+        public void GenerateInit() => _input.GenerateInit();
+        public void GenerateMoveNext(ProgramLabel loopStart, ProgramLabel loopEnd) => _input.GenerateMoveNext(loopStart, loopEnd);
+        public void Reset() => _input.Reset();
 
         private IteratorOutput CalculateOutput()
         {

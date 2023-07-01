@@ -37,6 +37,11 @@ namespace SimpleDatabase.Planning.Iterators
             CompilePredicate(loopStart, _predicate);
         }
 
+        public void Reset()
+        {
+            throw new NotImplementedException();
+        }
+
         private void CompilePredicate(ProgramLabel falseTarget, Expression expression)
         {
             var innerOutput = (IteratorOutput.Row)_input.Output;

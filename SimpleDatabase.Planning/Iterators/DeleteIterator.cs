@@ -33,5 +33,10 @@ namespace SimpleDatabase.Planning.Iterators
             _generator.Emit(new DeleteOperation());
             inner.Cursor.Store(_generator);
         }
+
+        public void Reset()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

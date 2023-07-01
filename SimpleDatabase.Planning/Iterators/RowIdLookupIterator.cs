@@ -38,13 +38,11 @@ public class RowIdLookupIterator : IIterator
     
     public void GenerateInit()
     {
-        _generator.Emit(new ConstIntOperation(0));
-        _once.Store(_generator);
-        
-        PushRowId();
+        // _cursor = _table
         _generator.Emit(new OpenReadTableOperation(_table));
-        _generator.Emit(new SeekRowIdOperation());
         _cursor.Store(_generator);
+
+        Reset();
     }
 
     private void PushRowId()
@@ -60,15 +58,27 @@ public class RowIdLookupIterator : IIterator
 
     public void GenerateMoveNext(ProgramLabel loopStart, ProgramLabel loopEnd)
     {
+        // if _once: break;
         _generator.Emit(new ConstIntOperation(1));
         _once.Load(_generator);
         _generator.Emit(new ConditionalJumpOperation(Comparison.Equal, loopEnd));
         
+        // _once = true;
         _generator.Emit(new ConstIntOperation(1));
         _once.Store(_generator);
 
+        // seek(rowid)
+        PushRowId();
         _cursor.Load(_generator);
+        _generator.Emit(new SeekRowIdOperation());
         _generator.Emit(new NextOperation(loopEnd));
         _cursor.Store(_generator);
+    }
+
+    public void Reset()
+    {
+        // once = false
+        _generator.Emit(new ConstIntOperation(0));
+        _once.Store(_generator);
     }
 }

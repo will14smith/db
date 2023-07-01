@@ -74,7 +74,12 @@ public class SeekIndexIterator : IIterator
 
         CheckEnd(loopEnd);
     }
-    
+
+    public void Reset()
+    {
+        throw new NotImplementedException();
+    }
+
     private void CheckEnd(ProgramLabel loopEnd)
     {
         if (_predicate is not BinaryExpression { Operator: BinaryOperator.Equal, Left: ColumnNameExpression equalityColumn, Right: LiteralExpression equalityValue })

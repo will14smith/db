@@ -40,7 +40,12 @@ public class ExplainIterator : IIterator
         
         _generator.Emit(new JumpOperation(loopEnd));
     }
-    
+
+    public void Reset()
+    {
+        throw new NotImplementedException();
+    }
+
     private void YieldNode(Node node, string indent)
     {
         switch (node)

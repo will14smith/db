@@ -49,6 +49,11 @@ namespace SimpleDatabase.Planning.Iterators
             _cursor.Store(_generator);
         }
 
+        public void Reset()
+        {
+            throw new NotImplementedException();
+        }
+
         private IteratorOutput ComputeOutput()
         {
             var columns = new List<IteratorOutput.Named>();

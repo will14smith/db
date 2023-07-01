@@ -89,6 +89,11 @@ namespace SimpleDatabase.Planning.Iterators
             _cursor.Store(_generator);
         }
 
+        public void Reset()
+        {
+            throw new NotImplementedException();
+        }
+
         private KeyStructure GenerateKey()
         {
             var innerOutputRow = (IteratorOutput.Row)_inner.Output;

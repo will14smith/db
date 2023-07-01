@@ -42,5 +42,10 @@ namespace SimpleDatabase.Planning.Iterators
             _cursor.Load(_generator);
             _generator.Emit(new InsertOperation());
         }
+
+        public void Reset()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }
