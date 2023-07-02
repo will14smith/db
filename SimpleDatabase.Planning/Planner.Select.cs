@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using SimpleDatabase.Parsing.Expressions;
 using SimpleDatabase.Parsing.Statements;
+using SimpleDatabase.Parsing.Tables;
 using SimpleDatabase.Planning.Nodes;
 using SimpleDatabase.Schemas;
 
 namespace SimpleDatabase.Planning;
 
-public class PlanBuilder
+public static class PlanBuilder
 {
     public static IEnumerable<Plan> EnumeratePlans(Table table, IReadOnlyList<ResultColumn> columns, Expression? predicate, IReadOnlyList<OrderExpression> ordering)
     {
@@ -233,9 +234,116 @@ public partial class Planner
 {
     private Plan PlanSelect(SelectStatement select)
     {
-        var tableName = select.Table.Name;
-        var table = _database.GetTable(tableName);
+        var tables = GetTables(select.From);
+        var columns = ResolveResultColumns(select.Columns, tables);
+        var predicate = select.Where.Value;
+        
+        if (select.From.Joins.Any())
+        {
+            predicate = select.From.Joins
+                .Select(join => join.Predicate)
+                .Aggregate(predicate, (current, joinPredicate) => joinPredicate == null ? current : current == null ? joinPredicate : new BinaryExpression(BinaryOperator.BooleanAnd, current, joinPredicate));
+        }
 
-        return PlanBuilder.EnumeratePlans(table, select.Columns, select.Where.Value, select.Ordering).First();
+        predicate = predicate == null ? null : ResolveExpression(predicate, tables);
+        
+        var tableName = select.From.Table.Name;
+        var table = _database.GetTable(tableName);
+        
+        return PlanBuilder.EnumeratePlans(table, columns, predicate, select.Ordering).First();
+    }
+
+    private IReadOnlyDictionary<string, Table> GetTables(TableFrom from)
+    {
+        var tables = new Dictionary<string, Table>
+        {
+            { from.Table.Alias, _database.GetTable(from.Table.Name) }
+        };
+
+        foreach (var join in from.Joins)
+        {
+            tables.Add(join.Table.Alias, _database.GetTable(join.Table.Name));
+        }
+        
+        return tables;
+    }
+
+    private static IReadOnlyList<ResultColumn.Expression> ResolveResultColumns(IReadOnlyList<ResultColumn> columns, IReadOnlyDictionary<string, Table> tables)
+    {
+        var resolved = new List<ResultColumn.Expression>();
+
+        foreach (var column in columns)
+        {
+            switch (column)
+            {
+                case ResultColumn.Star star:
+                    var (tableAlias, table) = ResolveTable(tables, star.Table);
+                    resolved.AddRange(table.Columns.Select(tableColumn => new ResultColumn.Expression(new ColumnNameExpression(tableAlias, tableColumn.Name), tableColumn.Name)));
+                    break;
+
+                case ResultColumn.Expression expression: resolved.Add(new ResultColumn.Expression(ResolveExpression(expression.Value, tables), expression.Alias)); break;
+   
+                default: throw new ArgumentOutOfRangeException(nameof(column));
+            }
+        }
+        
+        return resolved;
+    }
+    
+    private static (string Alias, Table Table) ResolveTable(IReadOnlyDictionary<string, Table> tables, string? alias)
+    {
+        if (alias != null)
+        {
+            return (alias, tables[alias]);
+        }
+
+        if (tables.Count != 1)
+        {
+            throw new Exception("ambiguous star in result columns");
+        }
+        
+        var (tableAlias, table) = tables.First();
+        return (tableAlias, table);
+    }
+    
+    private static Expression ResolveExpression(Expression expression, IReadOnlyDictionary<string, Table> tables)
+    {
+        return expression switch
+        {
+            BinaryExpression binaryExpression => new BinaryExpression(
+                binaryExpression.Operator,
+                ResolveExpression(binaryExpression.Left, tables),
+                ResolveExpression(binaryExpression.Right, tables)),
+            
+            ColumnNameExpression { Table: not null } => expression,
+            ColumnNameExpression columnNameExpression => new ColumnNameExpression(ResolveColumn(columnNameExpression.Name, tables), columnNameExpression.Name),
+
+            LiteralExpression => expression,
+            NodeOutputExpression => expression,
+
+            _ => throw new ArgumentOutOfRangeException(nameof(expression))
+        };
+    }
+
+    private static string ResolveColumn(string column, IReadOnlyDictionary<string, Table> tables)
+    {
+        (string Alias, Table Table)? selected = null;
+
+        foreach (var (alias, table) in tables)
+        {
+            if (!table.Columns.Any(x => string.Equals(x.Name, column, StringComparison.OrdinalIgnoreCase)))
+            {
+                continue;
+            }
+            
+            if (selected != null)
+            {
+                throw new Exception($"ambiguous column '{column}'");
+            }
+                
+            selected = (alias, table);
+        }
+        
+        return selected?.Alias ?? throw new Exception($"could not find column '{column}'");
     }
 }

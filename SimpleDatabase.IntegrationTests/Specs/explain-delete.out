@@ -7,22 +7,22 @@ d2 = delete
 
 === Program ===                                                 
 [                                                               
-  cursor                                                         
+  cursor_table_scan_tbl                                                         
 ] {                                                             
   CUR.OPEN.W tbl                                                 
   CUR.FIRST                                                      
-  STORE S0_cursor                                                
+  STORE S0_cursor_table_scan_tbl                                                
 L0_loop_start:                                                  
-  LOAD S0_cursor                                                 
+  LOAD S0_cursor_table_scan_tbl                                                 
   CUR.NEXT L1_loop_done                                          
-  STORE S0_cursor                                                
-  LOAD S0_cursor                                                 
+  STORE S0_cursor_table_scan_tbl                                                
+  LOAD S0_cursor_table_scan_tbl                                                 
   COL 0                                                          
   CONST.I 1                                                      
   J.NOTEQUAL L0_loop_start                                       
-  LOAD S0_cursor                                                 
+  LOAD S0_cursor_table_scan_tbl                                                 
   DELETE                                                         
-  STORE S0_cursor                                                
+  STORE S0_cursor_table_scan_tbl                                                
   J L0_loop_start                                                
 L1_loop_done:                                                   
   FINISH                                                         

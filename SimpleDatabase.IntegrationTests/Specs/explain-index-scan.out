@@ -5,7 +5,7 @@ p4 = projection
   : columns (id, name, country)
   j3 = nested loop join
     i0 = seek index (tbl.ix_tbl_name)
-      : predicate (name == 'Will')
+      : predicate (tbl.name == 'Will')
     p2 = projection
       : columns (id, country)
       t1 = rowid lookup (tbl)
@@ -16,12 +16,22 @@ p4 = projection
   cursor_index_seek_ix_tbl_name
   cursor_row_id_tbl
   once_row_id_tbl
+  nested_loop_need_outer
 ] {
+  CONST.I 1
+  STORE S3_nested_loop_need_outer
   CONST.S Will
   CUR.OPEN.RI tbl.ix_tbl_name
   CUR.SEEK.EQ
   STORE S0_cursor_index_seek_ix_tbl_name
+  CUR.OPEN.RT tbl
+  STORE S1_cursor_row_id_tbl
+  CONST.I 0
+  STORE S2_once_row_id_tbl
 L0_loop_start:
+  CONST.I 1
+  LOAD S3_nested_loop_need_outer
+  J.NOTEQUAL L2_nested_loop_inner_start
   LOAD S0_cursor_index_seek_ix_tbl_name
   CUR.NEXT L1_loop_done
   STORE S0_cursor_index_seek_ix_tbl_name
@@ -30,20 +40,27 @@ L0_loop_start:
   CONST.S Will
   J.NOTEQUAL L1_loop_done
   CONST.I 0
+  LOAD S3_nested_loop_need_outer
+  CONST.I 0
+  STORE S2_once_row_id_tbl
+L2_nested_loop_inner_start:
+  CONST.I 1
+  LOAD S2_once_row_id_tbl
+  J.EQUAL L3_nested_loop_inner_end
+  CONST.I 1
   STORE S2_once_row_id_tbl
   LOAD S0_cursor_index_seek_ix_tbl_name
   COL 0
-  CUR.OPEN.RT tbl
-  CUR.SEEK.ROWID
-  STORE S1_cursor_row_id_tbl
-  CONST.I 1
-  LOAD S2_once_row_id_tbl
-  J.EQUAL L1_loop_done
-  CONST.I 1
-  STORE S2_once_row_id_tbl
   LOAD S1_cursor_row_id_tbl
-  CUR.NEXT L1_loop_done
+  CUR.SEEK.ROWID
+  CUR.NEXT L3_nested_loop_inner_end
   STORE S1_cursor_row_id_tbl
+  J L4_nested_loop_predicate
+L3_nested_loop_inner_end:
+  CONST.I 1
+  STORE S3_nested_loop_need_outer
+  J L0_loop_start
+L4_nested_loop_predicate:
   LOAD S1_cursor_row_id_tbl
   COL 0
   LOAD S0_cursor_index_seek_ix_tbl_name

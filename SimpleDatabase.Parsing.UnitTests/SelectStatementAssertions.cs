@@ -3,6 +3,7 @@ using FluentAssertions;
 using FluentAssertions.Primitives;
 using SimpleDatabase.Parsing.Expressions;
 using SimpleDatabase.Parsing.Statements;
+using SimpleDatabase.Parsing.Tables;
 using SimpleDatabase.Utils;
 
 namespace SimpleDatabase.Parsing.UnitTests
@@ -22,7 +23,7 @@ namespace SimpleDatabase.Parsing.UnitTests
 
         public AndConstraint<SelectStatementAssertions> HaveTable(TableAlias expected, string because = "", params object[] becauseArgs)
         {
-            Subject.Table.Should().Be(expected, because, becauseArgs);
+            Subject.From.Should().Be(expected, because, becauseArgs);
             
             return new AndConstraint<SelectStatementAssertions>(this);
         }

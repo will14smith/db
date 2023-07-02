@@ -1,5 +1,6 @@
 ﻿using SimpleDatabase.Parsing.Expressions;
 using SimpleDatabase.Parsing.Statements;
+using SimpleDatabase.Parsing.Tables;
 using SimpleDatabase.Utils;
 using Xunit;
 using static SimpleDatabase.Parsing.UnitTests.ParserTestHelpers; 

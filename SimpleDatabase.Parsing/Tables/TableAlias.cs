@@ -1,6 +1,6 @@
 using System;
 
-namespace SimpleDatabase.Parsing.Statements;
+namespace SimpleDatabase.Parsing.Tables;
 
 public class TableAlias
 {

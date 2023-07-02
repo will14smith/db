@@ -4,7 +4,7 @@ CREATE INDEX
 p1 = projection
   : columns (id)
   i0 = seek index (tbl.ix_tbl_name)
-    : predicate (name == 'Will')
+    : predicate (tbl.name == 'Will')
 
 === Program ===
 [

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using SimpleDatabase.Parsing.Expressions;
+using SimpleDatabase.Parsing.Tables;
 using SimpleDatabase.Utils;
 
 namespace SimpleDatabase.Parsing.Statements;
@@ -8,14 +9,14 @@ namespace SimpleDatabase.Parsing.Statements;
 public class SelectStatement : StatementDataManipulation
 {
     public IReadOnlyList<ResultColumn> Columns { get; }
-    public TableAlias Table { get; }
+    public TableFrom From { get; }
     public Option<Expression> Where { get; }
     public IReadOnlyList<OrderExpression> Ordering { get; }
 
-    public SelectStatement(IReadOnlyList<ResultColumn> columns, TableAlias table, Option<Expression> where, IReadOnlyList<OrderExpression> ordering)
+    public SelectStatement(IReadOnlyList<ResultColumn> columns, TableFrom from, Option<Expression> where, IReadOnlyList<OrderExpression> ordering)
     {
         Columns = columns;
-        Table = table;
+        From = from;
         Where = where;
         Ordering = ordering;
     }

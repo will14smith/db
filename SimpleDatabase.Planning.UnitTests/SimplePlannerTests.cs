@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using SimpleDatabase.Parsing.Expressions;
 using SimpleDatabase.Parsing.Statements;
+using SimpleDatabase.Parsing.Tables;
 using SimpleDatabase.Planning.Nodes;
 using SimpleDatabase.Schemas;
 using SimpleDatabase.Schemas.Types;
@@ -34,7 +35,7 @@ namespace SimpleDatabase.Planning.UnitTests
         {
             var statement = new SelectStatement(
                 new List<ResultColumn> { new ResultColumn.Star(null) },
-                new TableAlias("table"),
+                new TableFrom(new TableAlias("table")),
                 Option.None<Expression>(),
                 Array.Empty<OrderExpression>()
             );
@@ -55,7 +56,7 @@ namespace SimpleDatabase.Planning.UnitTests
                     new ResultColumn.Expression(new ColumnNameExpression("name"), null),
                     new ResultColumn.Expression(new ColumnNameExpression("email"), null),
                 },
-                new TableAlias("table"),
+                new TableFrom(new TableAlias("table")),
                 Option.None<Expression>(),
                 new OrderExpression[0]
             );
@@ -75,7 +76,7 @@ namespace SimpleDatabase.Planning.UnitTests
         {
             var statement = new SelectStatement(
                 new List<ResultColumn> { new ResultColumn.Star(null) },
-                new TableAlias("table"),
+                new TableFrom(new TableAlias("table")),
                 Option.Some<Expression>(new BinaryExpression(BinaryOperator.Equal, new ColumnNameExpression("name"), new StringLiteralExpression("a"))),
                 Array.Empty<OrderExpression>()
             );
@@ -94,7 +95,7 @@ namespace SimpleDatabase.Planning.UnitTests
         {
             var statement = new SelectStatement(
                 new List<ResultColumn> { new ResultColumn.Star(null) },
-                new TableAlias("table"),
+                new TableFrom(new TableAlias("table")),
                 Option.None<Expression>(),
                 new[] { new OrderExpression(new ColumnNameExpression("name"), Order.Ascending) }
             );
@@ -113,7 +114,7 @@ namespace SimpleDatabase.Planning.UnitTests
         {
             var statement = new SelectStatement(
                 new List<ResultColumn> { new ResultColumn.Star(null) },
-                new TableAlias("table"),
+                new TableFrom(new TableAlias("table")),
                 Option.None<Expression>(),
                 new[] { new OrderExpression(new ColumnNameExpression("email"), Order.Ascending) }
             );

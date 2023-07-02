@@ -1,8 +1,10 @@
 ﻿CREATE TABLE
 === Plan ===
-f1 = filter
-  : predicate (name == 'Will' OR country == 'FR')
-  t0 = scan (tbl)
+p2 = projection
+  : columns (id, name, country)
+  f1 = filter
+    : predicate (tbl.name == 'Will' OR tbl.country == 'FR')
+    t0 = scan (tbl)
 
 === Program ===
 [

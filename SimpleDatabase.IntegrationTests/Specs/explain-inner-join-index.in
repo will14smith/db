@@ -1,0 +1,6 @@
+﻿CREATE TABLE person (id int, name char(31), country char(2));
+CREATE TABLE country (id char(2), population int);
+CREATE INDEX pk_country ON country (id);
+INSERT INTO person VALUES (1, 'Alan', 'GB'), (2, 'Betty', 'FR'), (3, 'Charles', 'DE'), (4, 'Donna', 'GR'), (5, 'Emma', 'GB'), (6, 'Will', 'GB'), (7, 'Yvonne', 'AU'), (8, 'Zach', 'DE');
+INSERT INTO country VALUES ('GB', 67330000), ('FR', 67750000), ('DE', 83200000), ('GR', 10640000),  ('AU', 25690000);
+EXPLAIN EXECUTE SELECT person.*, country.population FROM person JOIN country on person.country = country.id;

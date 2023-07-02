@@ -4,6 +4,7 @@ using System.Linq;
 using SimpleDatabase.Parsing.Antlr;
 using SimpleDatabase.Parsing.Expressions;
 using SimpleDatabase.Parsing.Statements;
+using SimpleDatabase.Parsing.Tables;
 using SimpleDatabase.Utils;
 
 namespace SimpleDatabase.Parsing.Visitors
@@ -25,11 +26,11 @@ namespace SimpleDatabase.Parsing.Visitors
         public override StatementDataManipulation VisitStatement_dml_select(SQLParser.Statement_dml_selectContext context)
         {
             var columns = context._Columns.Select(HandleResultColumn).ToList();
-            var table = HandleTable(context.Table);
+            var from = HandleFrom(context.table_from());
             var where = context.Where.ToOption().Select(HandleExpression);
             var ordering = context._Ordering.Select(HandleOrdering).ToList();
         
-            return new SelectStatement(columns, table, where, ordering);
+            return new SelectStatement(columns, from, where, ordering);
         
             OrderExpression HandleOrdering(SQLParser.Ordering_termContext arg)
             {
@@ -90,7 +91,32 @@ namespace SimpleDatabase.Parsing.Visitors
             }
         }
         
-        private static TableAlias HandleTable(SQLParser.Table_fromContext context)
+        private static TableFrom HandleFrom(SQLParser.Table_fromContext from)
+        {
+            var table = HandleTableAlias(from.table_alias());
+
+            var joinContexts = from.table_join();
+            if (joinContexts.Length == 0)
+            {
+                return new TableFrom(table);
+            }
+
+            var joins = new List<TableJoin>();
+
+            foreach (var joinContext in joinContexts)
+            {
+                var joinTable = HandleTableAlias(joinContext.table_alias());
+                var joinPredicate = joinContext.expression() != null ? HandleExpression(joinContext.expression()) : null;
+                
+                var join = new TableJoin(joinTable, joinPredicate);
+                
+                joins.Add(join);
+            }
+            
+            return new TableFrom(table, joins);
+        }
+        
+        private static TableAlias HandleTableAlias(SQLParser.Table_aliasContext context)
         {
             var name = context.table.IDENTIFIER().GetText();
             var alias = context.alias?.IDENTIFIER().GetText() ?? name;
