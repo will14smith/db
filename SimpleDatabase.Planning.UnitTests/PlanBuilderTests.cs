@@ -30,7 +30,7 @@ public class PlanBuilderTests
             {
                 new ResultColumn.Star(null),
             },
-            predicate,
+            new [] { predicate },
             Array.Empty<OrderExpression>()
         );
     }
